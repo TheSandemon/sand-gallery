@@ -58,11 +58,49 @@ const StudioContent = () => {
         }
     };
 
+    const handleGenerateVideo = async () => {
+        const { prompt } = params.video || {};
+        if (!prompt) return alert("Please enter a prompt for video");
+
+        setIsGenerating(true);
+        setStatus("Initializing Zeroscope...");
+        setResultUrl(null);
+
+        try {
+            const { httpsCallable } = await import('firebase/functions');
+            const { functions } = await import('../firebase');
+
+            const generateVideo = httpsCallable(functions, 'generateVideo');
+
+            setStatus('Synthesizing Frames (this takes ~30s)...');
+
+            const result = await generateVideo({
+                prompt: prompt,
+                motion: 5
+            });
+
+            if (result.data.success) {
+                setStatus('Video Generated!');
+                setResultUrl(result.data.videoUrl);
+            } else {
+                throw new Error("Generation failed");
+            }
+        } catch (error) {
+            console.error(error);
+            setStatus("Error: " + error.message);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const handleGenerate = () => {
         if (!user) return alert("Please login first");
-        if ((user.credits || 0) < 2) return alert("Insufficient credits");
+
+        const cost = currentMode === 'video' ? 10 : 2;
+        if ((user.credits || 0) < cost) return alert(`Insufficient credits (Need ${cost})`);
 
         if (currentMode === 'audio') handleGenerateAudio();
+        else if (currentMode === 'video') handleGenerateVideo();
         else alert(`Generation for ${currentMode} is coming soon!`);
     };
 
@@ -104,6 +142,33 @@ const StudioContent = () => {
                 </div>
             );
         }
+        if (currentMode === 'video') {
+            return (
+                <div className="flex flex-col gap-6">
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-2 font-bold tracking-wider">VIDEO PROMPT</label>
+                        <textarea
+                            value={params.video?.prompt}
+                            onChange={e => updateParams('video', { prompt: e.target.value })}
+                            placeholder="A drone shot of a futuristic neon city..."
+                            rows={4}
+                            className="w-full bg-[#111] border border-gray-800 text-white p-3 rounded-lg resize-none outline-none text-sm focus:border-neon-green transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-2 font-bold tracking-wider">MOTION BUCKET (5)</label>
+                        <input
+                            type="range"
+                            min="1" max="10"
+                            defaultValue="5"
+                            className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-neon-green opacity-50 cursor-not-allowed"
+                            disabled
+                            title="Coming in v2"
+                        />
+                    </div>
+                </div>
+            );
+        }
         return <div className="text-gray-600 italic text-sm">Controls for {currentMode} coming soon...</div>;
     };
 
@@ -114,7 +179,11 @@ const StudioContent = () => {
                 {resultUrl ? (
                     <div className="bg-black/80 border border-neon-green p-8 rounded-2xl text-center animate-fade-in shadow-[0_0_30px_rgba(0,143,78,0.2)]">
                         <h3 className="mt-0 text-neon-green text-xl font-bold tracking-widest mb-4">SUCCESS</h3>
-                        <audio controls src={resultUrl} autoPlay className="w-full max-w-md" />
+                        {currentMode === 'video' ? (
+                            <video controls src={resultUrl} autoPlay loop className="w-full max-w-lg rounded-lg border border-[#333]" />
+                        ) : (
+                            <audio controls src={resultUrl} autoPlay className="w-full max-w-md" />
+                        )}
                         <div className="mt-4">
                             <button onClick={() => setResultUrl(null)} className="text-white underline hover:text-neon-green transition-colors text-sm">
                                 Generate Another
