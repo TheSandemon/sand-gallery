@@ -8,6 +8,7 @@ import {
     MoreHorizontal, Smartphone, Monitor
 } from 'lucide-react';
 import { MODELS } from '../config/models';
+import { useDeviceState } from '../hooks/useDeviceState';
 
 const StudioPage = () => (
     <StudioProvider>
@@ -115,7 +116,6 @@ const StudioContent = () => {
 
     // --- UI COMPONENTS ---
 
-    import { useDeviceState } from '../hooks/useDeviceState';
 
     // ... (inside StudioContent)
 
