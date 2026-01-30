@@ -1,101 +1,188 @@
 import React, { useState } from 'react';
-import AudioGenerator from '../components/tools/AudioGenerator';
+import { StudioProvider, useStudio } from '../context/StudioContext';
+import StudioLayout from '../components/StudioLayout';
+import { useAuth } from '../context/AuthContext';
+import { Zap } from 'lucide-react';
 
-const Studio = () => {
-    const [activeTool, setActiveTool] = useState(null);
+// Wrapper to provide context
+const StudioPage = () => (
+    <StudioProvider>
+        <StudioContent />
+    </StudioProvider>
+);
 
-    const renderTool = () => {
-        switch (activeTool) {
-            case 'Audio Synthesis':
-                return <AudioGenerator />;
-            default:
-                return <div style={{ color: 'white', textAlign: 'center' }}>Tool Under Construction</div>;
+const StudioContent = () => {
+    const { currentMode, params, updateParams } = useStudio();
+    const { user } = useAuth();
+
+    // Local state for generation status (shared across tools for now)
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [status, setStatus] = useState('');
+    const [resultUrl, setResultUrl] = useState(null);
+
+    // --- LOGIC HANDLERS ---
+
+    const handleGenerateAudio = async () => {
+        const { prompt, duration } = params.audio || {};
+        if (!prompt) return alert("Please enter a prompt");
+
+        setIsGenerating(true);
+        setStatus("Initializing AudioLDM...");
+        setResultUrl(null);
+
+        try {
+            // Dynamically import to avoid import errors if firebase isn't fully set up
+            const { httpsCallable } = await import('firebase/functions');
+            const { functions } = await import('../firebase');
+
+            const generateAudio = httpsCallable(functions, 'generateAudio');
+
+            setStatus('Sending to Neural Cloud...');
+
+            const result = await generateAudio({
+                prompt: prompt,
+                duration: parseInt(duration)
+            });
+
+            if (result.data.success) {
+                setStatus('Audio Generated!');
+                setResultUrl(result.data.audioUrl);
+            } else {
+                throw new Error("Generation failed");
+            }
+        } catch (error) {
+            console.error(error);
+            setStatus("Error: " + error.message);
+        } finally {
+            setIsGenerating(false);
         }
     };
 
-    return (
-        <div style={{ paddingTop: '120px', maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <h1 style={{ fontSize: '3rem', margin: 0 }}>
-                    AI <span style={{ color: 'var(--neon-gold)' }}>STUDIO</span>
-                </h1>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {activeTool && (
-                        <button
-                            onClick={() => setActiveTool(null)}
+    const handleGenerate = () => {
+        if (!user) return alert("Please login first");
+        if ((user.credits || 0) < 2) return alert("Insufficient credits");
+
+        if (currentMode === 'audio') handleGenerateAudio();
+        else alert(`Generation for ${currentMode} is coming soon!`);
+    };
+
+    // --- UI RENDERERS ---
+
+    const renderControls = () => {
+        if (currentMode === 'audio') {
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>PROMPT</label>
+                        <textarea
+                            value={params.audio?.prompt}
+                            onChange={e => updateParams('audio', { prompt: e.target.value })}
+                            placeholder="A cyberpunk city rain ambience..."
+                            rows={4}
                             style={{
-                                padding: '0.5rem 1.5rem',
-                                background: 'transparent',
-                                border: '1px solid var(--text-secondary)',
-                                borderRadius: '50px',
-                                color: 'var(--text-secondary)',
-                                cursor: 'pointer'
+                                width: '100%',
+                                background: '#111',
+                                border: '1px solid #333',
+                                color: 'white',
+                                padding: '10px',
+                                borderRadius: '8px',
+                                resize: 'none',
+                                outline: 'none',
+                                fontSize: '0.9rem'
                             }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>DURATION: {params.audio?.duration}s</label>
+                        <input
+                            type="range"
+                            min="1" max="10"
+                            value={params.audio?.duration}
+                            onChange={e => updateParams('audio', { duration: parseInt(e.target.value) })}
+                            style={{ width: '100%', accentColor: 'var(--neon-green)' }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>VOICE ID</label>
+                        <select
+                            style={{ width: '100%', padding: '0.5rem', background: '#111', border: '1px solid #333', color: 'white', borderRadius: '4px' }}
+                            disabled
                         >
-                            ← Back to Tools
-                        </button>
-                    )}
-                    <div style={{
-                        padding: '0.5rem 1.5rem',
-                        background: 'rgba(199, 155, 55, 0.1)',
-                        border: '1px solid var(--neon-gold)',
-                        borderRadius: '50px',
-                        color: 'var(--neon-gold)',
-                        fontWeight: 'bold'
-                    }}>
-                        PREVIEW MODE
+                            <option>AudioLDM (Default)</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-
-            {activeTool ? (
-                <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                    {renderTool()}
-                </div>
-            ) : (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '2rem'
-                }}>
-                    {['Image Gen', 'Audio Synthesis', 'Prompt Lab'].map((tool) => (
-                        <div key={tool}
-                            onClick={() => setActiveTool(tool)}
-                            style={{
-                                height: '250px',
-                                background: 'rgba(255, 255, 255, 0.03)',
-                                borderRadius: '20px',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = 'var(--neon-gold)';
-                                e.currentTarget.style.background = 'rgba(199, 155, 55, 0.05)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                            }}
-                        >
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{tool}</h3>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Expand Suite Feature</p>
-                        </div>
-                    ))}
-                </div>
-            )}
-            <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+            );
         }
-      `}</style>
-        </div>
+        return <div style={{ color: '#666', fontStyle: 'italic' }}>Controls for {currentMode} coming soon...</div>;
+    };
+
+    const renderCanvas = () => {
+        return (
+            <div style={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundImage: 'radial-gradient(circle at center, #1a1a1a 1px, transparent 1px)',
+                backgroundSize: '20px 20px'
+
+            }}>
+                {/* Result Area */}
+                {resultUrl ? (
+                    <div style={{
+                        background: 'rgba(0,20,0,0.8)',
+                        border: '1px solid var(--neon-green)',
+                        padding: '2rem',
+                        borderRadius: '16px',
+                        textAlign: 'center',
+                        animation: 'fadeIn 0.5s'
+                    }}>
+                        <h3 style={{ marginTop: 0, color: 'var(--neon-green)' }}>SUCCESS</h3>
+                        <audio controls src={resultUrl} autoPlay />
+                        <div style={{ marginTop: '1rem' }}>
+                            <button onClick={() => setResultUrl(null)} style={{ color: '#fff', textDecoration: 'underline', background: 'none' }}>
+                                Generate Another
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', opacity: 0.3 }}>
+                        {isGenerating ? (
+                            <>
+                                <Zap size={64} className="animate-pulse" style={{ animation: 'pulse 1s infinite' }} />
+                                <p style={{ marginTop: '1rem' }}>{status}</p>
+                            </>
+                        ) : (
+                            <>
+                                <h1 style={{ fontSize: '4rem', margin: 0, fontWeight: '900', color: '#222' }}>STUDIO</h1>
+                                <p>Select a mode and configure settings to generate.</p>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                <style>{`
+                    @keyframes pulse {
+                        0% { opacity: 0.5; transform: scale(0.95); }
+                        50% { opacity: 1; transform: scale(1.05); }
+                        100% { opacity: 0.5; transform: scale(0.95); }
+                    }
+                    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+                 `}</style>
+            </div>
+        );
+    };
+
+    return (
+        <StudioLayout
+            controls={renderControls()}
+            onGenerate={handleGenerate}
+        >
+            {renderCanvas()}
+        </StudioLayout>
     );
 };
 
-export default Studio;
+export default StudioPage;
