@@ -24,7 +24,8 @@ const StudioContent = () => {
     const [activeTab, setActiveTab] = useState('all');
     const [status, setStatus] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
-    const [resultData, setResultData] = useState(null); // { url, text, type }
+    const [resultData, setResultData] = useState(null);
+    const [history, setHistory] = useState([]);
 
     // Auto-select model logic
     useEffect(() => {
@@ -35,6 +36,31 @@ const StudioContent = () => {
             }
         });
     }, [currentMode, serviceStatus]);
+
+    // History Subscription
+    useEffect(() => {
+        if (!user) return;
+        let unsubscribe = () => { };
+
+        const setup = async () => {
+            const { getFirestore, collection, query, where, orderBy, onSnapshot } = await import('firebase/firestore');
+            const { app } = await import('../firebase');
+            const db = getFirestore(app);
+
+            const q = query(
+                collection(db, 'creations'),
+                where('userId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setHistory(data);
+            });
+        };
+        setup();
+        return () => unsubscribe();
+    }, [user]);
 
     // --- LOGIC: Generation ---
     const handleGenerate = async () => {
