@@ -35,46 +35,53 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                // CRM Sync: Check if user exists in Firestore
-                const userRef = doc(db, 'users', currentUser.uid);
-                const userSnap = await getDoc(userRef);
+            try {
+                if (currentUser) {
+                    // CRM Sync: Check if user exists in Firestore
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    const userSnap = await getDoc(userRef);
 
-                let userData = userSnap.data();
+                    let userData = userSnap.data() || {};
 
-                if (!userSnap.exists()) {
-                    // Create new user in CRM
-                    userData = {
+                    if (!userSnap.exists()) {
+                        // Create new user in CRM
+                        userData = {
+                            uid: currentUser.uid,
+                            email: currentUser.email,
+                            displayName: currentUser.displayName,
+                            photoURL: currentUser.photoURL,
+                            role: 'user', // Default role
+                            createdAt: serverTimestamp(),
+                        };
+                        await setDoc(userRef, userData);
+                    }
+
+                    // Combine Auth object with Firestore data (role)
+                    setUser({
                         uid: currentUser.uid,
                         email: currentUser.email,
                         displayName: currentUser.displayName,
                         photoURL: currentUser.photoURL,
-                        role: 'user', // Default role
-                        createdAt: serverTimestamp(),
-                    };
-                    await setDoc(userRef, userData);
+                        ...userData
+                    });
                 } else {
-                    // Merge Firestore role/data with Auth data
-                    userData = {
-                        ...userData,
-                        // Ensure we have latest auth profile data if needed, or prefer Firestore?
-                        // Usually keeping auth data fresh is good, but let's stick to the request:
-                        // "Fetch their latest data ... and merge it"
-                    }
+                    setUser(null);
                 }
-
-                // Combine Auth object with Firestore data (role)
-                setUser({
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    displayName: currentUser.displayName,
-                    photoURL: currentUser.photoURL,
-                    ...userData
-                });
-            } else {
-                setUser(null);
+            } catch (error) {
+                console.error("CRM Sync Error:", error);
+                // Fallback: Set user with just Auth data if Firestore fails
+                if (currentUser) {
+                    setUser({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName,
+                        photoURL: currentUser.photoURL,
+                        role: 'user'
+                    });
+                }
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         });
 
         return unsubscribe;
