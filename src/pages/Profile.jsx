@@ -67,8 +67,7 @@ const Profile = () => {
         </div>
 
     );
-        </div >
-    );
+
 };
 
 const CreationsGallery = ({ userId }) => {
