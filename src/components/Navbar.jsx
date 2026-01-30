@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import UserButton from './UserButton';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
+    const location = useLocation();
+    const { user } = useAuth();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -35,6 +39,7 @@ const Navbar = () => {
             fontWeight: '700',
             color: 'var(--text-primary)',
             letterSpacing: '-0.05em',
+            textDecoration: 'none',
         },
         logoHighlight: {
             color: 'var(--neon-green)',
@@ -50,25 +55,59 @@ const Navbar = () => {
         link: {
             position: 'relative',
             fontSize: '0.9rem',
-            fontWeight: '500',
+            fontWeight: '600',
             color: 'var(--text-secondary)',
+            textDecoration: 'none',
             cursor: 'pointer',
+            transition: 'color 0.3s ease',
         },
         activeLink: {
             color: 'var(--neon-gold)',
         },
     };
 
+    const isActive = (path) => location.pathname === path;
+
     return (
         <nav style={styles.nav}>
-            <div style={styles.logo}>
+            <Link to="/" style={styles.logo}>
                 SAND<span style={styles.logoHighlight}>.GALLERY</span>
-            </div>
+            </Link>
             <ul style={styles.menu}>
-                <li style={styles.link}>WORK</li>
-                <li style={styles.link}>ABOUT</li>
-                <li style={styles.link}>LAB</li>
-                <li style={{ ...styles.link }}>CONTACT</li>
+                <li>
+                    <Link
+                        to="/"
+                        style={{ ...styles.link, ...(isActive('/') ? styles.activeLink : {}) }}
+                    >
+                        WORK
+                    </Link>
+                </li>
+                <li>
+                    <Link
+                        to="/studio"
+                        style={{ ...styles.link, ...(isActive('/studio') ? styles.activeLink : {}) }}
+                    >
+                        STUDIO
+                    </Link>
+                </li>
+                {user?.role === 'owner' && (
+                    <li>
+                        <Link
+                            to="/admin"
+                            style={{ ...styles.link, ...(isActive('/admin') ? styles.activeLink : {}) }}
+                        >
+                            ADMIN
+                        </Link>
+                    </li>
+                )}
+                <li>
+                    <Link
+                        to="/profile"
+                        style={{ ...styles.link, ...(isActive('/profile') ? styles.activeLink : {}) }}
+                    >
+                        PROFILE
+                    </Link>
+                </li>
                 <li><UserButton /></li>
             </ul>
         </nav>

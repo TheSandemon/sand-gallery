@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const UserButton = () => {
     const { user, signInWithGoogle, logout } = useAuth();
+    const navigate = useNavigate();
 
     const styles = {
         button: {
@@ -73,8 +75,8 @@ const UserButton = () => {
                 src={user.photoURL}
                 alt={user.displayName}
                 style={styles.avatar}
-                onClick={logout}
-                title="Click to Logout"
+                onClick={() => navigate('/profile')}
+                title="View Profile"
             />
         </div>
     );

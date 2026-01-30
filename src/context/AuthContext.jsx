@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
                             displayName: currentUser.displayName,
                             photoURL: currentUser.photoURL,
                             role: 'user', // Default role
+                            credits: 10,   // Starting credits
                             createdAt: serverTimestamp(),
                         };
                         await setDoc(userRef, userData);
