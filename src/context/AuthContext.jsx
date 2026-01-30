@@ -89,21 +89,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const claimAdminAccess = async () => {
-        if (!user) return false;
-        try {
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
-                role: 'owner'
-            });
-            // Update local state immediately
-            setUser(prev => ({ ...prev, role: 'owner' }));
-            return true;
-        } catch (error) {
-            console.error("Error claiming admin:", error);
-            return false;
-        }
-    };
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -164,7 +150,6 @@ export const AuthProvider = ({ children }) => {
         deductCredits,
         grantCredits,
         getAllUsers,
-        claimAdminAccess,
         loading
     };
 

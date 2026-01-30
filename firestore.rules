@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is an owner
+    function isOwner() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if request.auth != null && (request.auth.uid == userId || isOwner());
+      
+      // Users can create their own profile (during sign-up)
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Users can update their own profile EXCEPT 'role' and 'credits'
+      // Only admins (owners) can update 'role' and 'credits'
+      // OR if the user is claiming admin (dev backdoor - temporary)
+      allow update: if request.auth != null && (
+        (request.auth.uid == userId && (
+           (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['credits', 'role'])) || 
+           (request.resource.data.role == 'owner' && resource.data.role != 'owner') // Allow self-promotion for dev
+        )) || 
+        isOwner()
+      );
+    }
+  }
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-    const { user, claimAdminAccess } = useAuth();
+    const { user } = useAuth();
 
     if (!user) return <div style={{ paddingTop: '100px', textAlign: 'center' }}>Please log in to view profile.</div>;
 
@@ -40,37 +40,6 @@ const Profile = () => {
                             fontSize: '0.8rem',
                             fontWeight: 'bold'
                         }}>{user.role || 'USER'}</span>
-
-                        <button
-                            onClick={async () => {
-                                console.log("Claiming admin...");
-                                const success = await claimAdminAccess();
-                                if (success) {
-                                    alert("SUCCESS: You are now an Admin! Refreshing...");
-                                    window.location.reload();
-                                } else {
-                                    alert("Failed to claim admin. Check console.");
-                                }
-                            }}
-                            style={{
-                                display: 'block',
-                                marginTop: '1.5rem',
-                                padding: '1rem 2rem',
-                                background: 'var(--neon-green)',
-                                border: '2px solid white',
-                                color: 'black',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                fontSize: '1rem',
-                                boxShadow: '0 0 20px rgba(0,255,0,0.5)',
-                                position: 'relative', // Ensure z-index works
-                                zIndex: 100001,       // Force above CircuitEffect (9999)
-                                pointerEvents: 'auto' // Explicitly enable clicks
-                            }}
-                        >
-                            [DEV] FORCE ADMIN RIGHTS (v3.4)
-                        </button>
                     </div>
                 </div>
             </div>
