@@ -63,10 +63,13 @@ const Profile = () => {
                                 cursor: 'pointer',
                                 fontWeight: 'bold',
                                 fontSize: '1rem',
-                                boxShadow: '0 0 20px rgba(0,255,0,0.5)'
+                                boxShadow: '0 0 20px rgba(0,255,0,0.5)',
+                                position: 'relative', // Ensure z-index works
+                                zIndex: 100001,       // Force above CircuitEffect (9999)
+                                pointerEvents: 'auto' // Explicitly enable clicks
                             }}
                         >
-                            [DEV] FORCE ADMIN RIGHTS (v3.3)
+                            [DEV] FORCE ADMIN RIGHTS (v3.4)
                         </button>
                     </div>
                 </div>
