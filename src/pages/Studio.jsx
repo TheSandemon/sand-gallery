@@ -283,20 +283,20 @@ const StudioContent = () => {
 
     // 4. History Grid (Infinite Canvas)
     const renderHistory = () => {
-        // Placeholder for real firestore data
-        const items = resultData ? [resultData] : [];
+        const items = resultData ? [resultData, ...history] : history;
+        const filteredItems = activeTab === 'all' ? items : items.filter(item => item.type === activeTab);
 
         return (
-            <div className="w-full h-full p-8 overflow-y-auto pb-[200px]">
-                {items.length === 0 ? (
+            <div className="w-full h-full p-8 overflow-y-auto pb-[200px] custom-scrollbar">
+                {filteredItems.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center opacity-20 pointer-events-none select-none">
                         <h1 className="text-[15vw] font-black text-[#1a1a1a] leading-none">CREATE</h1>
                         <p className="font-mono text-neon-green tracking-[1em] text-sm">THE INFINITE CANVAS</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
-                        {items.map((item, i) => (
-                            <div key={i} className="group relative break-inside-avoid mb-4 rounded-xl overflow-hidden border border-white/10 bg-[#111] hover:border-emerald-500/50 transition-all">
+                        {filteredItems.map((item, i) => (
+                            <div key={item.id || i} className="group relative break-inside-avoid mb-4 rounded-xl overflow-hidden border border-white/10 bg-[#111] hover:border-emerald-500/50 transition-all">
                                 {/* Content */}
                                 {item.type === 'video' && <video src={item.url} autoPlay muted loop className="w-full" />}
                                 {item.type === 'image' && <img src={item.url} className="w-full" />}
