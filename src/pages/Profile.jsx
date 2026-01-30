@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, claimAdminAccess } = useAuth();
 
     if (!user) return <div style={{ paddingTop: '100px', textAlign: 'center' }}>Please log in to view profile.</div>;
 
@@ -40,6 +40,29 @@ const Profile = () => {
                             fontSize: '0.8rem',
                             fontWeight: 'bold'
                         }}>{user.role || 'USER'}</span>
+
+                        {user.role !== 'owner' && (
+                            <button
+                                onClick={async () => {
+                                    if (await claimAdminAccess()) {
+                                        alert("You are now an Administrator! The Admin Dashboard is unlocked.");
+                                    }
+                                }}
+                                style={{
+                                    display: 'block',
+                                    marginTop: '1rem',
+                                    padding: '0.5rem 1rem',
+                                    background: 'rgba(255, 0, 0, 0.2)',
+                                    border: '1px solid red',
+                                    color: 'red',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                }}
+                            >
+                                [DEV] Claim Admin Rights
+                            </button>
+                        )}
                     </div>
                 </div>
 
