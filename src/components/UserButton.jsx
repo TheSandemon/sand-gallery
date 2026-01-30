@@ -48,7 +48,10 @@ const UserButton = () => {
         return (
             <button
                 style={styles.button}
-                onClick={signInWithGoogle}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    signInWithGoogle();
+                }}
                 onMouseEnter={(e) => {
                     e.target.style.backgroundColor = '#dcb04d';
                     e.target.style.boxShadow = '0 0 15px rgba(199, 155, 55, 0.4)';
