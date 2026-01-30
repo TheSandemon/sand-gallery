@@ -6,20 +6,14 @@ import { Mic, Video, Image as ImageIcon, Music, Zap } from 'lucide-react';
 const SidebarItem = ({ icon: Icon, label, isActive, onClick }) => (
     <div
         onClick={onClick}
-        style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '1.5rem 0.5rem',
-            cursor: 'pointer',
-            color: isActive ? 'var(--neon-green)' : 'var(--text-secondary)',
-            borderLeft: isActive ? '3px solid var(--neon-green)' : '3px solid transparent',
-            background: isActive ? 'rgba(0, 143, 78, 0.1)' : 'transparent',
-            transition: 'all 0.2s ease'
-        }}
+        className={`flex flex-col items-center py-6 px-2 cursor-pointer transition-all duration-200 
+            ${isActive
+                ? 'text-neon-green border-l-4 border-neon-green bg-gradient-to-r from-neon-green/10 to-transparent'
+                : 'text-text-secondary border-l-4 border-transparent hover:text-white'
+            }`}
     >
         <Icon size={24} />
-        <span style={{ fontSize: '0.7rem', marginTop: '0.5rem', fontWeight: 'bold' }}>{label}</span>
+        <span className="text-[0.65rem] mt-2 font-bold tracking-wider">{label}</span>
     </div>
 );
 
@@ -29,22 +23,9 @@ const StudioLayout = ({ children, controls, onGenerate }) => {
     const cost = getCost();
 
     return (
-        <div style={{
-            display: 'grid',
-            gridTemplateColumns: '80px 1fr 300px', // Fixed Sidebar, Flexible Canvas, Fixed Controls
-            height: 'calc(100vh - 80px)', // Subtract Navbar height approx
-            marginTop: '80px', // Push below Navbar
-            background: '#0a0a0a',
-            overflow: 'hidden'
-        }}>
+        <div className="grid grid-cols-[80px_1fr_300px] h-[calc(100vh-80px)] mt-[80px] bg-bg-dark overflow-hidden">
             {/* 1. Left Sidebar (Navigation) */}
-            <div style={{
-                borderRight: '1px solid #333',
-                background: '#050505',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between'
-            }}>
+            <div className="border-r border-gray-800 bg-[#050505] flex flex-col justify-between">
                 <div>
                     <SidebarItem
                         icon={Mic}
@@ -67,84 +48,38 @@ const StudioLayout = ({ children, controls, onGenerate }) => {
                 </div>
 
                 {/* Credit Display */}
-                <div style={{
-                    padding: '1rem',
-                    textAlign: 'center',
-                    borderTop: '1px solid #222'
-                }}>
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        border: '3px solid var(--neon-gold)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto',
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        color: 'var(--neon-gold)'
-                    }}>
+                <div className="p-4 text-center border-t border-gray-800 bg-black/40">
+                    <div className="w-10 h-10 rounded-full border-2 border-neon-gold flex items-center justify-center mx-auto text-sm font-bold text-neon-gold mb-1">
                         {user ? user.credits : 0}
                     </div>
-                    <div style={{ fontSize: '0.6rem', color: '#666', marginTop: '0.3rem' }}>CREDITS</div>
+                    <div className="text-[10px] text-gray-500 font-bold tracking-widest">CREDITS</div>
                 </div>
             </div>
 
             {/* 2. Main Canvas */}
-            <div style={{
-                background: '#111',
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
+            <div className="bg-[#111] relative overflow-hidden flex flex-col items-center justify-center">
                 {children}
             </div>
 
             {/* 3. Right Sidebar (Controls) */}
-            <div style={{
-                borderLeft: '1px solid #333',
-                background: '#050505',
-                padding: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <h3 style={{
-                        margin: '0 0 1.5rem 0',
-                        fontSize: '0.9rem',
-                        color: 'var(--text-secondary)',
-                        letterSpacing: '1px'
-                    }}>
+            <div className="border-l border-gray-800 bg-[#050505] p-6 flex flex-col h-full">
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <h3 className="m-0 mb-6 text-sm text-text-secondary tracking-widest font-bold opacity-60">
                         CONTROLS
                     </h3>
                     {controls}
                 </div>
 
                 {/* Generate Button Area */}
-                <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #222' }}>
+                <div className="mt-auto pt-4 border-t border-gray-800">
                     <button
                         onClick={onGenerate}
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            background: 'var(--neon-green)',
-                            color: '#000',
-                            fontWeight: '900',
-                            fontSize: '1rem',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '10px',
-                            transition: 'transform 0.1s'
-                        }}
-                        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                        className="w-full py-4 bg-neon-green text-black font-black text-base rounded-lg flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,143,78,0.3)]"
                     >
                         <Zap size={18} fill="black" />
-                        GENERATE <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>({cost} Credits)</span>
+                        GENERATE <span className="text-xs opacity-70">({cost} Credits)</span>
                     </button>
-                    <div style={{ textAlign: 'center', color: '#444', fontSize: '0.7rem', marginTop: '0.5rem' }}>
+                    <div className="text-center text-gray-600 text-xs mt-2 font-mono">
                         Est. Time: {currentMode === 'video' ? '30s' : '5s'}
                     </div>
                 </div>

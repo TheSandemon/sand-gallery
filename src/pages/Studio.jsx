@@ -71,41 +71,31 @@ const StudioContent = () => {
     const renderControls = () => {
         if (currentMode === 'audio') {
             return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="flex flex-col gap-6">
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>PROMPT</label>
+                        <label className="block text-xs text-gray-500 mb-2 font-bold tracking-wider">PROMPT</label>
                         <textarea
                             value={params.audio?.prompt}
                             onChange={e => updateParams('audio', { prompt: e.target.value })}
                             placeholder="A cyberpunk city rain ambience..."
                             rows={4}
-                            style={{
-                                width: '100%',
-                                background: '#111',
-                                border: '1px solid #333',
-                                color: 'white',
-                                padding: '10px',
-                                borderRadius: '8px',
-                                resize: 'none',
-                                outline: 'none',
-                                fontSize: '0.9rem'
-                            }}
+                            className="w-full bg-[#111] border border-gray-800 text-white p-3 rounded-lg resize-none outline-none text-sm focus:border-neon-green transition-colors"
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>DURATION: {params.audio?.duration}s</label>
+                        <label className="block text-xs text-gray-500 mb-2 font-bold tracking-wider">DURATION: {params.audio?.duration}s</label>
                         <input
                             type="range"
                             min="1" max="10"
                             value={params.audio?.duration}
                             onChange={e => updateParams('audio', { duration: parseInt(e.target.value) })}
-                            style={{ width: '100%', accentColor: 'var(--neon-green)' }}
+                            className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-neon-green"
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>VOICE ID</label>
+                        <label className="block text-xs text-gray-500 mb-2 font-bold tracking-wider">VOICE ID</label>
                         <select
-                            style={{ width: '100%', padding: '0.5rem', background: '#111', border: '1px solid #333', color: 'white', borderRadius: '4px' }}
+                            className="w-full p-2 bg-[#111] border border-gray-800 text-gray-400 rounded-md text-sm"
                             disabled
                         >
                             <option>AudioLDM (Default)</option>
@@ -114,63 +104,38 @@ const StudioContent = () => {
                 </div>
             );
         }
-        return <div style={{ color: '#666', fontStyle: 'italic' }}>Controls for {currentMode} coming soon...</div>;
+        return <div className="text-gray-600 italic text-sm">Controls for {currentMode} coming soon...</div>;
     };
 
     const renderCanvas = () => {
         return (
-            <div style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundImage: 'radial-gradient(circle at center, #1a1a1a 1px, transparent 1px)',
-                backgroundSize: '20px 20px'
-
-            }}>
+            <div className="h-full w-full flex flex-col items-center justify-center bg-[radial-gradient(circle_at_center,_#1a1a1a_1px,_transparent_1px)] bg-[size:20px_20px]">
                 {/* Result Area */}
                 {resultUrl ? (
-                    <div style={{
-                        background: 'rgba(0,20,0,0.8)',
-                        border: '1px solid var(--neon-green)',
-                        padding: '2rem',
-                        borderRadius: '16px',
-                        textAlign: 'center',
-                        animation: 'fadeIn 0.5s'
-                    }}>
-                        <h3 style={{ marginTop: 0, color: 'var(--neon-green)' }}>SUCCESS</h3>
-                        <audio controls src={resultUrl} autoPlay />
-                        <div style={{ marginTop: '1rem' }}>
-                            <button onClick={() => setResultUrl(null)} style={{ color: '#fff', textDecoration: 'underline', background: 'none' }}>
+                    <div className="bg-black/80 border border-neon-green p-8 rounded-2xl text-center animate-fade-in shadow-[0_0_30px_rgba(0,143,78,0.2)]">
+                        <h3 className="mt-0 text-neon-green text-xl font-bold tracking-widest mb-4">SUCCESS</h3>
+                        <audio controls src={resultUrl} autoPlay className="w-full max-w-md" />
+                        <div className="mt-4">
+                            <button onClick={() => setResultUrl(null)} className="text-white underline hover:text-neon-green transition-colors text-sm">
                                 Generate Another
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <div style={{ textAlign: 'center', opacity: 0.3 }}>
+                    <div className="text-center opacity-30">
                         {isGenerating ? (
-                            <>
-                                <Zap size={64} className="animate-pulse" style={{ animation: 'pulse 1s infinite' }} />
-                                <p style={{ marginTop: '1rem' }}>{status}</p>
-                            </>
+                            <div className="flex flex-col items-center">
+                                <Zap size={64} className="animate-pulse text-neon-green" />
+                                <p className="mt-4 text-neon-green font-mono">{status}</p>
+                            </div>
                         ) : (
-                            <>
-                                <h1 style={{ fontSize: '4rem', margin: 0, fontWeight: '900', color: '#222' }}>STUDIO</h1>
-                                <p>Select a mode and configure settings to generate.</p>
-                            </>
+                            <div className="flex flex-col items-center">
+                                <h1 className="text-6xl m-0 font-black text-[#222]">STUDIO</h1>
+                                <p className="text-gray-600 mt-2">Select a mode and configure settings to generate.</p>
+                            </div>
                         )}
                     </div>
                 )}
-
-                <style>{`
-                    @keyframes pulse {
-                        0% { opacity: 0.5; transform: scale(0.95); }
-                        50% { opacity: 1; transform: scale(1.05); }
-                        100% { opacity: 0.5; transform: scale(0.95); }
-                    }
-                    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-                 `}</style>
             </div>
         );
     };
