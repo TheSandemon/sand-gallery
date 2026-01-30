@@ -35,57 +35,50 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            try {
-                if (currentUser) {
-                    // CRM Sync: Check if user exists in Firestore
-                    const userRef = doc(db, 'users', currentUser.uid);
-                    const userSnap = await getDoc(userRef);
-
-                    let userData = userSnap.data() || {};
-
-                    if (!userSnap.exists()) {
-                        // Create new user in CRM
-                        userData = {
-                            uid: currentUser.uid,
-                            email: currentUser.email,
-                            displayName: currentUser.displayName,
-                            photoURL: currentUser.photoURL,
-                            role: 'user', // Default role
-                            credits: 10,   // Starting credits
-                            createdAt: serverTimestamp(),
-                        };
-                        await setDoc(userRef, userData);
-                    }
-
-                    // Combine Auth object with Firestore data (role)
-                    const finalUser = {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        displayName: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
-                        ...userData
-                    };
-                    console.log("Setting user:", finalUser);
-                    alert("User logged in: " + finalUser.displayName);
-                    setUser(finalUser);
-                } else {
-                    console.log("No user, setting null");
-                    setUser(null);
-                }
-            } catch (error) {
-                console.error("CRM Sync Error:", error);
-                // Fallback: Set user with just Auth data if Firestore fails
-                if (currentUser) {
-                    setUser({
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        displayName: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
-                        role: 'user'
-                    });
-                }
-            } finally {
+            if (!currentUser) {
+                setUser(null);
                 setLoading(false);
+                return;
+            }
+
+            // 1. Set user IMMEDIATELY with Auth data to hide loading screen faster
+            setUser({
+                uid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                role: 'user', // Default temporary role
+                credits: 0
+            });
+            setLoading(false);
+
+            // 2. Background Sync: Fetch the rest of the CRM data from Firestore
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                const userSnap = await getDoc(userRef);
+
+                let userData = userSnap.data() || {};
+
+                if (!userSnap.exists()) {
+                    userData = {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName,
+                        photoURL: currentUser.photoURL,
+                        role: 'user',
+                        credits: 10,
+                        createdAt: serverTimestamp(),
+                    };
+                    await setDoc(userRef, userData);
+                }
+
+                // 3. Update state in background once Firestore data arrives
+                setUser(prev => ({
+                    ...prev,
+                    ...userData
+                }));
+            } catch (error) {
+                console.error("Background CRM Sync Error:", error);
             }
         });
 
