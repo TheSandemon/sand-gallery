@@ -42,27 +42,28 @@ const Profile = () => {
                         }}>{user.role || 'USER'}</span>
                     </div>
                 </div>
+            </div>
 
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.5rem',
+                marginTop: '2rem'
+            }}>
                 <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '1.5rem',
-                    marginTop: '2rem'
+                    padding: '1.5rem',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    borderRadius: '15px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}>
-                    <div style={{
-                        padding: '1.5rem',
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        borderRadius: '15px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}>
-                        <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>BALANCE</h3>
-                        <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: 'var(--neon-gold)' }}>
-                            {user.credits || 0} <span style={{ fontSize: '1rem' }}>CREDITS</span>
-                        </p>
-                    </div>
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>BALANCE</h3>
+                    <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: 'var(--neon-gold)' }}>
+                        {user.credits || 0} <span style={{ fontSize: '1rem' }}>CREDITS</span>
+                    </p>
                 </div>
             </div>
         </div>
+
     );
 };
 

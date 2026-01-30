@@ -90,6 +90,14 @@ const Navbar = () => {
                         STUDIO
                     </Link>
                 </li>
+                <li>
+                    <Link
+                        to="/pricing"
+                        style={{ ...styles.link, ...(isActive('/pricing') ? styles.activeLink : {}) }}
+                    >
+                        PRICING
+                    </Link>
+                </li>
                 {user?.role === 'owner' && (
                     <li>
                         <Link

@@ -11,7 +11,11 @@ import {
     setDoc,
     updateDoc,
     increment,
-    serverTimestamp
+    serverTimestamp,
+    collection,
+    getDocs,
+    query,
+    where
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
@@ -59,6 +63,33 @@ export const AuthProvider = ({ children }) => {
             return false;
         }
     };
+
+    const grantCredits = async (targetUid, amount) => {
+        try {
+            const userRef = doc(db, 'users', targetUid);
+            await updateDoc(userRef, {
+                credits: increment(amount)
+            });
+            return true;
+        } catch (error) {
+            console.error("Error granting credits:", error);
+            alert("Failed to grant credits: " + error.message);
+            return false;
+        }
+    };
+
+    const getAllUsers = async () => {
+        try {
+            const usersRef = collection(db, 'users');
+            const snapshot = await getDocs(usersRef);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            return [];
+        }
+    };
+
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -117,6 +148,8 @@ export const AuthProvider = ({ children }) => {
         signInWithGoogle,
         logout,
         deductCredits,
+        grantCredits,
+        getAllUsers,
         loading
     };
 
