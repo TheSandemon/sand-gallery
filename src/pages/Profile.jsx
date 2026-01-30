@@ -43,24 +43,30 @@ const Profile = () => {
 
                         <button
                             onClick={async () => {
-                                if (await claimAdminAccess()) {
-                                    alert("You are now an Administrator! The Admin Dashboard is unlocked.");
-                                    window.location.reload(); // Force reload to update Navbar
+                                console.log("Claiming admin...");
+                                const success = await claimAdminAccess();
+                                if (success) {
+                                    alert("SUCCESS: You are now an Admin! Refreshing...");
+                                    window.location.reload();
+                                } else {
+                                    alert("Failed to claim admin. Check console.");
                                 }
                             }}
                             style={{
                                 display: 'block',
-                                marginTop: '1rem',
-                                padding: '0.5rem 1rem',
-                                background: 'rgba(255, 0, 0, 0.2)',
-                                border: '1px solid red',
-                                color: 'red',
+                                marginTop: '1.5rem',
+                                padding: '1rem 2rem',
+                                background: 'var(--neon-green)',
+                                border: '2px solid white',
+                                color: 'black',
                                 borderRadius: '8px',
                                 cursor: 'pointer',
-                                fontSize: '0.8rem'
+                                fontWeight: 'bold',
+                                fontSize: '1rem',
+                                boxShadow: '0 0 20px rgba(0,255,0,0.5)'
                             }}
                         >
-                            [DEV] Claim Admin Rights (v3.2)
+                            [DEV] FORCE ADMIN RIGHTS (v3.3)
                         </button>
                     </div>
                 </div>
