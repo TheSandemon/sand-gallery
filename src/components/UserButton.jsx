@@ -70,7 +70,13 @@ const UserButton = () => {
 
     return (
         <div style={styles.userContainer}>
-            <span style={styles.badge}>{user.role || 'GUEST'}</span>
+            <span
+                style={{ ...styles.badge, cursor: 'pointer' }}
+                onClick={() => navigate('/pricing')}
+                title="Buy Credits"
+            >
+                {user.credits || 0} CR
+            </span>
             <img
                 src={user.photoURL}
                 alt={user.displayName}
