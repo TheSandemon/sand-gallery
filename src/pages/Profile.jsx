@@ -62,8 +62,78 @@ const Profile = () => {
                     </p>
                 </div>
             </div>
+
+            <CreationsGallery userId={user.uid} />
         </div>
 
+    );
+        </div >
+    );
+};
+
+const CreationsGallery = ({ userId }) => {
+    const [creations, setCreations] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchCreations = async () => {
+            try {
+                // Import dynamically to avoid errors during build if firebase isn't fully set up logic logic
+                const { collection, query, where, getDocs, orderBy } = await import('firebase/firestore');
+                const { db } = await import('../firebase');
+
+                // Construct query
+                // Note: orderBy might require an index. If it fails, we default to client-side sort
+                const q = query(
+                    collection(db, 'creations'),
+                    where('userId', '==', userId)
+                    // orderBy('createdAt', 'desc') // Commented out to avoid index requirements for now
+                );
+
+                const snapshot = await getDocs(q);
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Client side sort
+                data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                setCreations(data);
+            } catch (error) {
+                console.error("Error fetching creations:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCreations();
+    }, [userId]);
+
+    if (loading) return <div style={{ color: '#888' }}>Loading gallery...</div>;
+    if (creations.length === 0) return <div style={{ color: '#888' }}>No creations yet. Visit the Studio!</div>;
+
+    return (
+        <div style={{ marginTop: '2rem' }}>
+            <h3 style={{ borderBottom: '1px solid #333', paddingBottom: '0.5rem', color: 'var(--neon-green)' }}>MY CREATIONS</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                {creations.map(item => (
+                    <div key={item.id} style={{
+                        background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid #333',
+                        borderRadius: '8px',
+                        padding: '1rem'
+                    }}>
+                        <div style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '0.5rem', height: '40px', overflow: 'hidden' }}>
+                            "{item.prompt}"
+                        </div>
+                        {item.audioUrl && (
+                            <audio controls src={item.audioUrl} style={{ width: '100%', height: '30px' }} />
+                        )}
+                        <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '0.5rem' }}>
+                            {new Date(item.createdAt?.seconds * 1000).toLocaleDateString()}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 };
 

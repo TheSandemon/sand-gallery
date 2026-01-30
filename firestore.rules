@@ -25,5 +25,10 @@ service cloud.firestore {
         isOwner()
       );
     }
+
+    match /creations/{creationId} {
+      // Users can read their own creations; Owners can read all
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isOwner());
+    }
   }
 }
