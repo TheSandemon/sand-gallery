@@ -65,7 +65,10 @@ export const AuthProvider = ({ children }) => {
 
                 // Combine Auth object with Firestore data (role)
                 setUser({
-                    ...currentUser,
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    displayName: currentUser.displayName,
+                    photoURL: currentUser.photoURL,
                     ...userData
                 });
             } else {
