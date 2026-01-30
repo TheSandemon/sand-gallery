@@ -67,6 +67,12 @@ const CircuitEffect = () => {
         resizeCanvas();
 
         const handleClick = (e) => {
+            // Skip if clicking on an interactive element
+            const interactiveTags = ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT', 'LABEL'];
+            const isInteractive = interactiveTags.includes(e.target.tagName) ||
+                e.target.closest('button, a, input, textarea, select, label, [role="button"]');
+            if (isInteractive) return;
+
             const colors = ['#008f4e', '#c79b37', '#ffffff'];
             // Create a batch of sparks at click position
             for (let i = 0; i < 8; i++) {

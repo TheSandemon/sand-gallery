@@ -1,22 +1,28 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
 import CircuitEffect from './components/CircuitEffect';
+import Home from './pages/Home';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
+import Studio from './pages/Studio';
+import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
 function App() {
   return (
-    <>
-      <CircuitEffect />
-      <Navbar />
-      <main>
-        <Hero />
-        {/* Placeholder for future sections */}
-        <section style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>More content coming soon...</p>
-        </section>
-      </main>
-    </>
+    <AuthProvider>
+      <Router>
+        <CircuitEffect />
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/studio" element={<Studio />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
