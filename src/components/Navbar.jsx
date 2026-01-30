@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import UserButton from './UserButton';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -44,6 +45,7 @@ const Navbar = () => {
             listStyle: 'none',
             margin: 0,
             padding: 0,
+            alignItems: 'center',
         },
         link: {
             position: 'relative',
@@ -66,7 +68,8 @@ const Navbar = () => {
                 <li style={styles.link}>WORK</li>
                 <li style={styles.link}>ABOUT</li>
                 <li style={styles.link}>LAB</li>
-                <li style={{ ...styles.link, ...styles.activeLink }}>CONTACT</li>
+                <li style={{ ...styles.link }}>CONTACT</li>
+                <li><UserButton /></li>
             </ul>
         </nav>
     );
