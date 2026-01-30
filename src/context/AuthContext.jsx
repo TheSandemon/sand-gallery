@@ -9,6 +9,8 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
+    increment,
     serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -32,6 +34,31 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => signOut(auth);
+
+    const deductCredits = async (amount) => {
+        if (!user) return false;
+        if ((user.credits || 0) < amount) {
+            alert("Insufficient credits!");
+            return false;
+        }
+
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                credits: increment(-amount)
+            });
+
+            // Optimistic update for immediate UI feedback
+            setUser(prev => ({
+                ...prev,
+                credits: (prev.credits || 0) - amount
+            }));
+            return true;
+        } catch (error) {
+            console.error("Error deducting credits:", error);
+            return false;
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -89,6 +116,7 @@ export const AuthProvider = ({ children }) => {
         user,
         signInWithGoogle,
         logout,
+        deductCredits,
         loading
     };
 
