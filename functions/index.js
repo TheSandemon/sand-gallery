@@ -6,164 +6,190 @@ const cors = require("cors")({ origin: true });
 admin.initializeApp();
 const db = admin.firestore();
 
-// Initialize Replicate with API Key from Firebase Config
-// Set this via: firebase functions:config:set replicate.key="YOUR_KEY"
+// Initialize Replicate with API Key
 const replicate = new Replicate({
-    auth: functions.config().replicate?.key || "MOCK_KEY_FOR_BUILD",
+    auth: functions.config().replicate?.key || "MOCK_KEY",
 });
 
+const getOpenRouterKey = () => functions.config().openrouter?.key;
+
+// --- UTILS ---
+exports.getServiceStatus = functions.https.onCall((data, context) => {
+    return {
+        replicate: !!functions.config().replicate?.key,
+        openrouter: !!functions.config().openrouter?.key
+    };
+});
+
+// --- GENERATION HANDLERS ---
+
 exports.generateAudio = functions.https.onCall(async (data, context) => {
-    // 1. Authentication Check
-    if (!context.auth) {
-        throw new functions.https.HttpsError(
-            "unauthenticated",
-            "You must be logged in to generate audio."
-        );
-    }
-
+    if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login required.");
     const uid = context.auth.uid;
-    const { prompt, duration = 5 } = data; // Duration in seconds
+    // Allow version override
+    const { prompt, duration = 5, version } = data;
 
-    if (!prompt) {
-        throw new functions.https.HttpsError(
-            "invalid-argument",
-            "Prompt is required."
-        );
-    }
-
-    // Cost: 2 Credits
+    if (!prompt) throw new functions.https.HttpsError("invalid-argument", "Prompt required.");
     const COST = 2;
 
+    await deductCredits(uid, COST);
+
+    console.log(`Audio (${uid}): ${prompt}`);
+
+    // Default to AudioLDM 2 if no version provided
+    const modelVersion = version || "avo-world/audioldm-s-full-v2:tuw5z4i4rxj6c0cj4q4907q050";
+
     try {
-        // 2. Transaction: Check & Deduct Credits
-        await db.runTransaction(async (transaction) => {
-            const userRef = db.collection("users").doc(uid);
-            const userDoc = await transaction.get(userRef);
-
-            if (!userDoc.exists) {
-                throw new functions.https.HttpsError("not-found", "User profile not found.");
-            }
-
-            const userData = userDoc.data();
-            const currentCredits = userData.credits || 0;
-
-            if (currentCredits < COST) {
-                throw new functions.https.HttpsError(
-                    "resource-exhausted",
-                    `Insufficient credits. You need ${COST} credits.`
-                );
-            }
-
-            transaction.update(userRef, {
-                credits: currentCredits - COST,
-            });
+        const output = await replicate.run(modelVersion, {
+            input: { text: prompt, duration: duration.toString(), guidance_scale: 2.5 }
         });
+        const audioUrl = output; // Replicate usually returns string or array
 
-        // 3. Call Replicate API (AudioLDM)
-        // Model: avo-world/audioldm-s-full-v2
-        console.log(`Generating audio for ${uid}: "${prompt}"`);
-
-        // Note: Replicate.run returns the output directly
-        const output = await replicate.run(
-            "avo-world/audioldm-s-full-v2:tuw5z4i4rxj6c0cj4q4907q050", // Use a stable version ID or 'latest'
-            {
-                input: {
-                    text: prompt,
-                    duration: duration.toString(),
-                    n_candidates: 1,
-                    guidance_scale: 2.5,
-                },
-            }
-        );
-
-        console.log("Replicate output:", output);
-        // Output is usually a URI string or an array depending on the model. 
-        // For AudioLDM it's typically a string URL.
-
-        const audioUrl = output;
-
-        // 4. Save Metadata to Firestore
-        await db.collection("creations").add({
-            userId: uid,
-            prompt: prompt,
-            audioUrl: audioUrl,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            cost: COST,
-            type: "audio"
-        });
-
-        return { success: true, audioUrl: audioUrl, remainingCredits: "fetched_client_side" };
-
-    } catch (error) {
-        console.error("Error in generateAudio:", error);
-        // Rethrow valid HttpsErrors, wrap others
-        if (error.code && error.details) throw error;
-        throw new functions.https.HttpsError("internal", error.message);
+        await saveCreation(uid, "audio", prompt, audioUrl, COST);
+        return { success: true, audioUrl };
+    } catch (e) {
+        console.error(e);
+        throw new functions.https.HttpsError("internal", e.message);
     }
 });
 
 exports.generateVideo = functions.runWith({ timeoutSeconds: 300, memory: '1GB' }).https.onCall(async (data, context) => {
-    // 1. Auth Check
-    if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "Login required.");
-    }
+    if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login required.");
     const uid = context.auth.uid;
-    const { prompt, motion = 5, seed } = data;
+    const { prompt, motion = 5, version } = data;
 
     if (!prompt) throw new functions.https.HttpsError("invalid-argument", "Prompt required.");
+    const COST = 10;
 
-    const COST = 10; // Video is expensive
+    await deductCredits(uid, COST);
+
+    console.log(`Video (${uid}): ${prompt}`);
+
+    // Default to Zeroscope
+    const modelVersion = version || "anotherjesse/zeroscope-v2-xl:9f747673055b9c058f22d9c375dcf743b74959db2354c478a5e82da9428f5727";
 
     try {
-        // 2. Credits Deduct
-        await db.runTransaction(async (t) => {
-            const userRef = db.collection("users").doc(uid);
-            const doc = await t.get(userRef);
-            if (!doc.exists) throw new functions.https.HttpsError("not-found", "User not found.");
-
-            const current = doc.data().credits || 0;
-            if (current < COST) throw new functions.https.HttpsError("resource-exhausted", `Need ${COST} credits.`);
-
-            t.update(userRef, { credits: current - COST });
+        const output = await replicate.run(modelVersion, {
+            input: { prompt, num_frames: 24, fps: 8, width: 576, height: 320, guidance_scale: 17.5 }
         });
-
-        // 3. Replicate Call (Zeroscope v2 XL for Text-to-Video)
-        console.log(`Generating video for ${uid}: ${prompt}`);
-
-        // Using simple zeroscope model for demo purposes
-        const output = await replicate.run(
-            "anotherjesse/zeroscope-v2-xl:9f747673055b9c058f22d9c375dcf743b74959db2354c478a5e82da9428f5727",
-            {
-                input: {
-                    prompt: prompt,
-                    num_frames: 24,
-                    fps: 8,
-                    width: 576,
-                    height: 320,
-                    guidance_scale: 17.5,
-                    negative_prompt: "noisy, washed out, ugly, distorted, broken",
-                    num_inference_steps: 50
-                }
-            }
-        );
-
-        // Output is usually an array of URL strings involved in the generation process, the last one is the video
         const videoUrl = Array.isArray(output) ? output[0] : output;
 
-        // 4. Save
-        await db.collection("creations").add({
-            userId: uid,
-            prompt: prompt,
-            videoUrl: videoUrl,
-            type: "video",
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            cost: COST
-        });
-
-        return { success: true, videoUrl: videoUrl };
-
-    } catch (error) {
-        console.error("Video Error:", error);
-        throw new functions.https.HttpsError("internal", error.message);
+        await saveCreation(uid, "video", prompt, videoUrl, COST);
+        return { success: true, videoUrl };
+    } catch (e) {
+        console.error(e);
+        throw new functions.https.HttpsError("internal", e.message);
     }
 });
+
+exports.generateImage = functions.https.onCall(async (data, context) => {
+    if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login required.");
+    const uid = context.auth.uid;
+    const { prompt, provider, modelId, version, aspectRatio = "1:1" } = data;
+
+    if (!prompt) throw new functions.https.HttpsError("invalid-argument", "Prompt required.");
+    const COST = provider === 'openrouter' ? 4 : 1;
+
+    await deductCredits(uid, COST);
+
+    console.log(`Image (${uid}) [${provider}]: ${prompt}`);
+    let imageUrl = null;
+
+    try {
+        if (provider === 'replicate') {
+            // Flux or SDXL
+            const output = await replicate.run(version, {
+                input: { prompt, aspect_ratio: aspectRatio, safety_tolerance: 5 } // Flux params
+            });
+            // Helper for flux result which is often ReadableStream or array
+            imageUrl = Array.isArray(output) ? output[0] : output;
+        } else if (provider === 'openrouter') {
+            // DALL-E 3 via OpenRouter
+            const key = getOpenRouterKey();
+            if (!key) throw new functions.https.HttpsError("failed-precondition", "OpenRouter key missing.");
+
+            const response = await fetch("https://openrouter.ai/api/v1/images/generations", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://sand-gallery.web.app",
+                },
+                body: JSON.stringify({
+                    model: modelId,
+                    prompt: prompt,
+                    n: 1,
+                    size: "1024x1024"
+                })
+            });
+            const json = await response.json();
+            if (json.error) throw new Error(json.error.message);
+            imageUrl = json.data[0].url;
+        }
+
+        await saveCreation(uid, "image", prompt, imageUrl, COST);
+        return { success: true, imageUrl };
+
+    } catch (e) {
+        console.error(e);
+        throw new functions.https.HttpsError("internal", e.message);
+    }
+});
+
+exports.generateText = functions.https.onCall(async (data, context) => {
+    if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login required.");
+    const uid = context.auth.uid;
+    const { prompt, modelId } = data;
+
+    const COST = 1;
+    await deductCredits(uid, COST);
+
+    try {
+        const key = getOpenRouterKey();
+        if (!key) throw new functions.https.HttpsError("failed-precondition", "OpenRouter key missing.");
+
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${key}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://sand-gallery.web.app",
+            },
+            body: JSON.stringify({
+                model: modelId || "openai/gpt-4o",
+                messages: [{ role: "user", content: prompt }]
+            })
+        });
+        const json = await response.json();
+        if (json.error) throw new Error(json.error.message || JSON.stringify(json));
+
+        const text = json.choices[0].message.content;
+        // Note: Maybe don't save every text chat to 'creations' unless user explicitly saves, 
+        // but for now we follow the pattern.
+
+        return { success: true, text };
+    } catch (e) {
+        console.error(e);
+        throw new functions.https.HttpsError("internal", e.message);
+    }
+});
+
+// --- HELPERS ---
+
+async function deductCredits(uid, amount) {
+    await db.runTransaction(async (t) => {
+        const ref = db.collection("users").doc(uid);
+        const doc = await t.get(ref);
+        if (!doc.exists) throw new functions.https.HttpsError("not-found", "User not found.");
+        const current = doc.data().credits || 0;
+        if (current < amount) throw new functions.https.HttpsError("resource-exhausted", `Need ${amount} credits.`);
+        t.update(ref, { credits: current - amount });
+    });
+}
+
+async function saveCreation(uid, type, prompt, url, cost) {
+    await db.collection("creations").add({
+        userId: uid, type, prompt, url, cost,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+}
