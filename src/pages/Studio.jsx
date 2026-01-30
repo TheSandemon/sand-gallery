@@ -116,9 +116,6 @@ const StudioContent = () => {
 
     // --- UI COMPONENTS ---
 
-
-    // ... (inside StudioContent)
-
     const { isMobile, isPortrait } = useDeviceState();
 
     // 1. Top Filter Deck
@@ -145,7 +142,72 @@ const StudioContent = () => {
         </div>
     );
 
-    // ... (renderSettings remains mostly same, maybe width adjustments handled by Layout)
+    // 2. Settings Drawer Content
+    const renderSettings = () => {
+        const modeModels = MODELS[currentMode] || [];
+        return (
+            <div className="p-6 flex flex-col h-full overflow-y-auto">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-white font-black tracking-widest text-lg">SETTINGS</h2>
+                    <button onClick={() => setIsDrawerOpen(false)} className="text-gray-500 hover:text-white text-xl">✕</button>
+                </div>
+
+                {/* Model Selector */}
+                <div className="mb-8">
+                    <label className="text-[10px] font-bold text-neon-green tracking-widest mb-3 block">ACTIVE MODEL</label>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {modeModels.map(m => (
+                            <div
+                                key={m.id}
+                                onClick={() => setSelectedModel(m)}
+                                className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedModel?.id === m.id ? 'border-neon-green bg-neon-green/10' : 'border-gray-800 bg-[#111] hover:border-gray-600'}`}
+                            >
+                                <div className="text-white text-sm font-bold">{m.name}</div>
+                                <div className="text-xs text-gray-500 flex justify-between mt-1">
+                                    <span>{m.provider}</span>
+                                    <span>{m.cost}¢</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Mode Specific Sliders */}
+                {currentMode === 'image' && (
+                    <div className="space-y-6">
+                        <div>
+                            <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block">ASPECT RATIO</label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {['1:1', '16:9', '9:16'].map(r => (
+                                    <button
+                                        key={r}
+                                        onClick={() => updateParams('image', { aspectRatio: r })}
+                                        className={`p-2 border rounded text-xs ${params.image?.aspectRatio === r ? 'border-white text-white' : 'border-gray-800 text-gray-500'}`}
+                                    >
+                                        {r}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {currentMode === 'video' && (
+                    <div className="space-y-6">
+                        <div>
+                            <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block">MOTION BUCKET ({params.video?.motion || 5})</label>
+                            <input
+                                type="range" min="1" max="10"
+                                value={params.video?.motion || 5}
+                                onChange={e => updateParams('video', { motion: parseInt(e.target.value) })}
+                                className="w-full h-1 bg-gray-800 appearance-none rounded-lg accent-neon-green"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     // 3. Command Deck
     const renderBottomDeck = () => {
