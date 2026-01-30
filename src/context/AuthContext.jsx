@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
             await signInWithPopup(auth, provider);
         } catch (error) {
             console.error("Error creating user", error);
+            alert("Sign-In Error: " + error.message);
         }
     };
 
