@@ -97,7 +97,38 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading ? (
+                <div style={{
+                    height: '100vh',
+                    width: '100vw',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#0a0a0a',
+                    color: 'var(--neon-green)',
+                    fontFamily: 'var(--font-main)'
+                }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', letterSpacing: '0.1em' }}>
+                        INITIALIZING <span style={{ color: 'var(--neon-gold)' }}>SAND.GALLERY</span>
+                    </div>
+                    <div style={{ width: '200px', height: '2px', background: 'rgba(0, 143, 78, 0.2)', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{
+                            position: 'absolute',
+                            width: '50%',
+                            height: '100%',
+                            background: 'var(--neon-green)',
+                            animation: 'loading-bar 1.5s infinite ease-in-out'
+                        }} />
+                    </div>
+                    <style>{`
+                        @keyframes loading-bar {
+                            0% { left: -50%; }
+                            100% { left: 100%; }
+                        }
+                    `}</style>
+                </div>
+            ) : children}
         </AuthContext.Provider>
     );
 };
