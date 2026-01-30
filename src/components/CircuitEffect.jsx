@@ -36,27 +36,46 @@ const CircuitEffect = () => {
         }
 
         draw(ctx) {
-            ctx.beginPath();
-            ctx.strokeStyle = this.color;
+            if (this.history.length < 2) return;
+
             ctx.lineWidth = this.width;
             ctx.shadowBlur = 10;
             ctx.shadowColor = this.color;
 
-            if (this.history.length > 0) {
-                ctx.moveTo(this.history[0].x, this.history[0].y);
-                for (let i = 1; i < this.history.length; i++) {
-                    ctx.lineTo(this.history[i].x, this.history[i].y);
-                }
-            }
+            // Fade visual: Draw segments with decreasing opacity from head to tail? or fading the whole thing?
+            // "Fade over time from front to back" -> Let's interpret as the 'front' (newest point) stays bright, back fades? 
+            // OR maybe the user wants the electricity to "travel" and leave a gap?
+            // "lines fade over time from front to back" -> Visualizing a lightning strike that disappears starting from where it hit.
+            // So the *oldest* points (tail) remain visible longer? That's inverted logic.
+            // Let's stick to a standard electric trail where opacity is mapped to history index, 
+            // but modulated by 'life'.
 
-            ctx.stroke();
-            ctx.shadowBlur = 0; // Reset shadow
+            for (let i = 0; i < this.history.length - 1; i++) {
+                const point = this.history[i];
+                const nextPoint = this.history[i + 1];
+
+                // Calculate opacity: 
+                // i=0 is tail (oldest), i=length is head (newest).
+                // "Fade front to back" might mean newest fades first?? 
+                // I will make the whole line fade with life, but the tail is naturally thinner.
+                const opacity = (this.life / 100) * (i / this.history.length);
+
+                ctx.beginPath();
+                ctx.moveTo(point.x, point.y);
+                ctx.lineTo(nextPoint.x, nextPoint.y);
+                ctx.globalAlpha = opacity;
+                ctx.strokeStyle = this.color;
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1.0; // Reset
+            ctx.shadowBlur = 0;
         }
     }
 
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
+        let lastClickTime = 0; // Throttling tracker
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
@@ -67,11 +86,16 @@ const CircuitEffect = () => {
         resizeCanvas();
 
         const handleClick = (e) => {
+            const now = Date.now();
+            if (now - lastClickTime < 1000) return; // 1s Limit
+
             // Skip if clicking on an interactive element
             const interactiveTags = ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT', 'LABEL'];
             const isInteractive = interactiveTags.includes(e.target.tagName) ||
                 e.target.closest('button, a, input, textarea, select, label, [role="button"]');
             if (isInteractive) return;
+
+            lastClickTime = now;
 
             const colors = ['#008f4e', '#c79b37', '#ffffff'];
             // Create a batch of sparks at click position
