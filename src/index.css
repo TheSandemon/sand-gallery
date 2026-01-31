@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --neon-green: #008f4e;
   --neon-gold: #c79b37;

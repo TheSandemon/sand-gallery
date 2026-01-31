@@ -2,33 +2,51 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 const AudioGenerator = () => {
-    const { deductCredits } = useAuth();
+    // Note: deducted on server side now! 
+    const { user } = useAuth();
     const [prompt, setPrompt] = useState('');
     const [duration, setDuration] = useState(5);
     const [isGenerating, setIsGenerating] = useState(false);
     const [status, setStatus] = useState('');
+    const [audioUrl, setAudioUrl] = useState(null);
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
+        if ((user.credits || 0) < 2) {
+            alert("Not enough credits (2 required).");
+            return;
+        }
 
-        const cost = 2; // Cost per generation
+        setIsGenerating(true);
+        setAudioUrl(null);
+        setStatus('Initializing AudioLDM...');
 
-        if (await deductCredits(cost)) {
-            setIsGenerating(true);
-            setStatus('Initializing AudioLDM...');
+        try {
+            // Dynamically import to avoid import errors if firebase isn't fully set up
+            const { httpsCallable } = await import('firebase/functions');
+            const { functions } = await import('../../firebase');
 
-            // Mock Generation Process
-            setTimeout(() => {
-                setStatus('Diffusing audio waveforms...');
-                setTimeout(() => {
-                    setStatus('Finalizing output...');
-                    setTimeout(() => {
-                        setIsGenerating(false);
-                        setStatus('Audio Generated! (Mock Success)');
-                        // Future: Handle actual audio file result here
-                    }, 1500);
-                }, 1500);
-            }, 1000);
+            const generateAudio = httpsCallable(functions, 'generateAudio');
+
+            setStatus('Sending to Neural Cloud...');
+
+            const result = await generateAudio({
+                prompt: prompt,
+                duration: parseInt(duration)
+            });
+
+            if (result.data.success) {
+                setStatus('Audio Generated!');
+                setAudioUrl(result.data.audioUrl);
+            } else {
+                throw new Error("Generation failed");
+            }
+        } catch (error) {
+            console.error("Generation error:", error);
+            setStatus('Error: ' + error.message);
+            // alert("Failed to generate: " + error.message);
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -42,7 +60,7 @@ const AudioGenerator = () => {
             flexDirection: 'column',
             gap: '16px'
         }}>
-            <h2 style={{ margin: 0, color: 'var(--neon-gold)' }}>Audio Synthesis</h2>
+            <h2 style={{ margin: 0, color: 'var(--neon-gold)' }}>Audio Synthesis (Beta)</h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Prompt</label>
@@ -89,6 +107,13 @@ const AudioGenerator = () => {
             >
                 {isGenerating ? status : `Generate (2 Credits)`}
             </button>
+
+            {audioUrl && (
+                <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,255,0,0.1)', borderRadius: '8px' }}>
+                    <p style={{ margin: '0 0 0.5rem 0', color: 'var(--neon-green)', fontSize: '0.9rem' }}>Result:</p>
+                    <audio controls src={audioUrl} style={{ width: '100%' }} />
+                </div>
+            )}
         </div>
     );
 };
