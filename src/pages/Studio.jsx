@@ -137,33 +137,53 @@ const StudioContent = () => {
     const { isMobile, isPortrait } = useDeviceState();
 
     // 1. Top Filter Deck
-    const renderTopBar = () => (
-        <div className="flex items-center gap-4">
-            {/* History Label */}
-            <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">HISTORY</span>
+    const renderTopBar = () => {
+        if (isMobile) {
+            return (
+                <div className="w-full overflow-x-auto no-scrollbar py-2 px-1">
+                    <div className="flex items-center gap-3 w-max mx-auto">
+                        {['all', 'image', 'video', 'voice', 'music', 'sfx'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab === 'sfx' ? 'sound_effects' : tab)}
+                                className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all border
+                                    ${activeTab === (tab === 'sfx' ? 'sound_effects' : tab)
+                                        ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                        : 'bg-black/40 text-gray-500 border-white/10 backdrop-blur-md hover:text-white hover:border-white/20 hover:bg-white/5'}
+                                `}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
 
-            <div className={`flex items-center gap-2 p-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl transition-all duration-300 ${isMobile ? 'scale-90 origin-top' : ''}`}>
-                {['all', 'image', 'video', 'voice', 'music', 'sfx'].map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab === 'sfx' ? 'sound_effects' : tab)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all
-                            ${activeTab === (tab === 'sfx' ? 'sound_effects' : tab) ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}
-                        `}
-                    >
-                        {tab}
-                    </button>
-                ))}
-                {!isMobile && <div className="h-4 w-px bg-white/20 mx-2" />}
-                {!isMobile && (
-                    <>
-                        <button className="p-2 text-gray-400 hover:text-white"><Search size={14} /></button>
-                        <button className="p-2 text-gray-400 hover:text-white"><Grid size={14} /></button>
-                    </>
-                )}
+        return (
+            <div className="flex items-center gap-4">
+                {/* History Label */}
+                <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">HISTORY</span>
+
+                <div className="flex items-center gap-2 p-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl transition-all duration-300">
+                    {['all', 'image', 'video', 'voice', 'music', 'sfx'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab === 'sfx' ? 'sound_effects' : tab)}
+                            className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all
+                                ${activeTab === (tab === 'sfx' ? 'sound_effects' : tab) ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+                            `}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                    <div className="h-4 w-px bg-white/20 mx-2" />
+                    <button className="p-2 text-gray-400 hover:text-white"><Search size={14} /></button>
+                    <button className="p-2 text-gray-400 hover:text-white"><Grid size={14} /></button>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // 2. Settings Drawer Content
     const renderSettings = () => {
@@ -252,39 +272,166 @@ const StudioContent = () => {
                         currentMode === 'music' ? "Describe a song..." :
                             currentMode === 'sound_effects' ? "Describe a sound..." : "Create something...";
 
+        const MODES = [
+            { id: 'image', icon: Sparkles, label: 'Image', color: 'text-amber-400' },
+            { id: 'video', icon: Film, label: 'Video', color: 'text-red-400' },
+            { id: 'voice', icon: Mic, label: 'Voice', color: 'text-purple-400' },
+            { id: 'music', icon: Music, label: 'Music', color: 'text-blue-400' },
+            { id: 'sound_effects', icon: Volume2, label: 'SFX', color: 'text-orange-400' }
+        ];
+
+        // --- MOBILE LAYOUTS ---
+        if (isMobile) {
+            // landscape mobile (compact bottom bar)
+            if (!isPortrait) {
+                return (
+                    <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10 p-2 flex gap-2 items-center z-50">
+                        {/* Compact Mode Switcher */}
+                        <div className="flex bg-white/5 rounded-lg p-1">
+                            {MODES.map(m => (
+                                <button
+                                    key={m.id}
+                                    onClick={() => setCurrentMode(m.id)}
+                                    className={`p-2 rounded-md ${currentMode === m.id ? 'bg-white/20 text-white' : 'text-gray-500'}`}
+                                >
+                                    <m.icon size={16} />
+                                </button>
+                            ))}
+                        </div>
+
+                        <input
+                            type="text"
+                            value={params[currentMode]?.prompt || ''}
+                            onChange={e => updateParams(currentMode, { prompt: e.target.value })}
+                            placeholder={placeholder}
+                            className="flex-1 bg-transparent text-white border-b border-white/10 focus:border-neon-green outline-none px-2 py-1 text-sm transition-colors"
+                        />
+
+                        <button
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !selectedModel}
+                            className={`h-9 px-4 rounded-lg font-bold text-xs flex items-center gap-2 whitespace-nowrap
+                                ${isGenerating || !selectedModel ? 'bg-gray-800 text-gray-500' : 'bg-white text-black'}
+                             `}
+                        >
+                            {isGenerating ? <Zap size={14} className="animate-pulse" /> : "CREATE"}
+                        </button>
+                    </div>
+                );
+            }
+
+            // PORTRAIT MOBILE (Expanded Bottom Sheet)
+            return (
+                <div className="w-full bg-[#050505] border-t border-white/10 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] pb-safe pt-2 flex flex-col gap-4 relative isolate z-50">
+                    {/* Visual Handle */}<div className="w-12 h-1 bg-white/10 rounded-full mx-auto" />
+
+                    {/* Mode Scroll */}
+                    <div className="px-4">
+                        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 mask-gradient-sides">
+                            {MODES.map(m => (
+                                <button
+                                    key={m.id}
+                                    onClick={() => setCurrentMode(m.id)}
+                                    className={`flex flex-col items-center gap-2 min-w-[64px] transition-all duration-300
+                                        ${currentMode === m.id ? 'opacity-100 scale-105' : 'opacity-40 grayscale scale-95'}
+                                    `}
+                                >
+                                    <div className={`p-4 rounded-2xl shadow-lg border border-white/5 relative overflow-hidden group
+                                        ${currentMode === m.id ? 'bg-[#1a1a1a]' : 'bg-[#0a0a0a]'}
+                                    `}>
+                                        <div className={`absolute inset-0 opacity-20 bg-gradient-to-br from-transparent to-white/10`} />
+                                        <m.icon size={24} className={m.color} />
+                                    </div>
+                                    <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">{m.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Input Area */}
+                    <div className="px-4">
+                        <div className="bg-[#111] rounded-2xl border border-white/10 p-4 focus-within:border-white/30 focus-within:bg-[#161616] transition-all relative">
+                            {/* Video Frame Dropzones (Mini) */}
+                            {currentMode === 'video' && (
+                                <div className="flex gap-2 mb-2 overflow-x-auto">
+                                    {['Start', 'End'].map((label, i) => (
+                                        <div key={i} className="min-w-[60px] h-10 rounded border border-dashed border-white/10 flex items-center justify-center bg-black/20">
+                                            <span className="text-[8px] text-gray-500">{label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <textarea
+                                value={params[currentMode]?.prompt || ''}
+                                onChange={e => updateParams(currentMode, { prompt: e.target.value })}
+                                placeholder={placeholder}
+                                className="w-full bg-transparent text-white text-base outline-none resize-none h-20 placeholder-gray-600 leading-normal"
+                            />
+
+                            {status && (
+                                <div className="absolute right-2 bottom-2 text-[10px] font-mono text-neon-green bg-black/50 px-2 py-1 rounded">
+                                    {status}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Action Bar */}
+                    <div className="px-4 pb-4 flex gap-3 h-14">
+                        <button
+                            onClick={() => setIsDrawerOpen(true)}
+                            className={`flex-1 bg-[#111] rounded-xl border border-white/10 px-4 flex flex-col justify-center transition-all active:scale-95
+                                ${!selectedModel ? 'border-red-500/30 bg-red-500/5' : ''}
+                            `}
+                        >
+                            <span className="text-[9px] text-gray-500 font-bold tracking-widest uppercase mb-0.5">Model</span>
+                            <div className="flex items-center justify-between w-full">
+                                <span className="text-xs font-bold text-white truncate max-w-[100px]">{selectedModel?.name || 'Select'}</span>
+                                <Settings size={14} className="text-gray-600" />
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !selectedModel}
+                            className={`flex-[2] rounded-xl font-black text-sm tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95
+                                ${isGenerating || !selectedModel
+                                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                    : 'bg-white text-black hover:bg-gray-200'}
+                            `}
+                        >
+                            {isGenerating ? <Zap size={18} className="animate-pulse" /> : "CREATE"}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- DESKTOP LAYOUT ---
         return (
             <div className={`pointer-events-auto bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 flex gap-3 shadow-2xl transition-shadow duration-500 w-full
                 ${isGenerating ? 'shadow-[#00ff9d]/20 border-[#00ff9d]/30' : ''}
-                ${isMobile ? 'flex-col' : 'h-[160px] flex-row items-stretch'}
+                h-[160px] flex-row items-stretch
             `}>
 
-                {/* Zone A: Mode Switcher (Left Column) */}
-                <div className={`flex flex-col gap-1 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'h-14 flex-row w-full justify-between' : 'w-32 h-full justify-center'}`}>
-                    {[
-                        { id: 'image', icon: Sparkles, label: 'Image', color: 'text-amber-400' },
-                        { id: 'video', icon: Film, label: 'Video', color: 'text-red-400' },
-                        { id: 'voice', icon: Mic, label: 'Voice', color: 'text-purple-400' },
-                        { id: 'music', icon: Music, label: 'Music', color: 'text-blue-400' },
-                        { id: 'sound_effects', icon: Volume2, label: 'SFX', color: 'text-orange-400' }
-                    ].map(m => (
+                {/* Zone A: Mode Switcher (Legacy Desktop) */}
+                <div className="w-32 h-full justify-center flex flex-col gap-1 p-1 bg-black/50 rounded-xl border border-white/5">
+                    {MODES.map(m => (
                         <button
                             key={m.id}
                             onClick={() => setCurrentMode(m.id)}
-                            className={`rounded-lg transition-all flex items-center flex-1
-                                ${isMobile
-                                    ? 'flex-col justify-center gap-0.5'
-                                    : 'flex-row justify-start gap-3 px-3 w-full'
-                                }
+                            className={`rounded-lg transition-all flex items-center flex-1 flex-row justify-start gap-3 px-3 w-full
                                 ${currentMode === m.id ? 'bg-white/10 ' + m.color : 'text-gray-600 hover:text-gray-400'}
                             `}
                         >
-                            <m.icon size={isMobile ? 16 : 18} />
-                            <span className={`font-bold tracking-wide ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>{m.label}</span>
+                            <m.icon size={18} />
+                            <span className="font-bold tracking-wide text-[10px]">{m.label}</span>
                         </button>
                     ))}
                 </div>
 
-                {/* Zone B: Input + Actions (Combined - Anchored Together) */}
+                {/* Zone B: Input + Actions */}
                 <div className="flex-1 flex flex-col gap-2">
                     {/* Top Row: Input Area */}
                     <div className="flex-1 bg-black/40 rounded-xl border border-white/5 relative flex flex-col overflow-hidden">
@@ -317,7 +464,7 @@ const StudioContent = () => {
                         )}
                     </div>
 
-                    {/* Bottom Row: Model Selector + CREATE Button (Anchored to Chat) */}
+                    {/* Bottom Row: Model Selector + CREATE Button */}
                     <div className="flex gap-2 h-14">
                         {/* Model Selector */}
                         <div
