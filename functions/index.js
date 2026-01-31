@@ -205,13 +205,20 @@ exports.generateImage = onCall({
 
             // Gemini returns base64 images in inlineData
             const candidates = json.candidates || [];
-            const parts = candidates[0]?.content?.parts || [];
-            const imagePart = parts.find(p => p.inlineData);
+            const firstPart = candidates[0]?.content?.parts?.[0];
+            const imagePart = candidates[0]?.content?.parts?.find(p => p.inlineData);
 
             if (imagePart && imagePart.inlineData) {
                 imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
             } else {
-                throw new Error("No image generated. The model might have refused the prompt.");
+                // Debugging: Log what *did* come back
+                console.error("Gemini Image Gen Failed. Response:", JSON.stringify(json, null, 2));
+
+                let msg = "No image generated.";
+                if (firstPart?.text) msg += ` Model said: "${firstPart.text.substring(0, 100)}..."`;
+                if (json.promptFeedback) msg += ` Feedback: ${JSON.stringify(json.promptFeedback)}`;
+
+                throw new Error(msg);
             }
         }
 
