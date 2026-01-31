@@ -23,9 +23,11 @@ const db = admin.firestore();
 // Or use .env file with firebase functions:config:export
 
 const googleApiKey = defineSecret("GOOGLE_API_KEY");
+const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
+const openRouterApiKey = defineSecret("OPENROUTER_API_KEY");
 
-const getReplicateKey = () => process.env.REPLICATE_API_TOKEN;
-const getOpenRouterKey = () => process.env.OPENROUTER_API_KEY;
+const getReplicateKey = () => replicateApiToken.value();
+const getOpenRouterKey = () => openRouterApiKey.value();
 const getGoogleKey = () => googleApiKey.value();
 
 // Lazy load Replicate to avoid global scope issues
@@ -40,7 +42,9 @@ const getReplicate = () => {
 };
 
 // --- UTILS ---
-exports.getServiceStatus = onCall((request) => {
+exports.getServiceStatus = onCall({
+    secrets: [replicateApiToken, openRouterApiKey, googleApiKey]
+}, (request) => {
     return {
         replicate: !!getReplicateKey(),
         openrouter: !!getOpenRouterKey(),
@@ -52,7 +56,8 @@ exports.getServiceStatus = onCall((request) => {
 
 exports.generateAudio = onCall({
     timeoutSeconds: 300,
-    memory: "1GiB"
+    memory: "1GiB",
+    secrets: [replicateApiToken]
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
@@ -84,7 +89,8 @@ exports.generateAudio = onCall({
 
 exports.generateVideo = onCall({
     timeoutSeconds: 300,
-    memory: "2GiB" // Increased for video
+    memory: "2GiB", // Increased for video
+    secrets: [replicateApiToken]
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
@@ -117,7 +123,7 @@ exports.generateVideo = onCall({
 exports.generateImage = onCall({
     timeoutSeconds: 60,
     memory: "1GiB",
-    secrets: [googleApiKey]
+    secrets: [googleApiKey, replicateApiToken, openRouterApiKey]
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
@@ -236,7 +242,8 @@ exports.generateImage = onCall({
 });
 
 exports.generateText = onCall({
-    timeoutSeconds: 60
+    timeoutSeconds: 60,
+    secrets: [openRouterApiKey]
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;

@@ -6,13 +6,13 @@ import { getFunctions } from "firebase/functions";
 // TODO: Replace with your actual Firebase project configuration
 // You can find this in the Firebase Console under Project Settings > General > Your Apps
 const firebaseConfig = {
-    apiKey: "AIzaSyCwz1TaDlxamSbKDraSfmMotFBoLWZ08Wc",
-    authDomain: "sand-gallery-lab.firebaseapp.com",
-    projectId: "sand-gallery-lab",
-    storageBucket: "sand-gallery-lab.appspot.com",
-    messagingSenderId: "994096883540",
-    appId: "1:994096883540:web:90c2fdf989b12e07dacac1",
-    measurementId: "G-7TNLB1RS80"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
