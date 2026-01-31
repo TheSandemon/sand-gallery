@@ -278,7 +278,12 @@ async function deductCredits(uid, amount) {
         const ref = db.collection("users").doc(uid);
         const doc = await t.get(ref);
         if (!doc.exists) throw new HttpsError("not-found", "User not found.");
-        const current = doc.data().credits || 0;
+
+        const data = doc.data();
+        // Admins have unlimited resources
+        if (data.role === 'admin' || data.isAdmin === true) return;
+
+        const current = data.credits || 0;
         if (current < amount) throw new HttpsError("resource-exhausted", `Need ${amount} credits.`);
         t.update(ref, { credits: current - amount });
     });
