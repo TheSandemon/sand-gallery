@@ -18,21 +18,31 @@ const db = admin.firestore();
 // To minimize friction, we will just use `process.env` or `functions.config()` if it still works.
 // Actually, `functions.config()` is available in V2 via `require("firebase-functions").config()`.
 
-const functions = require("firebase-functions");
+// V2 uses process.env instead of functions.config()
+// Set these via: firebase functions:secrets:set REPLICATE_API_TOKEN
+// Or use .env file with firebase functions:config:export
 
-// Initialize Replicate (REMOVED: Lazy loaded now)
-// const replicate = new Replicate({
-//     auth: functions.config().replicate?.key || "MOCK_KEY",
-// });
+const getReplicateKey = () => process.env.REPLICATE_API_TOKEN;
+const getOpenRouterKey = () => process.env.OPENROUTER_API_KEY;
+const getGoogleKey = () => process.env.GOOGLE_API_KEY;
 
-const getOpenRouterKey = () => functions.config().openrouter?.key;
-const getGoogleKey = () => functions.config().google?.key || process.env.GOOGLE_API_KEY;
+// Lazy load Replicate to avoid global scope issues
+let replicateInstance = null;
+const getReplicate = () => {
+    if (!replicateInstance) {
+        const key = getReplicateKey();
+        if (!key) throw new Error("REPLICATE_API_TOKEN not set");
+        replicateInstance = new Replicate({ auth: key });
+    }
+    return replicateInstance;
+};
 
 // --- UTILS ---
 exports.getServiceStatus = onCall((request) => {
     return {
-        replicate: !!functions.config().replicate?.key,
-        openrouter: !!functions.config().openrouter?.key
+        replicate: !!getReplicateKey(),
+        openrouter: !!getOpenRouterKey(),
+        google: !!getGoogleKey()
     };
 });
 
