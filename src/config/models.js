@@ -6,8 +6,8 @@ export const MODELS = {
         { id: 'starcoder-2', name: 'StarCoder 2', provider: 'openrouter', modelId: 'bigcode/starcoder2', available: false, cost: 1, tags: ['completion', 'niche-langs'] }
     ],
     image: [
-        { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro Preview', provider: 'google', available: true, cost: 2, tags: ['next-gen', 'visionary'] },
-        { id: 'nano-banana', name: 'Nano Banana (Gemini 2.5 Flash)', provider: 'google', available: true, cost: 1, tags: ['consistency', 'fast'] },
+        { id: 'imagen-3', name: 'Imagen 3', provider: 'google', available: true, cost: 2, tags: ['high-quality', 'photorealistic'] },
+        { id: 'imagen-3-fast', name: 'Imagen 3 Fast', provider: 'google', available: true, cost: 1, tags: ['speed', 'efficiency'] },
         { id: 'midjourney-v7', name: 'Midjourney v7', provider: 'replicate', version: 'midjourney/v7-turbo', available: false, cost: 2, tags: ['art', 'vibes'] },
         { id: 'flux-pro', name: 'Flux Pro / Dev', provider: 'replicate', version: 'black-forest-labs/flux-pro', available: true, cost: 1, tags: ['realistic', 'text'] },
         { id: 'reve', name: 'Reve', provider: 'replicate', version: 'reve/visual-adherence', available: false, cost: 1, tags: ['prompt-adherence'] },

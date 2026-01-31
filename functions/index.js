@@ -169,9 +169,7 @@ exports.generateImage = onCall({
             if (!googleKey) throw new HttpsError("failed-precondition", "Google API key missing.");
 
             // Map frontend IDs to actual Google API model names
-            // 'nano-banana' -> Imagen 3 Fast
-            // 'gemini-3-pro-preview' -> Imagen 3 Standard
-            const modelName = modelId === 'nano-banana' ? 'imagen-3.0-fast-generate-001' : 'imagen-3.0-generate-001';
+            const modelName = modelId === 'imagen-3-fast' ? 'imagen-3.0-fast-generate-001' : 'imagen-3.0-generate-001';
 
             // Note: Imagen 3 on standard REST API often uses :predict or :generateImages, 
             // but for the unified 'generateContent' on generativelanguage.googleapis.com, 
