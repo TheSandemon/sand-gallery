@@ -3,7 +3,7 @@ import { useStudio } from '../context/StudioContext';
 import { useAuth } from '../context/AuthContext';
 import { useDeviceState } from '../hooks/useDeviceState';
 
-const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOpen }) => {
+const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOpen, onCloseDrawer }) => {
     const { isMobile, isPortrait } = useDeviceState();
 
     return (
@@ -46,9 +46,12 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
                 {settingsDrawer}
             </div>
 
-            {/* 4. Drawer Overlay */}
+            {/* 4. Drawer Overlay - CLICKS TO CLOSE */}
             {isDrawerOpen && (
-                <div className="absolute inset-0 bg-black/50 z-30 pointer-events-none backdrop-blur-sm" />
+                <div
+                    className="absolute inset-0 bg-black/50 z-30 backdrop-blur-sm cursor-pointer"
+                    onClick={onCloseDrawer}
+                />
             )}
         </div>
     );

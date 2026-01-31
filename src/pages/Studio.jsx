@@ -28,15 +28,14 @@ const StudioContent = () => {
     const [resultData, setResultData] = useState(null);
     const [history, setHistory] = useState([]);
 
-    // Auto-select model logic
+    // Auto-select model logic - NOW SENSITIVE TO MODE CHANGE
     useEffect(() => {
-        import('../config/models').then(({ MODELS }) => {
-            const modeModels = MODELS[currentMode] || [];
-            if (modeModels.length > 0 && !selectedModel) {
-                setSelectedModel(modeModels[0]);
-            }
-        });
-    }, [currentMode, serviceStatus]);
+        const modeModels = MODELS[currentMode] || [];
+        if (modeModels.length > 0) {
+            // Always select first model for the new mode
+            setSelectedModel(modeModels[0]);
+        }
+    }, [currentMode]);
 
     // History Subscription
     useEffect(() => {
@@ -120,25 +119,30 @@ const StudioContent = () => {
 
     // 1. Top Filter Deck
     const renderTopBar = () => (
-        <div className={`flex items-center gap-2 p-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl transition-all duration-300 ${isMobile ? 'scale-90 origin-top' : ''}`}>
-            {['all', 'image', 'video', 'audio'].map(tab => (
-                <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all
-                        ${activeTab === tab ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}
-                    `}
-                >
-                    {tab}
-                </button>
-            ))}
-            {!isMobile && <div className="h-4 w-px bg-white/20 mx-2" />}
-            {!isMobile && (
-                <>
-                    <button className="p-2 text-gray-400 hover:text-white"><Search size={14} /></button>
-                    <button className="p-2 text-gray-400 hover:text-white"><Grid size={14} /></button>
-                </>
-            )}
+        <div className="flex items-center gap-4">
+            {/* History Label */}
+            <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">HISTORY</span>
+
+            <div className={`flex items-center gap-2 p-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl transition-all duration-300 ${isMobile ? 'scale-90 origin-top' : ''}`}>
+                {['all', 'image', 'video', 'audio'].map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all
+                            ${activeTab === tab ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+                        `}
+                    >
+                        {tab}
+                    </button>
+                ))}
+                {!isMobile && <div className="h-4 w-px bg-white/20 mx-2" />}
+                {!isMobile && (
+                    <>
+                        <button className="p-2 text-gray-400 hover:text-white"><Search size={14} /></button>
+                        <button className="p-2 text-gray-400 hover:text-white"><Grid size={14} /></button>
+                    </>
+                )}
+            </div>
         </div>
     );
 
@@ -149,7 +153,7 @@ const StudioContent = () => {
             <div className="p-6 flex flex-col h-full overflow-y-auto">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-white font-black tracking-widest text-lg">SETTINGS</h2>
-                    <button onClick={() => setIsDrawerOpen(false)} className="text-gray-500 hover:text-white text-xl">✕</button>
+                    <button onClick={() => setIsDrawerOpen(false)} className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 text-lg transition-colors">✕</button>
                 </div>
 
                 {/* Model Selector */}
@@ -219,11 +223,11 @@ const StudioContent = () => {
         return (
             <div className={`pointer-events-auto bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 flex gap-3 shadow-2xl transition-shadow duration-500 w-full
                 ${isGenerating ? 'shadow-[#00ff9d]/20 border-[#00ff9d]/30' : ''}
-                ${isMobile ? 'flex-col min-h-[250px]' : 'h-[200px] flex-row items-stretch'}
+                ${isMobile ? 'flex-col' : 'h-[160px] flex-row items-stretch'}
             `}>
 
                 {/* Zone A: Mode Switcher (Left Column) */}
-                <div className={`flex flex-col gap-2 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'h-16 flex-row w-full justify-between' : 'w-16 h-full justify-center'}`}>
+                <div className={`flex flex-col gap-1 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'h-14 flex-row w-full justify-between' : 'w-14 h-full justify-center'}`}>
                     {[
                         { id: 'image', icon: Sparkles, color: 'text-amber-400' },
                         { id: 'video', icon: Film, color: 'text-red-400' },
@@ -237,113 +241,71 @@ const StudioContent = () => {
                                 ${currentMode === m.id ? 'bg-white/10 ' + m.color : 'text-gray-600 hover:text-gray-400'}
                             `}
                         >
-                            <m.icon size={isMobile ? 20 : 24} />
+                            <m.icon size={isMobile ? 18 : 20} />
                         </button>
                     ))}
                 </div>
 
-                {/* Zone B: Input Field (Center - Red Box Area) */}
-                <div className="flex-1 bg-black/40 rounded-xl border border-white/5 relative flex flex-col overflow-hidden group">
-
-                    {/* Blue Box: Video Start/End Frames (Top Right Overlay) */}
-                    {currentMode === 'video' && (
-                        <div className="absolute top-2 right-2 flex gap-2 z-10">
-                            {['Start Frame', 'End Frame'].map((label, i) => (
-                                <div key={i} className="w-24 h-16 rounded-lg border border-dashed border-white/20 bg-black/50 flex flex-col items-center justify-center cursor-pointer hover:border-white/40 hover:bg-white/5 transition-all">
-                                    <div className="text-white/20 mb-1"><Film size={12} /></div>
-                                    <span className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">{label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <textarea
-                        value={params[currentMode]?.prompt || ''}
-                        onChange={e => updateParams(currentMode, { prompt: e.target.value })}
-                        placeholder={placeholder}
-                        className="w-full h-full bg-transparent text-white p-6 text-lg outline-none resize-none font-medium placeholder-gray-700 leading-relaxed custom-scrollbar"
-                    />
-
-                    <div className="absolute bottom-2 left-4 px-2 py-1 bg-white/5 rounded text-[10px] text-gray-500 pointer-events-none">
-                        PROMPT
+                {/* Zone B: Input + Actions (Combined - Anchored Together) */}
+                <div className="flex-1 flex flex-col gap-2">
+                    {/* Top Row: Input Area */}
+                    <div className="flex-1 bg-black/40 rounded-xl border border-white/5 relative flex flex-col overflow-hidden">
+                        {/* Video Frame Dropzones */}
+                        {currentMode === 'video' && (
+                            <div className="absolute top-2 right-2 flex gap-2 z-10">
+                                {['Start', 'End'].map((label, i) => (
+                                    <div key={i} className="w-20 h-14 rounded-lg border border-dashed border-white/20 bg-black/50 flex flex-col items-center justify-center cursor-pointer hover:border-white/40 hover:bg-white/5 transition-all">
+                                        <Film size={10} className="text-white/20 mb-0.5" />
+                                        <span className="text-[8px] font-mono text-gray-500 uppercase">{label} Frame</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <textarea
+                            value={params[currentMode]?.prompt || ''}
+                            onChange={e => updateParams(currentMode, { prompt: e.target.value })}
+                            placeholder={placeholder}
+                            className="w-full h-full bg-transparent text-white p-4 text-base outline-none resize-none font-medium placeholder-gray-700 leading-relaxed custom-scrollbar"
+                        />
                     </div>
-                </div>
 
-                {/* Zone C: Control Stack (Right Column - Green Box Area) */}
-                <div className={`flex flex-col gap-2 ${isMobile ? 'w-full h-auto' : 'w-[240px] h-full'}`}>
-
-                    {/* Top: Model & Params Settings */}
-                    <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-3 flex flex-col gap-3">
-                        {/* 1. Model Selector */}
+                    {/* Bottom Row: Model Selector + CREATE Button (Anchored to Chat) */}
+                    <div className="flex gap-2 h-14">
+                        {/* Model Selector */}
                         <div
                             onClick={() => setIsDrawerOpen(true)}
-                            className="flex-1 bg-[#111] rounded-lg border border-white/10 p-3 cursor-pointer hover:border-neon-green/50 transition-all flex flex-col justify-center relative group"
+                            className="flex-1 bg-black/40 rounded-xl border border-white/5 px-4 flex items-center justify-between cursor-pointer hover:border-neon-green/30 transition-all group"
                         >
-                            <div className="flex justify-between items-start mb-1">
-                                <span className="text-[9px] font-bold text-gray-500 tracking-widest uppercase">MODEL</span>
-                                <Settings size={12} className="text-gray-600 group-hover:text-white transition-colors" />
+                            <div className="flex items-center gap-3">
+                                <span className="text-[9px] font-bold text-gray-600 tracking-widest uppercase">MODEL</span>
+                                <span className="text-sm font-bold text-white truncate">{selectedModel?.name || 'Select'}</span>
+                                <span className="text-[10px] text-neon-green">{selectedModel?.provider}</span>
                             </div>
-                            <div className="text-sm font-bold text-white truncate">{selectedModel?.name || 'Select Model'}</div>
-                            <div className="text-[10px] text-neon-green mt-1">{selectedModel?.provider || 'AI'}</div>
+                            <Settings size={14} className="text-gray-600 group-hover:text-white transition-colors" />
                         </div>
 
-                        {/* 2. Key Params (Context Sensitive) */}
-                        <div className="flex gap-2 h-12">
-                            {currentMode === 'image' && (
+                        {/* CREATE Button */}
+                        <button
+                            onClick={handleGenerate}
+                            disabled={isGenerating}
+                            className={`w-40 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95
+                                ${isGenerating ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(0,255,100,0.3)]'}
+                            `}
+                        >
+                            {isGenerating ? (
                                 <>
-                                    <button
-                                        className="flex-1 bg-[#111] rounded-lg border border-white/10 flex items-center justify-center text-xs font-mono text-gray-400 hover:text-white hover:border-white/30"
-                                        onClick={() => updateParams('image', { aspectRatio: '16:9' })}
-                                    >
-                                        16:9
-                                    </button>
-                                    <button
-                                        className="flex-1 bg-[#111] rounded-lg border border-white/10 flex items-center justify-center text-xs font-mono text-gray-400 hover:text-white hover:border-white/30"
-                                        onClick={() => updateParams('image', { aspectRatio: '1:1' })}
-                                    >
-                                        1:1
-                                    </button>
+                                    <Zap size={16} className="animate-pulse" />
+                                    <span className="text-xs tracking-widest">THINKING</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ArrowUp size={18} strokeWidth={3} />
+                                    <span className="text-sm font-black tracking-wide">CREATE</span>
+                                    <span className="text-[9px] opacity-60">{selectedModel?.cost || 1}¢</span>
                                 </>
                             )}
-                            {currentMode === 'video' && (
-                                <div className="flex-1 bg-[#111] rounded-lg border border-white/10 flex items-center justify-center px-4">
-                                    <span className="text-[10px] text-gray-500 mr-2">SEC</span>
-                                    <span className="text-white font-mono text-xs">5s</span>
-                                </div>
-                            )}
-                            {currentMode === 'text' && (
-                                <div className="flex-1 flex items-center justify-center text-[10px] text-gray-600">
-                                    DEFAULT PARAMS
-                                </div>
-                            )}
-                        </div>
+                        </button>
                     </div>
-
-                    {/* Bottom: Generate Button */}
-                    <button
-                        onClick={handleGenerate}
-                        disabled={isGenerating}
-                        className={`h-[70px] rounded-xl font-bold flex flex-col items-center justify-center transition-all active:scale-95
-                            ${isGenerating ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(0,255,100,0.3)]'}
-                        `}
-                    >
-                        {isGenerating ? (
-                            <div className="flex items-center gap-2">
-                                <Zap size={16} className="animate-pulse" />
-                                <span className="text-xs tracking-widest">THINKING</span>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="flex items-center gap-2">
-                                    <ArrowUp size={20} strokeWidth={3} />
-                                    <span className="text-base font-black tracking-wider">CREATE</span>
-                                </div>
-                                <span className="text-[9px] uppercase font-bold tracking-widest mt-0.5 opacity-60">
-                                    {selectedModel?.cost || 1} CREDITS
-                                </span>
-                            </>
-                        )}
-                    </button>
                 </div>
             </div>
         );
@@ -398,6 +360,7 @@ const StudioContent = () => {
             bottomDeck={renderBottomDeck()}
             settingsDrawer={renderSettings()}
             isDrawerOpen={isDrawerOpen}
+            onCloseDrawer={() => setIsDrawerOpen(false)}
         >
             {renderHistory()}
         </StudioLayout>
@@ -405,4 +368,4 @@ const StudioContent = () => {
 };
 
 export default StudioPage;
- 
+
