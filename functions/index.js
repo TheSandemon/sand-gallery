@@ -185,15 +185,15 @@ exports.generateImage = onCall({
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    system_instruction: {
+                        parts: [{ text: "You are an expert image generator. You generate images based on the user's prompt. Do not offer prompt variations. Do not be conversational. Return only the generated image." }]
+                    },
                     contents: [{
                         parts: [
-                            { text: prompt }
+                            { text: "Generate an image of: " + prompt }
                         ]
                     }],
-                    // Requesting image generation
-                    // Note: Gemini 3 (Thinking models) usually require TEXT output capability 
-                    // to express their chain of thought or preamble before the image.
-                    // Restricting to ["IMAGE"] alone causes NO_IMAGE finish reason if it tries to speak.
+                    // Requesting image generation - TEXT included to prevent NO_IMAGE errors but strictly guided by system prompt
                     generationConfig: {
                         responseModalities: ["TEXT", "IMAGE"]
                     }
@@ -208,16 +208,19 @@ exports.generateImage = onCall({
 
             // Gemini returns base64 images in inlineData
             const candidates = json.candidates || [];
-            const firstPart = candidates[0]?.content?.parts?.[0];
-            const imagePart = candidates[0]?.content?.parts?.find(p => p.inlineData);
+            // We search ALL parts for the image, as text might come first (Thinking model)
+            const parts = candidates[0]?.content?.parts || [];
+            const imagePart = parts.find(p => p.inlineData);
 
             if (imagePart && imagePart.inlineData) {
                 imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
             } else {
-                // Debugging: Log what *did* come back
-                console.error("Gemini Image Gen Failed. Response:", JSON.stringify(json, null, 2));
+                // Debug: If we got text but no image, log it.
+                const textPart = parts.find(p => p.text);
+                let msg = "No image found.";
+                if (textPart) msg += " Model text: " + textPart.text.substring(0, 200);
+                else msg += " Debug: " + JSON.stringify(json).substring(0, 300);
 
-                let msg = "DEBUG LOG: " + JSON.stringify(json).substring(0, 400); // Send raw JSON to UI
                 throw new Error(msg);
             }
         }
