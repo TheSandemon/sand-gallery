@@ -76,7 +76,13 @@ const StudioContent = () => {
             const { functions } = await import('../firebase');
 
             // Map modes to functions
-            const map = { audio: 'generateAudio', video: 'generateVideo', image: 'generateImage', text: 'generateText' };
+            const map = {
+                voice: 'generateAudio',
+                music: 'generateAudio',
+                sound_effects: 'generateAudio',
+                video: 'generateVideo',
+                image: 'generateImage'
+            };
             const fnName = map[currentMode];
 
             let payload = { ...params[currentMode] };
@@ -86,10 +92,16 @@ const StudioContent = () => {
                 payload.provider = selectedModel.provider;
                 payload.modelId = selectedModel.modelId || selectedModel.id;
                 payload.version = selectedModel.version;
-            } else if (currentMode === 'text') {
-                payload.modelId = selectedModel.modelId;
             } else {
+                // For all other modes (video, voice, music, sfx), we typically send version/provider/modelId
+                // The backend handles parsing based on mode + model
                 payload.version = selectedModel.version;
+                payload.provider = selectedModel.provider;
+                payload.modelId = selectedModel.modelId || selectedModel.id;
+                // Add explicit 'type' for audio clarity if backend needs it (though it likely infers from model)
+                if (['voice', 'music', 'sound_effects'].includes(currentMode)) {
+                    payload.audioType = currentMode;
+                }
             }
 
             const generateFn = httpsCallable(functions, fnName);
@@ -97,10 +109,9 @@ const StudioContent = () => {
             const data = res.data;
 
             if (data.success) {
-                if (currentMode === 'audio') setResultData({ type: 'audio', url: data.audioUrl });
+                if (['voice', 'music', 'sound_effects'].includes(currentMode)) setResultData({ type: 'audio', url: data.audioUrl, subType: currentMode });
                 if (currentMode === 'video') setResultData({ type: 'video', url: data.videoUrl });
                 if (currentMode === 'image') setResultData({ type: 'image', url: data.imageUrl });
-                if (currentMode === 'text') setResultData({ type: 'text', text: data.text });
                 setStatus("Complete");
             } else {
                 throw new Error("Failed");
@@ -124,12 +135,12 @@ const StudioContent = () => {
             <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">HISTORY</span>
 
             <div className={`flex items-center gap-2 p-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl transition-all duration-300 ${isMobile ? 'scale-90 origin-top' : ''}`}>
-                {['all', 'image', 'video', 'audio'].map(tab => (
+                {['all', 'image', 'video', 'voice', 'music', 'sfx'].map(tab => (
                     <button
                         key={tab}
-                        onClick={() => setActiveTab(tab)}
+                        onClick={() => setActiveTab(tab === 'sfx' ? 'sound_effects' : tab)}
                         className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all
-                            ${activeTab === tab ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+                            ${activeTab === (tab === 'sfx' ? 'sound_effects' : tab) ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}
                         `}
                     >
                         {tab}
@@ -216,9 +227,11 @@ const StudioContent = () => {
     // 3. Command Deck
     const renderBottomDeck = () => {
         const placeholder =
-            currentMode === 'audio' ? "Describe a sound..." :
-                currentMode === 'video' ? "Describe a scene..." :
-                    currentMode === 'image' ? "Imagine an image..." : "Ask me anything...";
+            currentMode === 'video' ? "Describe a scene..." :
+                currentMode === 'image' ? "Imagine an image..." :
+                    currentMode === 'voice' ? "What should I say?" :
+                        currentMode === 'music' ? "Describe a song..." :
+                            currentMode === 'sound_effects' ? "Describe a sound..." : "Create something...";
 
         return (
             <div className={`pointer-events-auto bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 flex gap-3 shadow-2xl transition-shadow duration-500 w-full
@@ -231,8 +244,9 @@ const StudioContent = () => {
                     {[
                         { id: 'image', icon: Sparkles, color: 'text-amber-400' },
                         { id: 'video', icon: Film, color: 'text-red-400' },
-                        { id: 'audio', icon: Music, color: 'text-blue-400' },
-                        { id: 'text', icon: FileText, color: 'text-green-400' }
+                        { id: 'voice', icon: Mic, color: 'text-purple-400' },
+                        { id: 'music', icon: Music, color: 'text-blue-400' },
+                        { id: 'sound_effects', icon: Volume2, color: 'text-orange-400' }
                     ].map(m => (
                         <button
                             key={m.id}
