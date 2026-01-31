@@ -514,7 +514,7 @@ const StudioContent = () => {
 
     // 4. History Grid (Infinite Canvas)
     const renderHistory = () => {
-        const items = resultData ? [resultData, ...history] : history;
+        const items = history;
         // Filter based on activeTab, handling 'voice', 'music', 'sound_effects' mapping to 'audio' type in DB
         const filteredItems = activeTab === 'all'
             ? items
