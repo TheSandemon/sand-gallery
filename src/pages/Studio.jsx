@@ -240,7 +240,7 @@ const StudioContent = () => {
             `}>
 
                 {/* Zone A: Mode Switcher (Left Column) */}
-                <div className={`flex flex-col gap-1 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'h-14 flex-row w-full justify-between' : 'w-20 h-full justify-center'}`}>
+                <div className={`flex flex-col gap-1 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'h-14 flex-row w-full justify-between' : 'w-32 h-full justify-center'}`}>
                     {[
                         { id: 'image', icon: Sparkles, label: 'Image', color: 'text-amber-400' },
                         { id: 'video', icon: Film, label: 'Video', color: 'text-red-400' },
@@ -251,12 +251,16 @@ const StudioContent = () => {
                         <button
                             key={m.id}
                             onClick={() => setCurrentMode(m.id)}
-                            className={`rounded-lg transition-all flex flex-col items-center justify-center flex-1 gap-0.5
+                            className={`rounded-lg transition-all flex items-center flex-1
+                                ${isMobile
+                                    ? 'flex-col justify-center gap-0.5'
+                                    : 'flex-row justify-start gap-3 px-3 w-full'
+                                }
                                 ${currentMode === m.id ? 'bg-white/10 ' + m.color : 'text-gray-600 hover:text-gray-400'}
                             `}
                         >
                             <m.icon size={isMobile ? 16 : 18} />
-                            <span className="text-[8px] font-bold tracking-wide">{m.label}</span>
+                            <span className={`font-bold tracking-wide ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>{m.label}</span>
                         </button>
                     ))}
                 </div>
