@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const location = useLocation();
     const { user } = useAuth();
 
@@ -12,113 +13,83 @@ const Navbar = () => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
-
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const styles = {
-        nav: {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            zIndex: 1000,
-            padding: '1.5rem 2rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            transition: 'all 0.3s ease',
-            boxSizing: 'border-box',
-            backdropFilter: scrolled ? 'blur(10px)' : 'none',
-            backgroundColor: scrolled ? 'rgba(10, 10, 10, 0.8)' : 'transparent',
-            borderBottom: scrolled ? '1px solid rgba(0, 143, 78, 0.2)' : '1px solid transparent',
-        },
-        logo: {
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: 'var(--text-primary)',
-            letterSpacing: '-0.05em',
-            textDecoration: 'none',
-        },
-        logoHighlight: {
-            color: 'var(--neon-green)',
-        },
-        menu: {
-            display: 'flex',
-            gap: '2rem',
-            listStyle: 'none',
-            margin: 0,
-            padding: 0,
-            alignItems: 'center',
-        },
-        link: {
-            position: 'relative',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            color: 'var(--text-secondary)',
-            textDecoration: 'none',
-            cursor: 'pointer',
-            transition: 'color 0.3s ease',
-        },
-        activeLink: {
-            color: 'var(--neon-gold)',
-        },
-    };
+    // Close mobile menu on route change
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const isActive = (path) => location.pathname === path;
 
+    const navLinks = [
+        { path: '/', label: 'WORK' },
+        { path: '/studio', label: 'STUDIO' },
+        { path: '/pricing', label: 'PRICING' },
+        ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
+        { path: '/profile', label: 'PROFILE' },
+    ];
+
     return (
-        <nav style={styles.nav}>
-            <Link to="/" style={styles.logo}>
-                SAND<span style={styles.logoHighlight}>.GALLERY</span>
-            </Link>
-            <ul style={styles.menu}>
-                <li>
+        <>
+            <nav className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-300 px-4 md:px-8 py-4 md:py-6 flex justify-between items-center
+                ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-neon-green/20' : 'bg-transparent border-b border-transparent'}
+            `}>
+                {/* Logo */}
+                <Link to="/" className="text-xl md:text-2xl font-bold tracking-tight text-white z-[1001] relative">
+                    SAND<span className="text-neon-green">.GALLERY</span>
+                </Link>
+
+                {/* Desktop Menu */}
+                <ul className="hidden md:flex items-center gap-8">
+                    {navLinks.map(link => (
+                        <li key={link.path}>
+                            <Link
+                                to={link.path}
+                                className={`text-sm font-semibold tracking-wide transition-colors duration-300
+                                    ${isActive(link.path) ? 'text-neon-gold' : 'text-gray-400 hover:text-white'}
+                                `}
+                            >
+                                {link.label}
+                            </Link>
+                        </li>
+                    ))}
+                    <li><UserButton /></li>
+                </ul>
+
+                {/* Mobile Menu Toggle */}
+                <button
+                    className="md:hidden text-white z-[1001] relative p-2"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                    <div className={`w-6 h-0.5 bg-white mb-1.5 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+                    <div className={`w-6 h-0.5 bg-white mb-1.5 transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+                    <div className={`w-6 h-0.5 bg-white transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+                </button>
+            </nav>
+
+            {/* Mobile Menu Overlay */}
+            <div className={`fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center gap-8 transition-all duration-300 md:hidden
+                ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+            `}>
+                {navLinks.map(link => (
                     <Link
-                        to="/"
-                        style={{ ...styles.link, ...(isActive('/') ? styles.activeLink : {}) }}
+                        key={link.path}
+                        to={link.path}
+                        className={`text-2xl font-bold tracking-widest transition-colors duration-300
+                            ${isActive(link.path) ? 'text-neon-gold' : 'text-gray-500 hover:text-white'}
+                        `}
                     >
-                        WORK
+                        {link.label}
                     </Link>
-                </li>
-                <li>
-                    <Link
-                        to="/studio"
-                        style={{ ...styles.link, ...(isActive('/studio') ? styles.activeLink : {}) }}
-                    >
-                        STUDIO
-                    </Link>
-                </li>
-                <li>
-                    <Link
-                        to="/pricing"
-                        style={{ ...styles.link, ...(isActive('/pricing') ? styles.activeLink : {}) }}
-                    >
-                        PRICING
-                    </Link>
-                </li>
-                {user?.role === 'owner' && (
-                    <li>
-                        <Link
-                            to="/admin"
-                            style={{ ...styles.link, ...(isActive('/admin') ? styles.activeLink : {}) }}
-                        >
-                            ADMIN
-                        </Link>
-                    </li>
-                )}
-                <li>
-                    <Link
-                        to="/profile"
-                        style={{ ...styles.link, ...(isActive('/profile') ? styles.activeLink : {}) }}
-                    >
-                        PROFILE
-                    </Link>
-                </li>
-                <li><UserButton /></li>
-            </ul>
-        </nav>
+                ))}
+                <div className="mt-8 scale-125">
+                    <UserButton />
+                </div>
+            </div>
+        </>
     );
 };
 
