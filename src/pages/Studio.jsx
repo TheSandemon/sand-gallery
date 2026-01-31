@@ -304,10 +304,12 @@ const StudioContent = () => {
                         />
                         {/* Status / Error Toast */}
                         {status && (
-                            <div className={`absolute bottom-2 right-2 px-3 py-1 rounded text-xs font-bold pointer-events-none transition-opacity
-                                ${status.startsWith('Error') ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-neon-green/10 text-neon-green'}
+                            <div className={`absolute top-2 right-2 max-w-[90%] max-h-[80px] overflow-y-auto custom-scrollbar px-3 py-2 rounded-lg text-xs font-bold backdrop-blur-md shadow-lg z-50 transition-all
+                                ${status.startsWith('Error') || status.includes('DEBUG')
+                                    ? 'bg-red-950/90 text-red-200 border border-red-500/50 select-text cursor-text'
+                                    : 'bg-black/60 text-emerald-400 border border-emerald-500/30 pointer-events-none'}
                             `}>
-                                {status}
+                                {status.startsWith('DEBUG') ? <code className="font-mono text-[10px] block break-all">{status}</code> : status}
                             </div>
                         )}
                     </div>
