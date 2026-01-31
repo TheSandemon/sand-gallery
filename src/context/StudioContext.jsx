@@ -5,12 +5,13 @@ const StudioContext = createContext();
 export const useStudio = () => useContext(StudioContext);
 
 export const StudioProvider = ({ children }) => {
-    const [currentMode, setCurrentMode] = useState('audio');
+    const [currentMode, setCurrentMode] = useState('image'); // Default to image
     const [params, setParams] = useState({
-        audio: { prompt: '', duration: 5, stability: 0.5 },
-        video: { prompt: '', seed: '', motion: 5 },
         image: { prompt: '', aspectRatio: '1:1', style: 'realistic' },
-        text: { prompt: '' }
+        video: { prompt: '', seed: '', motion: 5 },
+        voice: { prompt: '', duration: 5, stability: 0.5 },
+        music: { prompt: '', duration: 30, instrumental: false },
+        sound_effects: { prompt: '', duration: 10 }
     });
     const [selectedModel, setSelectedModel] = useState(null);
     const [serviceStatus, setServiceStatus] = useState({ replicate: true, openrouter: true }); // Assume available until checked
@@ -39,10 +40,11 @@ export const StudioProvider = ({ children }) => {
         if (selectedModel) return selectedModel.cost;
 
         switch (currentMode) {
-            case 'audio': return 2;
             case 'video': return 10;
+            case 'music': return 5;
+            case 'voice': return 2;
+            case 'sound_effects': return 2;
             case 'image': return 1;
-            case 'text': return 1;
             default: return 0;
         }
     };

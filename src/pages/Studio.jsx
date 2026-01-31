@@ -4,7 +4,7 @@ import StudioLayout from '../components/StudioLayout';
 import { useAuth } from '../context/AuthContext';
 import {
     Zap, Sparkles, Film, Music, FileText,
-    Search, Sliders, ArrowUp, Clock, Grid,
+    Search, Sliders, ArrowUp, Clock, Grid, Mic, Volume2,
     MoreHorizontal, Smartphone, Monitor, Settings
 } from 'lucide-react';
 import { MODELS } from '../config/models';
