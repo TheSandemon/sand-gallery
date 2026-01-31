@@ -297,6 +297,8 @@ async function saveCreation(uid, type, prompt, url, cost) {
     if (url && url.startsWith('data:')) {
         try {
             const bucket = admin.storage().bucket();
+            console.log("Attempting upload to bucket:", bucket.name);
+
             const mimeType = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
             const base64Data = url.split(',')[1];
             const buffer = Buffer.from(base64Data, 'base64');
