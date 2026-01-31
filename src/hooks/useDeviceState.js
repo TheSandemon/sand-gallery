@@ -13,7 +13,13 @@ export const useDeviceState = () => {
         const handleResize = () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
-            const isMobile = width < 768; // Standard mobile breakpoint
+
+            // Refined Mobile Detection
+            const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const isSmallScreen = width < 1024;
+            const isLandscapeMobile = height < 500 && width < 1000;
+
+            const isMobile = (isSmallScreen && isTouch) || isLandscapeMobile || width < 768;
             const isPortrait = height > width;
 
             setDeviceState({
