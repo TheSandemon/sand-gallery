@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StudioProvider, useStudio } from '../context/StudioContext';
 import StudioLayout from '../components/StudioLayout';
+import MediaViewer from '../components/MediaViewer';
 import { useAuth } from '../context/AuthContext';
 import {
     Zap, Sparkles, Film, Music, FileText,
     Search, Sliders, ArrowUp, Clock, Grid, Mic, Volume2,
-    MoreHorizontal, Smartphone, Monitor, Settings
+    MoreHorizontal, Smartphone, Monitor, Settings, Play
 } from 'lucide-react';
 import { MODELS } from '../config/models';
 import { useDeviceState } from '../hooks/useDeviceState';
@@ -27,12 +28,16 @@ const StudioContent = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [resultData, setResultData] = useState(null);
     const [history, setHistory] = useState([]);
+    const [viewerItem, setViewerItem] = useState(null);
 
-    // Auto-select model logic - NOW SENSITIVE TO MODE CHANGE
+    // Auto-select model logic - Prefer first AVAILABLE model
     useEffect(() => {
         const modeModels = MODELS[currentMode] || [];
-        if (modeModels.length > 0) {
-            // Always select first model for the new mode
+        const availableModels = modeModels.filter(m => m.available);
+        if (availableModels.length > 0) {
+            setSelectedModel(availableModels[0]);
+        } else if (modeModels.length > 0) {
+            // Fallback to first model if none available (user can't click it anyway)
             setSelectedModel(modeModels[0]);
         }
     }, [currentMode]);
@@ -174,9 +179,20 @@ const StudioContent = () => {
                         {modeModels.map(m => (
                             <div
                                 key={m.id}
-                                onClick={() => setSelectedModel(m)}
-                                className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedModel?.id === m.id ? 'border-neon-green bg-neon-green/10' : 'border-gray-800 bg-[#111] hover:border-gray-600'}`}
+                                onClick={() => m.available && setSelectedModel(m)}
+                                className={`p-3 rounded-lg border transition-all relative
+                                    ${!m.available
+                                        ? 'opacity-50 cursor-not-allowed border-gray-800 bg-[#0a0a0a]'
+                                        : selectedModel?.id === m.id
+                                            ? 'cursor-pointer border-neon-green bg-neon-green/10'
+                                            : 'cursor-pointer border-gray-800 bg-[#111] hover:border-gray-600'
+                                    }`}
                             >
+                                {!m.available && (
+                                    <span className="absolute top-2 right-2 text-[8px] uppercase font-bold tracking-wider text-yellow-600 bg-yellow-600/10 px-2 py-0.5 rounded">
+                                        Soon
+                                    </span>
+                                )}
                                 <div className="text-white text-sm font-bold">{m.name}</div>
                                 <div className="text-xs text-gray-500 flex justify-between mt-1">
                                     <span>{m.provider}</span>
@@ -333,7 +349,18 @@ const StudioContent = () => {
     // 4. History Grid (Infinite Canvas)
     const renderHistory = () => {
         const items = resultData ? [resultData, ...history] : history;
-        const filteredItems = activeTab === 'all' ? items : items.filter(item => item.type === activeTab);
+        // Filter based on activeTab, handling 'voice', 'music', 'sound_effects' mapping to 'audio' type in DB
+        const filteredItems = activeTab === 'all'
+            ? items
+            : activeTab === 'voice' || activeTab === 'music' || activeTab === 'sound_effects'
+                ? items.filter(item => item.type === 'audio' && item.subType === activeTab)
+                : items.filter(item => item.type === activeTab);
+
+        const formatDate = (timestamp) => {
+            if (!timestamp) return '';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        };
 
         return (
             <div className="w-full h-full p-8 overflow-y-auto pb-[200px] custom-scrollbar">
@@ -345,24 +372,56 @@ const StudioContent = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
                         {filteredItems.map((item, i) => (
-                            <div key={item.id || i} className="group relative break-inside-avoid mb-4 rounded-xl overflow-hidden border border-white/10 bg-[#111] hover:border-emerald-500/50 transition-all">
-                                {/* Content */}
-                                {item.type === 'video' && <video src={item.url} autoPlay muted loop className="w-full" />}
-                                {item.type === 'image' && <img src={item.url} className="w-full" />}
-                                {item.type === 'audio' && (
-                                    <div className="p-8 flex items-center justify-center bg-gradient-to-br from-blue-900/20 to-black aspect-video">
-                                        <Music size={48} className="text-blue-400 opacity-50" />
+                            <div
+                                key={item.id || i}
+                                onClick={() => setViewerItem(item)}
+                                className="group relative break-inside-avoid rounded-xl overflow-hidden border border-white/10 bg-[#111] hover:border-emerald-500/50 transition-all cursor-pointer"
+                            >
+                                {/* Media Thumbnail */}
+                                {item.type === 'video' && (
+                                    <div className="relative aspect-video bg-black">
+                                        <video src={item.url} muted className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center border border-white/20">
+                                                <Play size={20} className="text-white ml-1" />
+                                            </div>
+                                        </div>
+                                        <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/70 rounded text-[10px] text-white font-mono">
+                                            0:{item.duration || '03'}
+                                        </div>
                                     </div>
                                 )}
-                                {item.type === 'text' && (
-                                    <div className="p-6 text-sm text-gray-300 font-mono whitespace-pre-wrap max-h-[300px] overflow-hidden">
-                                        {item.text}
+                                {item.type === 'image' && (
+                                    <div className="aspect-square bg-black">
+                                        <img src={item.url} alt="Generated" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                                {item.type === 'audio' && (
+                                    <div className="aspect-video bg-gradient-to-br from-blue-900/30 to-purple-900/20 flex items-center justify-center relative">
+                                        <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                                            <Music size={28} className="text-blue-400" />
+                                        </div>
+                                        <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/70 rounded text-[10px] text-white font-mono">
+                                            {item.subType || 'audio'}
+                                        </div>
                                     </div>
                                 )}
 
+                                {/* Card Footer */}
+                                <div className="p-3 border-t border-white/5">
+                                    <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">{item.prompt || 'Untitled'}</p>
+                                    <div className="flex items-center justify-between mt-2 text-[10px] text-gray-600">
+                                        <span className="flex items-center gap-1">
+                                            <Clock size={10} />
+                                            {formatDate(item.createdAt)}
+                                        </span>
+                                        <span>{item.cost || 1}¢</span>
+                                    </div>
+                                </div>
+
                                 {/* Hover Overlay */}
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
-                                    <button className="p-2 bg-white rounded-full hover:scale-110 transition-transform"><ArrowUp size={16} /></button>
+                                    <button className="p-2 bg-white rounded-full hover:scale-110 transition-transform"><Play size={16} /></button>
                                     <button className="p-2 bg-[#222] text-white rounded-full hover:scale-110 transition-transform"><MoreHorizontal size={16} /></button>
                                 </div>
                             </div>
@@ -374,15 +433,18 @@ const StudioContent = () => {
     };
 
     return (
-        <StudioLayout
-            topBar={renderTopBar()}
-            bottomDeck={renderBottomDeck()}
-            settingsDrawer={renderSettings()}
-            isDrawerOpen={isDrawerOpen}
-            onCloseDrawer={() => setIsDrawerOpen(false)}
-        >
-            {renderHistory()}
-        </StudioLayout>
+        <>
+            <StudioLayout
+                topBar={renderTopBar()}
+                bottomDeck={renderBottomDeck()}
+                settingsDrawer={renderSettings()}
+                isDrawerOpen={isDrawerOpen}
+                onCloseDrawer={() => setIsDrawerOpen(false)}
+            >
+                {renderHistory()}
+            </StudioLayout>
+            {viewerItem && <MediaViewer item={viewerItem} onClose={() => setViewerItem(null)} />}
+        </>
     );
 };
 
