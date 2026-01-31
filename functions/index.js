@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { defineString } = require("firebase-functions/params");
+const { defineString, defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const Replicate = require("replicate");
 const cors = require("cors")({ origin: true });
@@ -22,9 +22,11 @@ const db = admin.firestore();
 // Set these via: firebase functions:secrets:set REPLICATE_API_TOKEN
 // Or use .env file with firebase functions:config:export
 
+const googleApiKey = defineSecret("GOOGLE_API_KEY");
+
 const getReplicateKey = () => process.env.REPLICATE_API_TOKEN;
 const getOpenRouterKey = () => process.env.OPENROUTER_API_KEY;
-const getGoogleKey = () => process.env.GOOGLE_API_KEY;
+const getGoogleKey = () => googleApiKey.value();
 
 // Lazy load Replicate to avoid global scope issues
 let replicateInstance = null;
@@ -114,7 +116,8 @@ exports.generateVideo = onCall({
 
 exports.generateImage = onCall({
     timeoutSeconds: 60,
-    memory: "1GiB"
+    memory: "1GiB",
+    secrets: [googleApiKey]
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
