@@ -10,7 +10,9 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
         <div className="relative w-full h-[100dvh] bg-[#050505] overflow-hidden">
 
             {/* 1. Main Infinite Canvas (Background) */}
-            <div className="absolute inset-0 z-0 flex justify-center overflow-hidden pt-[70px]">
+            <div className={`absolute inset-0 z-0 flex justify-center overflow-hidden
+                ${isMobile ? 'pt-[120px]' : 'pt-[70px]'}
+            `}>
                 <div className="w-full h-full max-w-[2000px] relative">
                     {children}
                 </div>
@@ -18,7 +20,7 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
 
             {/* 2. UI Overlay (Foreground) - Fixed Position for Perfect Pinning */}
             <div className={`fixed inset-0 z-20 flex flex-col justify-between pointer-events-none transition-all duration-300
-                ${isMobile ? 'pt-4 pb-0' : 'pt-[90px] pb-8'}
+                ${isMobile ? 'pt-20 pb-0' : 'pt-[90px] pb-8'}
             `}>
 
                 {/* Top: Filter Deck */}
