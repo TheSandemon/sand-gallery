@@ -30,6 +30,9 @@ exports.generateAudio = functions.https.onCall(async (data, context) => {
     const { prompt, duration = 5, version } = data;
 
     if (!prompt) throw new functions.https.HttpsError("invalid-argument", "Prompt required.");
+    // Cost logic: Replicate/Google = 2, OpenRouter/Others = 1 (simplified matching frontend)
+    // Actually, match models.js exactly:
+    // AudioLDM2 (Replicate) = 2
     const COST = 2;
 
     await deductCredits(uid, COST);
@@ -88,7 +91,17 @@ exports.generateImage = functions.https.onCall(async (data, context) => {
     const { prompt, provider, modelId, version, aspectRatio = "1:1" } = data;
 
     if (!prompt) throw new functions.https.HttpsError("invalid-argument", "Prompt required.");
-    const COST = provider === 'openrouter' ? 4 : 1;
+    // Cost: 
+    // Gemini 3.0 Pro (Google) = 2
+    // Midjourney v7 = 2
+    // Others = 1
+    // OpenRouter = 4 (Old default, but let's stick to 2 for consistency with Gemini? No, OpenRouter is expensive)
+    // Actually models.js says Gemini=2, MJ=2, Flux=1, Nano=1. 
+    // Let's implement dynamic looking or reasonable defaults.
+    let COST = 1;
+    if (provider === 'google' || version?.includes('midjourney')) COST = 2;
+    if (provider === 'openrouter') COST = 4; // Keep higher for external APIs
+    if (provider === 'replicate' && !version?.includes('midjourney')) COST = 1; // Flux, Reve, Qwen
 
     await deductCredits(uid, COST);
 

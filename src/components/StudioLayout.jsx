@@ -39,7 +39,7 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
             </div>
 
             {/* 3. Settings Drawer (Collapsible Right Panel - Above Navbar) */}
-            <div className={`fixed top-0 right-0 h-full bg-[#0c0c0c]/95 backdrop-blur-md border-l border-white/10 z-[1100] transform transition-transform duration-300 ease-spring 
+            <div className={`fixed top-0 right-0 h-full bg-[#0c0c0c]/98 border-l border-white/10 z-[1100] transform transition-transform duration-300 ease-spring 
                 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}
                 ${isMobile ? 'w-full' : 'w-[350px]'}
             `}>

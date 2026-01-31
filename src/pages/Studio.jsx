@@ -309,22 +309,28 @@ const StudioContent = () => {
                         {/* Model Selector */}
                         <div
                             onClick={() => setIsDrawerOpen(true)}
-                            className="flex-1 bg-black/40 rounded-xl border border-white/5 px-4 flex items-center justify-between cursor-pointer hover:border-neon-green/30 transition-all group"
+                            className={`flex-1 bg-black/40 rounded-xl border border-white/5 px-4 flex items-center justify-between cursor-pointer transition-all group
+                                ${!selectedModel ? 'opacity-50 hover:bg-red-500/5 hover:border-red-500/20' : 'hover:border-neon-green/30'}
+                            `}
                         >
-                            <div className="flex items-center gap-3">
-                                <span className="text-[9px] font-bold text-gray-600 tracking-widest uppercase">MODEL</span>
-                                <span className="text-sm font-bold text-white truncate">{selectedModel?.name || 'Select'}</span>
-                                <span className="text-[10px] text-neon-green">{selectedModel?.provider}</span>
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <span className={`text-[9px] font-bold tracking-widest uppercase shrink-0 ${!selectedModel ? 'text-red-400' : 'text-gray-600'}`}>
+                                    {!selectedModel ? 'UNAVAILABLE' : 'MODEL'}
+                                </span>
+                                <span className={`text-sm font-bold truncate ${!selectedModel ? 'text-gray-500 italic' : 'text-white'}`}>
+                                    {selectedModel?.name || 'No models available'}
+                                </span>
+                                {selectedModel && <span className="text-[10px] text-neon-green shrink-0">{selectedModel?.provider}</span>}
                             </div>
-                            <Settings size={14} className="text-gray-600 group-hover:text-white transition-colors" />
+                            <Settings size={14} className="text-gray-600 group-hover:text-white transition-colors shrink-0" />
                         </div>
 
                         {/* CREATE Button */}
                         <button
                             onClick={handleGenerate}
-                            disabled={isGenerating}
+                            disabled={isGenerating || !selectedModel}
                             className={`w-40 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95
-                                ${isGenerating ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(0,255,100,0.3)]'}
+                                ${isGenerating || !selectedModel ? 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(0,255,100,0.3)]'}
                             `}
                         >
                             {isGenerating ? (
@@ -336,7 +342,7 @@ const StudioContent = () => {
                                 <>
                                     <ArrowUp size={18} strokeWidth={3} />
                                     <span className="text-sm font-black tracking-wide">CREATE</span>
-                                    <span className="text-[9px] opacity-60">{selectedModel?.cost || 1}¢</span>
+                                    {selectedModel && <span className="text-[9px] opacity-60">{selectedModel.cost}¢</span>}
                                 </>
                             )}
                         </button>
