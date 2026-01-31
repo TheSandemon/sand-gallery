@@ -7,35 +7,38 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
     const { isMobile, isPortrait } = useDeviceState();
 
     return (
-        <div className="relative w-screen h-screen bg-[#050505] overflow-hidden flex flex-col pt-[70px]"> {/* Offset for Global Nav */}
+        <div className="relative w-full h-[100dvh] bg-[#050505] overflow-hidden">
 
             {/* 1. Main Infinite Canvas (Background) */}
-            <div className="flex-1 relative z-0 overflow-hidden flex flex-col items-center">
-                {/* Constrain width for better reading on ultra-wide, but allow full on mobile */}
+            <div className="absolute inset-0 z-0 flex justify-center overflow-hidden pt-[70px]">
                 <div className="w-full h-full max-w-[2000px] relative">
                     {children}
                 </div>
             </div>
 
-            {/* 2. Top Filter Deck (Floating) */}
-            <div className={`absolute left-1/2 transform -translate-x-1/2 z-20 w-fit transition-all duration-300
-                ${isMobile ? 'top-[80px] scale-90' : 'top-[90px]'}
-            `}>
-                {topBar}
+            {/* 2. UI Overlay (Foreground) - Flex Column for Perfect Centering */}
+            <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none pt-[90px] pb-8">
+
+                {/* Top: Filter Deck */}
+                <div className={`w-full flex justify-center transition-all duration-300 pointer-events-auto
+                    ${isMobile ? 'scale-90 origin-top' : ''}
+                `}>
+                    <div className="w-fit">
+                        {topBar}
+                    </div>
+                </div>
+
+                {/* Bottom: Command Deck */}
+                <div className={`w-full flex justify-center transition-all duration-300 pointer-events-auto
+                    ${isMobile ? 'px-2 pb-2' : 'px-4'}
+                `}>
+                    <div className={`w-full ${isMobile ? '' : 'max-w-4xl'}`}>
+                        {bottomDeck}
+                    </div>
+                </div>
             </div>
 
-            {/* 3. Bottom Command Deck (Floating) */}
-            <div className={`absolute left-1/2 transform -translate-x-1/2 z-30 w-full transition-all duration-300 pointer-events-none
-                ${isMobile
-                    ? 'bottom-4 px-2 max-w-full'
-                    : 'bottom-8 px-4 max-w-4xl'
-                }
-            `}>
-                {/* Pointer events none allows clicking through to canvas, but deck children must re-enable pointer-events */}
-                {bottomDeck}
-            </div>
-
-            {/* 4. Settings Drawer (Collapsible Right Panel) */}
+            {/* 3. Settings Drawer (Collapsible Right Panel) */}
             <div className={`absolute top-0 right-0 h-full bg-[#0c0c0c]/95 backdrop-blur-md border-l border-white/10 z-40 transform transition-transform duration-300 ease-spring 
                 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}
                 ${isMobile ? 'w-full' : 'w-[350px]'}
@@ -43,9 +46,9 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
                 {settingsDrawer}
             </div>
 
-            {/* 5. Overlay when drawer is open (Mobile primarily) */}
+            {/* 4. Drawer Overlay */}
             {isDrawerOpen && (
-                <div className="absolute inset-0 bg-black/50 z-10 pointer-events-none backdrop-blur-sm" />
+                <div className="absolute inset-0 bg-black/50 z-30 pointer-events-none backdrop-blur-sm" />
             )}
         </div>
     );
