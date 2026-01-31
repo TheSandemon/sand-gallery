@@ -214,10 +214,7 @@ exports.generateImage = onCall({
                 // Debugging: Log what *did* come back
                 console.error("Gemini Image Gen Failed. Response:", JSON.stringify(json, null, 2));
 
-                let msg = "No image generated.";
-                if (firstPart?.text) msg += ` Model said: "${firstPart.text.substring(0, 100)}..."`;
-                if (json.promptFeedback) msg += ` Feedback: ${JSON.stringify(json.promptFeedback)}`;
-
+                let msg = "DEBUG LOG: " + JSON.stringify(json).substring(0, 400); // Send raw JSON to UI
                 throw new Error(msg);
             }
         }
