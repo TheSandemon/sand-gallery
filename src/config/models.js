@@ -6,6 +6,7 @@ export const MODELS = {
         { id: 'starcoder-2', name: 'StarCoder 2', provider: 'openrouter', modelId: 'bigcode/starcoder2', cost: 1, tags: ['completion', 'niche-langs'] }
     ],
     image: [
+        { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro Preview', provider: 'google', cost: 2, tags: ['next-gen', 'visionary'] },
         { id: 'nano-banana', name: 'Nano Banana (Gemini 2.5 Flash)', provider: 'google', cost: 1, tags: ['consistency', 'fast'] },
         { id: 'midjourney-v7', name: 'Midjourney v7', provider: 'replicate', version: 'midjourney/v7-turbo', cost: 2, tags: ['art', 'vibes'] },
         { id: 'flux-pro', name: 'Flux Pro / Dev', provider: 'replicate', version: 'black-forest-labs/flux-pro', cost: 1, tags: ['realistic', 'text'] },

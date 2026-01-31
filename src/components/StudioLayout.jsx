@@ -16,8 +16,8 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
                 </div>
             </div>
 
-            {/* 2. UI Overlay (Foreground) - Flex Column for Perfect Centering */}
-            <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none pt-[90px] pb-8">
+            {/* 2. UI Overlay (Foreground) - Fixed Position for Perfect Pinning */}
+            <div className="fixed inset-0 z-20 flex flex-col justify-between pointer-events-none pt-[90px] pb-8">
 
                 {/* Top: Filter Deck */}
                 <div className={`w-full flex justify-center transition-all duration-300 pointer-events-auto
@@ -38,8 +38,8 @@ const StudioLayout = ({ children, topBar, bottomDeck, settingsDrawer, isDrawerOp
                 </div>
             </div>
 
-            {/* 3. Settings Drawer (Collapsible Right Panel) */}
-            <div className={`absolute top-0 right-0 h-full bg-[#0c0c0c]/95 backdrop-blur-md border-l border-white/10 z-40 transform transition-transform duration-300 ease-spring 
+            {/* 3. Settings Drawer (Collapsible Right Panel - Above Navbar) */}
+            <div className={`fixed top-0 right-0 h-full bg-[#0c0c0c]/95 backdrop-blur-md border-l border-white/10 z-[1100] transform transition-transform duration-300 ease-spring 
                 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}
                 ${isMobile ? 'w-full' : 'w-[350px]'}
             `}>
