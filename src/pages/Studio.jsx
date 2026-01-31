@@ -302,6 +302,14 @@ const StudioContent = () => {
                             placeholder={placeholder}
                             className="w-full h-full bg-transparent text-white p-4 text-base outline-none resize-none font-medium placeholder-gray-700 leading-relaxed custom-scrollbar"
                         />
+                        {/* Status / Error Toast */}
+                        {status && (
+                            <div className={`absolute bottom-2 right-2 px-3 py-1 rounded text-xs font-bold pointer-events-none transition-opacity
+                                ${status.startsWith('Error') ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-neon-green/10 text-neon-green'}
+                            `}>
+                                {status}
+                            </div>
+                        )}
                     </div>
 
                     {/* Bottom Row: Model Selector + CREATE Button (Anchored to Chat) */}
