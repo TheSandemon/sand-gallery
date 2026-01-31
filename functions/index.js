@@ -191,8 +191,11 @@ exports.generateImage = onCall({
                         ]
                     }],
                     // Requesting image generation
+                    // Note: Gemini 3 (Thinking models) usually require TEXT output capability 
+                    // to express their chain of thought or preamble before the image.
+                    // Restricting to ["IMAGE"] alone causes NO_IMAGE finish reason if it tries to speak.
                     generationConfig: {
-                        responseModalities: ["IMAGE"]
+                        responseModalities: ["TEXT", "IMAGE"]
                     }
                 })
             });
