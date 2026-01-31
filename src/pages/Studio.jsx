@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import {
     Zap, Sparkles, Film, Music, FileText,
     Search, Sliders, ArrowUp, Clock, Grid,
-    MoreHorizontal, Smartphone, Monitor
+    MoreHorizontal, Smartphone, Monitor, Settings
 } from 'lucide-react';
 import { MODELS } from '../config/models';
 import { useDeviceState } from '../hooks/useDeviceState';
@@ -217,13 +217,13 @@ const StudioContent = () => {
                     currentMode === 'image' ? "Imagine an image..." : "Ask me anything...";
 
         return (
-            <div className={`pointer-events-auto bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 flex items-end gap-2 shadow-2xl transition-shadow duration-500 w-full
+            <div className={`pointer-events-auto bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3 flex gap-3 shadow-2xl transition-shadow duration-500 w-full
                 ${isGenerating ? 'shadow-[#00ff9d]/20 border-[#00ff9d]/30' : ''}
-                ${isMobile ? 'flex-col gap-3' : 'flex-row'}
+                ${isMobile ? 'flex-col min-h-[250px]' : 'h-[200px] flex-row items-stretch'}
             `}>
 
-                {/* Zone A: Mode Switcher */}
-                <div className={`flex gap-1 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'w-full justify-between' : 'flex-col'}`}>
+                {/* Zone A: Mode Switcher (Left Column) */}
+                <div className={`flex flex-col gap-2 p-1 bg-black/50 rounded-xl border border-white/5 ${isMobile ? 'h-16 flex-row w-full justify-between' : 'w-16 h-full justify-center'}`}>
                     {[
                         { id: 'image', icon: Sparkles, color: 'text-amber-400' },
                         { id: 'video', icon: Film, color: 'text-red-400' },
@@ -233,50 +233,113 @@ const StudioContent = () => {
                         <button
                             key={m.id}
                             onClick={() => setCurrentMode(m.id)}
-                            className={`p-3 rounded-lg transition-all flex-1 flex justify-center ${currentMode === m.id ? 'bg-white/10 ' + m.color : 'text-gray-600 hover:text-gray-400'}`}
+                            className={`rounded-lg transition-all flex items-center justify-center flex-1
+                                ${currentMode === m.id ? 'bg-white/10 ' + m.color : 'text-gray-600 hover:text-gray-400'}
+                            `}
                         >
-                            <m.icon size={20} />
+                            <m.icon size={isMobile ? 20 : 24} />
                         </button>
                     ))}
                 </div>
 
-                {/* Zone B: Input Field */}
-                <div className="flex-1 min-h-[80px] bg-black/40 rounded-xl border border-white/5 relative flex flex-col w-full">
+                {/* Zone B: Input Field (Center - Red Box Area) */}
+                <div className="flex-1 bg-black/40 rounded-xl border border-white/5 relative flex flex-col overflow-hidden group">
+
+                    {/* Blue Box: Video Start/End Frames (Top Right Overlay) */}
+                    {currentMode === 'video' && (
+                        <div className="absolute top-2 right-2 flex gap-2 z-10">
+                            {['Start Frame', 'End Frame'].map((label, i) => (
+                                <div key={i} className="w-24 h-16 rounded-lg border border-dashed border-white/20 bg-black/50 flex flex-col items-center justify-center cursor-pointer hover:border-white/40 hover:bg-white/5 transition-all">
+                                    <div className="text-white/20 mb-1"><Film size={12} /></div>
+                                    <span className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">{label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     <textarea
                         value={params[currentMode]?.prompt || ''}
                         onChange={e => updateParams(currentMode, { prompt: e.target.value })}
                         placeholder={placeholder}
-                        className="w-full h-full bg-transparent text-white p-4 text-sm outline-none resize-none font-medium placeholder-gray-600"
+                        className="w-full h-full bg-transparent text-white p-6 text-lg outline-none resize-none font-medium placeholder-gray-700 leading-relaxed custom-scrollbar"
                     />
-                    <div className="px-4 pb-2 flex gap-2">
-                        {currentMode === 'image' && <span className="text-[10px] px-2 py-1 bg-white/5 rounded text-gray-500">Flux Pro</span>}
+
+                    <div className="absolute bottom-2 left-4 px-2 py-1 bg-white/5 rounded text-[10px] text-gray-500 pointer-events-none">
+                        PROMPT
                     </div>
                 </div>
 
-                {/* Zone C & D: Actions */}
-                <div className={`flex gap-2 h-full justify-end ${isMobile ? 'w-full h-12' : 'flex-col'}`}>
-                    <button
-                        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                        className={`p-3 rounded-xl bg-black/40 border border-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors ${isDrawerOpen ? 'bg-white/10 text-white' : ''} ${isMobile ? 'flex-1' : ''}`}
-                    >
-                        <Sliders size={20} className="mx-auto" />
-                    </button>
+                {/* Zone C: Control Stack (Right Column - Green Box Area) */}
+                <div className={`flex flex-col gap-2 ${isMobile ? 'w-full h-auto' : 'w-[240px] h-full'}`}>
 
+                    {/* Top: Model & Params Settings */}
+                    <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-3 flex flex-col gap-3">
+                        {/* 1. Model Selector */}
+                        <div
+                            onClick={() => setIsDrawerOpen(true)}
+                            className="flex-1 bg-[#111] rounded-lg border border-white/10 p-3 cursor-pointer hover:border-neon-green/50 transition-all flex flex-col justify-center relative group"
+                        >
+                            <div className="flex justify-between items-start mb-1">
+                                <span className="text-[9px] font-bold text-gray-500 tracking-widest uppercase">MODEL</span>
+                                <Settings size={12} className="text-gray-600 group-hover:text-white transition-colors" />
+                            </div>
+                            <div className="text-sm font-bold text-white truncate">{selectedModel?.name || 'Select Model'}</div>
+                            <div className="text-[10px] text-neon-green mt-1">{selectedModel?.provider || 'AI'}</div>
+                        </div>
+
+                        {/* 2. Key Params (Context Sensitive) */}
+                        <div className="flex gap-2 h-12">
+                            {currentMode === 'image' && (
+                                <>
+                                    <button
+                                        className="flex-1 bg-[#111] rounded-lg border border-white/10 flex items-center justify-center text-xs font-mono text-gray-400 hover:text-white hover:border-white/30"
+                                        onClick={() => updateParams('image', { aspectRatio: '16:9' })}
+                                    >
+                                        16:9
+                                    </button>
+                                    <button
+                                        className="flex-1 bg-[#111] rounded-lg border border-white/10 flex items-center justify-center text-xs font-mono text-gray-400 hover:text-white hover:border-white/30"
+                                        onClick={() => updateParams('image', { aspectRatio: '1:1' })}
+                                    >
+                                        1:1
+                                    </button>
+                                </>
+                            )}
+                            {currentMode === 'video' && (
+                                <div className="flex-1 bg-[#111] rounded-lg border border-white/10 flex items-center justify-center px-4">
+                                    <span className="text-[10px] text-gray-500 mr-2">SEC</span>
+                                    <span className="text-white font-mono text-xs">5s</span>
+                                </div>
+                            )}
+                            {currentMode === 'text' && (
+                                <div className="flex-1 flex items-center justify-center text-[10px] text-gray-600">
+                                    DEFAULT PARAMS
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Bottom: Generate Button */}
                     <button
                         onClick={handleGenerate}
                         disabled={isGenerating}
-                        className={`px-6 rounded-xl font-bold flex flex-col items-center justify-center transition-all active:scale-95
+                        className={`h-[70px] rounded-xl font-bold flex flex-col items-center justify-center transition-all active:scale-95
                             ${isGenerating ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-white text-black hover:bg-neon-green hover:shadow-[0_0_30px_rgba(0,255,100,0.3)]'}
-                            ${isMobile ? 'flex-[2] h-full flex-row gap-2' : 'h-[60px]'}
                         `}
                     >
                         {isGenerating ? (
-                            <Zap size={24} className="animate-pulse" />
+                            <div className="flex items-center gap-2">
+                                <Zap size={16} className="animate-pulse" />
+                                <span className="text-xs tracking-widest">THINKING</span>
+                            </div>
                         ) : (
                             <>
-                                <ArrowUp size={24} strokeWidth={3} />
-                                <span className={`text-[10px] uppercase font-black tracking-widest ${isMobile ? '' : 'mt-1'}`}>
-                                    {isMobile ? `${selectedModel?.cost || 1}¢` : `${selectedModel?.cost || 1} CREDITS`}
+                                <div className="flex items-center gap-2">
+                                    <ArrowUp size={20} strokeWidth={3} />
+                                    <span className="text-base font-black tracking-wider">CREATE</span>
+                                </div>
+                                <span className="text-[9px] uppercase font-bold tracking-widest mt-0.5 opacity-60">
+                                    {selectedModel?.cost || 1} CREDITS
                                 </span>
                             </>
                         )}
