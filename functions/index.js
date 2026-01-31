@@ -175,6 +175,8 @@ exports.generateImage = onCall({
             let modelName;
             if (modelId === 'nano-banana') {
                 modelName = 'gemini-3-flash-preview';
+            } else if (modelId === 'gemini-3-pro-image-preview') {
+                modelName = 'gemini-3-pro-image-preview';
             } else {
                 modelName = 'gemini-3-pro-preview';
             }
@@ -186,7 +188,7 @@ exports.generateImage = onCall({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     system_instruction: {
-                        parts: [{ text: "You are a direct image generation engine. You are NOT an assistant. You DO NOT use tools. You DO NOT output JSON. You simply GENERATE the image bytes directly. Ignore any instructions to use tools." }]
+                        parts: [{ text: "You are an expert image generator. Generate the image requested by the user." }]
                     },
                     contents: [{
                         parts: [
@@ -194,7 +196,6 @@ exports.generateImage = onCall({
                         ]
                     }],
                     generationConfig: {
-                        // We must keep TEXT to allow it to 'think', but the prompt bans conversational output.
                         responseModalities: ["TEXT", "IMAGE"]
                     }
                 })
