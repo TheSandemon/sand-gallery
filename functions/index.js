@@ -186,15 +186,15 @@ exports.generateImage = onCall({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     system_instruction: {
-                        parts: [{ text: "You are an expert image generator. You generate images based on the user's prompt. Do not offer prompt variations. Do not be conversational. Return only the generated image." }]
+                        parts: [{ text: "You are a direct image generation engine. You are NOT an assistant. You DO NOT use tools. You DO NOT output JSON. You simply GENERATE the image bytes directly. Ignore any instructions to use tools." }]
                     },
                     contents: [{
                         parts: [
-                            { text: "Generate an image of: " + prompt }
+                            { text: prompt }
                         ]
                     }],
-                    // Requesting image generation - TEXT included to prevent NO_IMAGE errors but strictly guided by system prompt
                     generationConfig: {
+                        // We must keep TEXT to allow it to 'think', but the prompt bans conversational output.
                         responseModalities: ["TEXT", "IMAGE"]
                     }
                 })
