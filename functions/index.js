@@ -302,27 +302,49 @@ async function saveCreation(uid, type, prompt, url, cost) {
             const mimeType = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
             const base64Data = url.split(',')[1];
             const buffer = Buffer.from(base64Data, 'base64');
+            const fileSize = buffer.length;
+
+            // QUOTA CHECK: 50MB for free users
+            const userRef = db.collection("users").doc(uid);
+            const userSnap = await userRef.get();
+            const userData = userSnap.data() || {};
+
+            // Allow if admin or unlimited flag is set
+            const isUnlimited = userData.role === 'admin' || userData.isAdmin === true || userData.unlimitedStorage === true;
+            const currentUsage = userData.storageUsage || 0;
+            const MAX_STORAGE = 50 * 1024 * 1024; // 50MB
+
+            if (!isUnlimited && (currentUsage + fileSize > MAX_STORAGE)) {
+                throw new Error(`Storage Quota Exceeded. Limit: 50MB. Used: ${(currentUsage / 1024 / 1024).toFixed(2)}MB. Upgrade for unlimited.`);
+            }
 
             const timestamp = Date.now();
             const extension = mimeType.split('/')[1] || 'png';
             const filePath = `creations/${uid}/${timestamp}.${extension}`;
             const file = bucket.file(filePath);
+            const uuid = crypto.randomUUID();
 
             await file.save(buffer, {
-                metadata: { contentType: mimeType }
+                metadata: {
+                    contentType: mimeType,
+                    metadata: {
+                        firebaseStorageDownloadTokens: uuid
+                    }
+                }
             });
 
-            // Make the file public or generate a signed URL
-            // Ensure the storage bucket is publicly readable or use signed URLs.
-            // For simplicity/longevity in this app context, we'll get a signed URL valid for a long time.
-            const [signedUrl] = await file.getSignedUrl({
-                action: 'read',
-                expires: '03-01-2500' // Far future
+            // Construct public URL manually to avoid IAM 'signBlob' permission issues
+            // Pattern: https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media&token=<uuid>
+            const encodedPath = encodeURIComponent(filePath);
+            finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${uuid}`;
+
+            // Update storage usage
+            await userRef.update({
+                storageUsage: admin.firestore.FieldValue.increment(fileSize)
             });
+
         } catch (error) {
             console.error("CRITICAL: Error uploading Base64 to Storage:", error);
-            // DO NOT fall back to Firestore for large base64 strings. It will fail with "Invalid Argument".
-            // Throwing here lets the user see the actual storage error.
             throw new Error("Failed to upload image to storage: " + error.message);
         }
     }
