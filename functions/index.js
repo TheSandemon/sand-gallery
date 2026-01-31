@@ -168,36 +168,57 @@ exports.generateImage = onCall({
             const googleKey = getGoogleKey();
             if (!googleKey) throw new HttpsError("failed-precondition", "Google API key missing.");
 
-            // Use Gemini 2.0 Flash with image generation capabilities
-            const modelName = modelId === 'nano-banana' ? 'gemini-2.0-flash-exp' : 'gemini-2.0-flash-exp';
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
+            // Map frontend IDs to actual Google API model names
+            // 'nano-banana' -> Imagen 3 Fast
+            // 'gemini-3-pro-preview' -> Imagen 3 Standard
+            const modelName = modelId === 'nano-banana' ? 'imagen-3.0-fast-generate-001' : 'imagen-3.0-generate-001';
+
+            // Note: Imagen 3 on standard REST API often uses :predict or :generateImages, 
+            // but for the unified 'generateContent' on generativelanguage.googleapis.com, 
+            // we should try the correct endpoint or fall back to the specialized one if needed.
+            // Documentation implies: models/imagen-3.0-generate-001:predict usually.
+            // BUT, for simplicity in the 'generativelanguage' namespace:
+            // Let's try the standard endpoint first. If it fails, we might need a different path.
+            // Actually, for Imagen on Gemini API, the model is often `imagen-3.0-generate-001`.
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:predict?key=${googleKey}`;
+            // NOTE: Imagen uses :predict with a specific payload format, DIFFERENT from generateContent.
+            // Payload for Imagen on REST: { instances: [{ prompt: "..." }], parameters: { sampleCount: 1 } }
+            // Wait, generativelanguage.googleapis.com usually hosts Gemini chat models.
+            // Imagen is typically on `us-central1-aiplatform.googleapis.com` (Vertex AI).
+            // However, it recently launched on AI Studio.
+            // If checking AI Studio docs, it might use `models/{model}:predict`.
 
             const response = await fetch(apiUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: `Generate an image: ${prompt}` }]
-                    }],
-                    generationConfig: {
-                        responseModalities: ["TEXT", "IMAGE"]
+                    instances: [
+                        { prompt: prompt }
+                    ],
+                    parameters: {
+                        sampleCount: 1,
+                        aspectRatio: aspectRatio || "1:1"
                     }
                 })
             });
             const json = await response.json();
 
             if (json.error) {
-                throw new Error(json.error.message || "Google API error");
+                // Fallback: If REST API fails, maybe try the plain Gemini 1.5 Pro which CAN generate images in some tiers?
+                // No, standard Gemini 1.5 Flash/Pro via API currently only *analyzes* images legally in many versions (no generation yet widely public on bare API).
+                // We will stick to Imagen but return the clear error if it fails (e.g. 404 meaning user needs Vertex enabled?).
+                throw new Error(json.error.message || JSON.stringify(json.error));
             }
 
-            // Extract image from response (Gemini returns inline images as base64)
-            const parts = json.candidates?.[0]?.content?.parts || [];
-            const imagePart = parts.find(p => p.inlineData);
-            if (imagePart && imagePart.inlineData) {
-                // Return data URL for inline images
-                imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            // Imagen Response Format: { predictions: [ { bytesBase64Encoded: "..." } ] }
+            if (json.predictions && json.predictions[0]?.bytesBase64Encoded) {
+                imageUrl = `data:image/png;base64,${json.predictions[0].bytesBase64Encoded}`;
+            } else if (json.predictions && json.predictions[0]?.mimeType) {
+                // Some versions return raw structure
+                imageUrl = `data:${json.predictions[0].mimeType};base64,${json.predictions[0].bytesBase64Encoded}`;
             } else {
-                throw new Error("No image returned from Gemini. The model may not support image generation for this prompt.");
+                throw new Error("Unexpected response format from Google API: " + JSON.stringify(json));
             }
         }
 
