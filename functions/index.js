@@ -26,6 +26,7 @@ const functions = require("firebase-functions");
 // });
 
 const getOpenRouterKey = () => functions.config().openrouter?.key;
+const getGoogleKey = () => functions.config().google?.key || process.env.GOOGLE_API_KEY;
 
 // --- UTILS ---
 exports.getServiceStatus = onCall((request) => {
@@ -150,14 +151,41 @@ exports.generateImage = onCall({
             if (json.error) throw new Error(json.error.message);
             imageUrl = json.data[0].url;
         } else if (provider === 'google') {
-            // Mocking Google for now or handling via similar HTTP if not using SDK directly here yet
-            // Assuming the frontend might be handling Google directly? 
-            // NO, the implementation plan said backend. 
-            // But we don't have vertex ai setup here yet.
-            // Let's assume we return a placeholder or handle it if we have the key.
-            // For now, let's default to Replicate if google is requested but not implemented code-wise,
-            // OR throw error.
-            throw new Error("Google backend generation not yet linked. Use Replicate models.");
+            // Google Gemini Image Generation via REST API
+            const googleKey = getGoogleKey();
+            if (!googleKey) throw new HttpsError("failed-precondition", "Google API key missing.");
+
+            // Use Gemini 2.0 Flash with image generation capabilities
+            const modelName = modelId === 'nano-banana' ? 'gemini-2.0-flash-exp' : 'gemini-2.0-flash-exp';
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `Generate an image: ${prompt}` }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ["TEXT", "IMAGE"]
+                    }
+                })
+            });
+            const json = await response.json();
+
+            if (json.error) {
+                throw new Error(json.error.message || "Google API error");
+            }
+
+            // Extract image from response (Gemini returns inline images as base64)
+            const parts = json.candidates?.[0]?.content?.parts || [];
+            const imagePart = parts.find(p => p.inlineData);
+            if (imagePart && imagePart.inlineData) {
+                // Return data URL for inline images
+                imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            } else {
+                throw new Error("No image returned from Gemini. The model may not support image generation for this prompt.");
+            }
         }
 
         await saveCreation(uid, "image", prompt, imageUrl, COST);
