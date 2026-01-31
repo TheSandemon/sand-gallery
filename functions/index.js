@@ -168,12 +168,13 @@ exports.generateImage = onCall({
             const googleKey = getGoogleKey();
             if (!googleKey) throw new HttpsError("failed-precondition", "Google API key missing.");
 
-            // Use Gemini 2.0 Flash which supports image generation via the generateContent endpoint
-            // 'nano-banana' -> gemini-2.0-flash-exp (Fast)
-            // 'gemini-3-pro-preview' -> gemini-2.0-pro-exp (High Quality, if available, else Flash)
+            // Use Gemini 2.0 Flash (Stable) which supports image generation via the generateContent endpoint
+            // 'nano-banana' -> gemini-2.0-flash (Fast)
+            // 'gemini-3-pro-preview' -> gemini-2.0-flash (Currently best multimodal generator via API Key)
 
-            // Note: As of late 2024/early 2025, gemini-2.0-flash-exp is the reliable multimodal generator on this API.
-            const modelName = 'gemini-2.0-flash-exp';
+            // Note: 'gemini-2.0-flash-exp' is deprecated. Using stable 'gemini-2.0-flash'.
+            // For pro features, we might consider 'gemini-2.0-pro-exp-02-05' if available, but Flash is safer default.
+            const modelName = 'gemini-2.0-flash';
 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
 
