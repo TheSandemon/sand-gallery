@@ -317,14 +317,17 @@ async function saveCreation(uid, type, prompt, url, cost) {
                 action: 'read',
                 expires: '03-01-2500' // Far future
             });
-            finalUrl = signedUrl;
-
         } catch (error) {
-            console.error("Error uploading Base64 to Storage:", error);
-            // Fallback: Try to save to Firestore anyway (might fail if too large, but cleaner than swallowing error)
-            // Or better, throw/log and let the user know. 
-            // We'll log and attempt to continue, but if it fails the caller catches it.
+            console.error("CRITICAL: Error uploading Base64 to Storage:", error);
+            // DO NOT fall back to Firestore for large base64 strings. It will fail with "Invalid Argument".
+            // Throwing here lets the user see the actual storage error.
+            throw new Error("Failed to upload image to storage: " + error.message);
         }
+    }
+
+    // Safety check: If for some reason we still have a huge string, fail fast to avoid obscure Firestore errors
+    if (finalUrl && finalUrl.length > 5000 && finalUrl.startsWith('data:')) {
+        throw new Error("Image too large for database and storage upload failed.");
     }
 
     await db.collection("creations").add({
