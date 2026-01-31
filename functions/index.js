@@ -291,8 +291,44 @@ async function deductCredits(uid, amount) {
 }
 
 async function saveCreation(uid, type, prompt, url, cost) {
+    let finalUrl = url;
+
+    // Check if url is a base64 string (data:image/...)
+    if (url && url.startsWith('data:')) {
+        try {
+            const bucket = admin.storage().bucket();
+            const mimeType = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
+            const base64Data = url.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+
+            const timestamp = Date.now();
+            const extension = mimeType.split('/')[1] || 'png';
+            const filePath = `creations/${uid}/${timestamp}.${extension}`;
+            const file = bucket.file(filePath);
+
+            await file.save(buffer, {
+                metadata: { contentType: mimeType }
+            });
+
+            // Make the file public or generate a signed URL
+            // Ensure the storage bucket is publicly readable or use signed URLs.
+            // For simplicity/longevity in this app context, we'll get a signed URL valid for a long time.
+            const [signedUrl] = await file.getSignedUrl({
+                action: 'read',
+                expires: '03-01-2500' // Far future
+            });
+            finalUrl = signedUrl;
+
+        } catch (error) {
+            console.error("Error uploading Base64 to Storage:", error);
+            // Fallback: Try to save to Firestore anyway (might fail if too large, but cleaner than swallowing error)
+            // Or better, throw/log and let the user know. 
+            // We'll log and attempt to continue, but if it fails the caller catches it.
+        }
+    }
+
     await db.collection("creations").add({
-        userId: uid, type, prompt, url, cost,
+        userId: uid, type, prompt, url: finalUrl, cost,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
 }
