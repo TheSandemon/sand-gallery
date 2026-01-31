@@ -61,6 +61,9 @@ const StudioContent = () => {
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setHistory(data);
+            }, (error) => {
+                console.error("Firestore History Error:", error);
+                setStatus("History Error: " + error.code);
             });
         };
         setup();
