@@ -36,9 +36,9 @@ const StudioContent = () => {
         const availableModels = modeModels.filter(m => m.available);
         if (availableModels.length > 0) {
             setSelectedModel(availableModels[0]);
-        } else if (modeModels.length > 0) {
-            // Fallback to first model if none available (user can't click it anyway)
-            setSelectedModel(modeModels[0]);
+        } else {
+            // Do NOT fallback to unavailable models. Leave as null to trigger "UNAVAILABLE" UI.
+            setSelectedModel(null);
         }
     }, [currentMode]);
 
