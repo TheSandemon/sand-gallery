@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StudioProvider, useStudio } from '../context/StudioContext';
 import StudioLayout from '../components/StudioLayout';
+import StudioSettings from '../components/StudioSettings';
 import MediaViewer from '../components/MediaViewer';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -185,122 +186,7 @@ const StudioContent = () => {
         );
     };
 
-    // 2. Settings Drawer Content
-    const renderSettings = () => {
-        const modeModels = MODELS[currentMode] || [];
-        // Helper to handle parameter updates
-        const handleParamChange = (mode, key, value) => {
-            updateParams(mode, { [key]: value });
-        };
-
-        return (
-            <div className="p-6 flex flex-col h-full overflow-y-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-white font-black tracking-widest text-lg">SETTINGS</h2>
-                    <button onClick={() => setIsDrawerOpen(false)} className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 text-lg transition-colors">✕</button>
-                </div>
-
-                {/* Model Selector */}
-                <div className="mb-8">
-                    <label className="text-[10px] font-bold text-neon-green tracking-widest mb-3 block">ACTIVE MODEL</label>
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
-                        {modeModels.map(m => (
-                            <div
-                                key={m.id}
-                                onClick={() => m.available && setSelectedModel(m)}
-                                className={`p-3 rounded-lg border transition-all relative
-                                    ${!m.available
-                                        ? 'opacity-50 cursor-not-allowed border-gray-800 bg-[#0a0a0a]'
-                                        : selectedModel?.id === m.id
-                                            ? 'cursor-pointer border-neon-green bg-neon-green/10'
-                                            : 'cursor-pointer border-gray-800 bg-[#111] hover:border-gray-600'
-                                    }`}
-                            >
-                                {!m.available && (
-                                    <span className="absolute top-2 right-2 text-[8px] uppercase font-bold tracking-wider text-yellow-600 bg-yellow-600/10 px-2 py-0.5 rounded">
-                                        Soon
-                                    </span>
-                                )}
-                                <div className="text-white text-sm font-bold">{m.name}</div>
-                                <div className="text-xs text-gray-500 flex justify-between mt-1">
-                                    <span>{m.provider}</span>
-                                    <span>{m.cost}¢</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Dynamic Model Parameters */}
-                {selectedModel?.parameters && (
-                    <div className="space-y-6 border-t border-white/10 pt-6">
-                        {selectedModel.parameters.map(param => (
-                            <div key={param.id}>
-                                <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block uppercase">{param.label}</label>
-
-                                {param.type === 'select' && (
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {param.options.map(opt => (
-                                            <button
-                                                key={opt}
-                                                onClick={() => handleParamChange(currentMode, param.id, opt)}
-                                                className={`p-2 border rounded text-xs transition-colors
-                                                    ${(params[currentMode]?.[param.id] || param.default) === opt
-                                                        ? 'border-white text-white bg-white/10'
-                                                        : 'border-gray-800 text-gray-500 hover:border-gray-600'}`
-                                                }
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {param.type === 'slider' && (
-                                    <div className="px-1">
-                                        <div className="flex justify-between text-xs text-gray-400 mb-2">
-                                            <span>{param.min}</span>
-                                            <span className="text-neon-green font-mono">{params[currentMode]?.[param.id] || param.default}</span>
-                                            <span>{param.max}</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min={param.min}
-                                            max={param.max}
-                                            step={param.step}
-                                            value={params[currentMode]?.[param.id] || param.default}
-                                            onChange={e => handleParamChange(currentMode, param.id, parseFloat(e.target.value))}
-                                            className="w-full h-1 bg-gray-800 appearance-none rounded-lg accent-neon-green cursor-pointer"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-
-                {/* Fallback for Mode Specific Sliders (Legacy) */}
-                {/* Only show if model has NO parameters defined, to preserve backward compatibility if needed, 
-                    though we prefer defining everything in config/models.js now. 
-                    Adding specific checks for Video motion bucket if not defined in model params.
-                */}
-                {currentMode === 'video' && !selectedModel?.parameters?.find(p => p.id === 'motion') && (
-                    <div className="space-y-6 mt-6 border-t border-white/10 pt-6">
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block">MOTION BUCKET ({params.video?.motion || 5})</label>
-                            <input
-                                type="range" min="1" max="10"
-                                value={params.video?.motion || 5}
-                                onChange={e => updateParams('video', { motion: parseInt(e.target.value) })}
-                                className="w-full h-1 bg-gray-800 appearance-none rounded-lg accent-neon-green"
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
+    // 2. Settings Drawer logic moved to StudioSettings.jsx
 
     // 3. Command Deck
     const renderBottomDeck = () => {
@@ -671,7 +557,18 @@ const StudioContent = () => {
             <StudioLayout
                 topBar={renderTopBar()}
                 bottomDeck={renderBottomDeck()}
-                settingsDrawer={renderSettings()}
+                settingsDrawer={
+                    <StudioSettings
+                        isDrawerOpen={isDrawerOpen}
+                        onCloseDrawer={() => setIsDrawerOpen(false)}
+                        currentMode={currentMode}
+                        params={params}
+                        updateParams={updateParams}
+                        selectedModel={selectedModel}
+                        setSelectedModel={setSelectedModel}
+                        modeModels={MODELS[currentMode] || []}
+                    />
+                }
                 isDrawerOpen={isDrawerOpen}
                 onCloseDrawer={() => setIsDrawerOpen(false)}
             >
@@ -683,4 +580,3 @@ const StudioContent = () => {
 };
 
 export default StudioPage;
-

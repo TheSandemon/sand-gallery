@@ -22,64 +22,11 @@ export const MODELS = {
                     default: '1:1'
                 },
                 {
-                    id: 'guidanceScale',
-                    label: 'Guidance Scale',
-                    type: 'slider',
-                    min: 1,
-                    max: 20,
-                    step: 0.5,
-                    default: 7.5
-                },
-                // Omniscience Skill Parameters
-                {
-                    id: 'temperature',
-                    label: 'Temperature',
-                    type: 'slider',
-                    min: 0.0,
-                    max: 2.0,
-                    step: 0.1,
-                    default: 0.4
-                },
-                {
-                    id: 'topP',
-                    label: 'Top P',
-                    type: 'slider',
-                    min: 0.0,
-                    max: 1.0,
-                    step: 0.05,
-                    default: 0.95
-                },
-                {
-                    id: 'topK',
-                    label: 'Top K',
-                    type: 'slider',
-                    min: 1,
-                    max: 40,
-                    step: 1,
-                    default: 32
-                },
-                {
-                    id: 'candidateCount',
-                    label: 'Candidate Count',
-                    type: 'slider',
-                    min: 1,
-                    max: 4,
-                    step: 1,
-                    default: 1
-                },
-                {
                     id: 'safetySettings',
                     label: 'Safety Filter',
                     type: 'select',
                     options: ['Standard', 'None (Creative)'],
                     default: 'Standard'
-                },
-                {
-                    id: 'grounding',
-                    label: 'Grounding',
-                    type: 'select',
-                    options: ['Disabled', 'Enabled'],
-                    default: 'Disabled'
                 }
             ]
         },
@@ -99,13 +46,11 @@ export const MODELS = {
                     default: '1:1'
                 },
                 {
-                    id: 'guidanceScale',
-                    label: 'Guidance Scale',
-                    type: 'slider',
-                    min: 1,
-                    max: 20,
-                    step: 0.5,
-                    default: 7.5
+                    id: 'safetySettings',
+                    label: 'Safety Filter',
+                    type: 'select',
+                    options: ['Standard', 'None (Creative)'],
+                    default: 'Standard'
                 }
             ]
         },
