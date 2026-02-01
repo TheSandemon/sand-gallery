@@ -1,6 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineString, defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 const Replicate = require("replicate");
 const cors = require("cors")({ origin: true });
 
@@ -304,8 +305,12 @@ async function saveCreation(uid, type, prompt, url, cost) {
             const bucket = admin.storage().bucket();
             console.log("Attempting upload to bucket:", bucket.name);
 
-            const mimeType = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
+            const match = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+            if (!match) throw new Error("Invalid base64 Data URI format");
+            const mimeType = match[1];
+
             const base64Data = url.split(',')[1];
+            if (!base64Data) throw new Error("Invalid base64 data content");
             const buffer = Buffer.from(base64Data, 'base64');
             const fileSize = buffer.length;
 
