@@ -6,14 +6,13 @@ export const MODELS = {
         { id: 'starcoder-2', name: 'StarCoder 2', provider: 'openrouter', modelId: 'bigcode/starcoder2', available: false, cost: 1, tags: ['completion', 'niche-langs'] }
     ],
     image: [
-        { id: 'gemini-3-pro-image-preview', name: 'Gemini 3.0 Pro Image', provider: 'google', available: false, cost: 2, tags: ['next-gen', 'visionary'] },
         {
-            id: 'nano-banana',
-            name: 'Gemini 3 Pro (Nano Banana Pro)',
+            id: 'gemini-3-pro-image-preview',
+            name: 'Nano Banana Pro',
             provider: 'google',
             available: true,
-            cost: 1,
-            tags: ['consistency', 'fast'],
+            cost: 2,
+            tags: ['next-gen', 'visionary'],
             parameters: [
                 {
                     id: 'aspectRatio',
