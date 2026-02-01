@@ -150,13 +150,25 @@ exports.generateImage = onCall({
 
             const bodyPayload = {
                 system_instruction: {
-                    parts: [{ text: "You are an expert image generator. Generate the image requested by the user." }]
+                    parts: [{ text: "You are an expert image generator. Generate the image requested by the user. Do not use any tools. Do not output JSON. Directly generate the image." }]
                 },
                 contents: [{
                     parts: [{ text: prompt }]
                 }],
                 generationConfig
             };
+
+            // STRICT OVERRIDE for Nano Banana (Gemini 2.5 Flash Image)
+            // This model can hallucinate tool calls if not strictly controlled.
+            if (modelId === 'nano-banana') {
+                bodyPayload.system_instruction = {
+                    parts: [{ text: "Generate the image. Do not use tools." }]
+                };
+                // Ensure toolConfig is explicitly disabling tools if possible, 
+                // but for REST API simple system instruction is usually best.
+                // We also remove safety settings to prevent false positives interfering.
+                generationConfig.responseModalities = ["IMAGE"];
+            }
 
             // Safety Settings
             if (safetySettings === 'None (Creative)') {
