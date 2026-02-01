@@ -424,10 +424,26 @@ const StudioContent = () => {
                                 ${!selectedModel ? 'border-red-500/30 bg-red-500/5' : ''}
                             `}
                         >
-                            <span className="text-[9px] text-gray-500 font-bold tracking-widest uppercase mb-0.5">Model</span>
-                            <div className="flex items-center justify-between w-full">
-                                <span className="text-xs font-bold text-white truncate max-w-[100px]">{selectedModel?.name || 'Select'}</span>
-                                <Settings size={14} className="text-gray-600" />
+                            <div className="flex flex-col w-full text-left overflow-hidden">
+                                <span className="text-[9px] text-gray-500 font-bold tracking-widest uppercase mb-0.5">Model</span>
+                                <div className="flex items-center justify-between w-full gap-2">
+                                    <div className="flex items-center gap-2 overflow-hidden w-full">
+                                        <span className="text-xs font-bold text-white shrink-0">{selectedModel?.name || 'Select'}</span>
+                                        {selectedModel && (
+                                            <div className="flex gap-2 overflow-x-auto no-scrollbar mask-gradient-sides">
+                                                {selectedModel?.parameters?.map(p => {
+                                                    const val = params[currentMode]?.[p.id] || p.default;
+                                                    return (
+                                                        <span key={p.id} className="text-[10px] text-gray-500 shrink-0 whitespace-nowrap border-l border-white/10 pl-2">
+                                                            {val}
+                                                        </span>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <Settings size={14} className="text-gray-600 shrink-0" />
+                                </div>
                             </div>
                         </button>
 
