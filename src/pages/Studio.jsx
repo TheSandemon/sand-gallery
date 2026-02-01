@@ -188,6 +188,11 @@ const StudioContent = () => {
     // 2. Settings Drawer Content
     const renderSettings = () => {
         const modeModels = MODELS[currentMode] || [];
+        // Helper to handle parameter updates
+        const handleParamChange = (mode, key, value) => {
+            updateParams(mode, { [key]: value });
+        };
+
         return (
             <div className="p-6 flex flex-col h-full overflow-y-auto">
                 <div className="flex items-center justify-between mb-8">
@@ -226,28 +231,62 @@ const StudioContent = () => {
                     </div>
                 </div>
 
-                {/* Mode Specific Sliders */}
-                {currentMode === 'image' && (
-                    <div className="space-y-6">
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block">ASPECT RATIO</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {['1:1', '16:9', '9:16'].map(r => (
-                                    <button
-                                        key={r}
-                                        onClick={() => updateParams('image', { aspectRatio: r })}
-                                        className={`p-2 border rounded text-xs ${params.image?.aspectRatio === r ? 'border-white text-white' : 'border-gray-800 text-gray-500'}`}
-                                    >
-                                        {r}
-                                    </button>
-                                ))}
+                {/* Dynamic Model Parameters */}
+                {selectedModel?.parameters && (
+                    <div className="space-y-6 border-t border-white/10 pt-6">
+                        {selectedModel.parameters.map(param => (
+                            <div key={param.id}>
+                                <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block uppercase">{param.label}</label>
+
+                                {param.type === 'select' && (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {param.options.map(opt => (
+                                            <button
+                                                key={opt}
+                                                onClick={() => handleParamChange(currentMode, param.id, opt)}
+                                                className={`p-2 border rounded text-xs transition-colors
+                                                    ${(params[currentMode]?.[param.id] || param.default) === opt
+                                                        ? 'border-white text-white bg-white/10'
+                                                        : 'border-gray-800 text-gray-500 hover:border-gray-600'}`
+                                                }
+                                            >
+                                                {opt}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {param.type === 'slider' && (
+                                    <div className="px-1">
+                                        <div className="flex justify-between text-xs text-gray-400 mb-2">
+                                            <span>{param.min}</span>
+                                            <span className="text-neon-green font-mono">{params[currentMode]?.[param.id] || param.default}</span>
+                                            <span>{param.max}</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min={param.min}
+                                            max={param.max}
+                                            step={param.step}
+                                            value={params[currentMode]?.[param.id] || param.default}
+                                            onChange={e => handleParamChange(currentMode, param.id, parseFloat(e.target.value))}
+                                            className="w-full h-1 bg-gray-800 appearance-none rounded-lg accent-neon-green cursor-pointer"
+                                        />
+                                    </div>
+                                )}
                             </div>
-                        </div>
+                        ))}
                     </div>
                 )}
 
-                {currentMode === 'video' && (
-                    <div className="space-y-6">
+
+                {/* Fallback for Mode Specific Sliders (Legacy) */}
+                {/* Only show if model has NO parameters defined, to preserve backward compatibility if needed, 
+                    though we prefer defining everything in config/models.js now. 
+                    Adding specific checks for Video motion bucket if not defined in model params.
+                */}
+                {currentMode === 'video' && !selectedModel?.parameters?.find(p => p.id === 'motion') && (
+                    <div className="space-y-6 mt-6 border-t border-white/10 pt-6">
                         <div>
                             <label className="text-[10px] font-bold text-gray-500 tracking-widest mb-2 block">MOTION BUCKET ({params.video?.motion || 5})</label>
                             <input
@@ -385,10 +424,26 @@ const StudioContent = () => {
                                 ${!selectedModel ? 'border-red-500/30 bg-red-500/5' : ''}
                             `}
                         >
-                            <span className="text-[9px] text-gray-500 font-bold tracking-widest uppercase mb-0.5">Model</span>
-                            <div className="flex items-center justify-between w-full">
-                                <span className="text-xs font-bold text-white truncate max-w-[100px]">{selectedModel?.name || 'Select'}</span>
-                                <Settings size={14} className="text-gray-600" />
+                            <div className="flex flex-col w-full text-left overflow-hidden">
+                                <span className="text-[9px] text-gray-500 font-bold tracking-widest uppercase mb-0.5">Model</span>
+                                <div className="flex items-center justify-between w-full gap-2">
+                                    <div className="flex items-center gap-2 overflow-hidden w-full">
+                                        <span className="text-xs font-bold text-white shrink-0">{selectedModel?.name || 'Select'}</span>
+                                        {selectedModel && (
+                                            <div className="flex gap-2 overflow-x-auto no-scrollbar mask-gradient-sides">
+                                                {selectedModel?.parameters?.map(p => {
+                                                    const val = params[currentMode]?.[p.id] || p.default;
+                                                    return (
+                                                        <span key={p.id} className="text-[10px] text-gray-500 shrink-0 whitespace-nowrap border-l border-white/10 pl-2">
+                                                            {val}
+                                                        </span>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <Settings size={14} className="text-gray-600 shrink-0" />
+                                </div>
                             </div>
                         </button>
 
@@ -480,7 +535,20 @@ const StudioContent = () => {
                                 <span className={`text-sm font-bold truncate ${!selectedModel ? 'text-gray-500 italic' : 'text-white'}`}>
                                     {selectedModel?.name || 'No models available'}
                                 </span>
-                                {selectedModel && <span className="text-[10px] text-neon-green shrink-0">{selectedModel?.provider}</span>}
+                                {selectedModel && (
+                                    <div className="flex gap-2 overflow-x-auto no-scrollbar mask-gradient-sides">
+                                        <span className="text-[10px] text-neon-green shrink-0 whitespace-nowrap">{selectedModel?.provider}</span>
+                                        {/* Dynamic Param Summary */}
+                                        {selectedModel?.parameters?.map(p => {
+                                            const val = params[currentMode]?.[p.id] || p.default;
+                                            return (
+                                                <span key={p.id} className="text-[10px] text-gray-500 shrink-0 whitespace-nowrap border-l border-white/10 pl-2">
+                                                    {val}
+                                                </span>
+                                            )
+                                        })}
+                                    </div>
+                                )}
                             </div>
                             <Settings size={14} className="text-gray-600 group-hover:text-white transition-colors shrink-0" />
                         </div>

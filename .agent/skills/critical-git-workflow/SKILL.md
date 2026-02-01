@@ -1,6 +1,6 @@
 ---
-name: professional-git-workflow
-description: Enforces a strict Feature Branch -> Firebase Preview -> Merge workflow with explicit Agent/User responsibilities.
+name: critical-git-workflow
+description: CRITICAL / MANDATORY. The ONLY acceptable workflow. Enforces strict Feature Branch -> Preview -> Merge protocol. You MUST follow this for every change.
 ---
 
 # Professional Git Workflow
