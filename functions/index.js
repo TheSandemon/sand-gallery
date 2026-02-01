@@ -187,24 +187,47 @@ exports.generateImage = onCall({
                 modelName = 'gemini-3-pro-preview';
             }
 
+            const { temperature, topP, topK, candidateCount, safetySettings, grounding } = request.data;
+
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
+
+            const generationConfig = {
+                responseModalities: ["TEXT", "IMAGE"],
+                temperature: temperature || 0.4,
+                topP: topP || 0.95,
+                topK: topK || 32,
+                candidateCount: candidateCount || 1,
+            };
+
+            const bodyPayload = {
+                system_instruction: {
+                    parts: [{ text: "You are an expert image generator. Generate the image requested by the user." }]
+                },
+                contents: [{
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig
+            };
+
+            // Safety Settings
+            if (safetySettings === 'None (Creative)') {
+                bodyPayload.safetySettings = [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ];
+            }
+
+            // Grounding (Google Search)
+            if (grounding === 'Enabled') {
+                bodyPayload.tools = [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }];
+            }
 
             const response = await fetch(apiUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    system_instruction: {
-                        parts: [{ text: "You are an expert image generator. Generate the image requested by the user." }]
-                    },
-                    contents: [{
-                        parts: [
-                            { text: prompt }
-                        ]
-                    }],
-                    generationConfig: {
-                        responseModalities: ["TEXT", "IMAGE"]
-                    }
-                })
+                body: JSON.stringify(bodyPayload)
             });
             const json = await response.json();
 
