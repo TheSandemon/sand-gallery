@@ -12,7 +12,7 @@ export const MODELS = {
             provider: 'google',
             available: true,
             cost: 2,
-            tags: ['next-gen', 'visionary'],
+            tags: ['next-gen', 'visionary', 'gemini-3-pro'],
             parameters: [
                 {
                     id: 'aspectRatio',
@@ -80,6 +80,32 @@ export const MODELS = {
                     type: 'select',
                     options: ['Disabled', 'Enabled'],
                     default: 'Disabled'
+                }
+            ]
+        },
+        {
+            id: 'nano-banana',
+            name: 'Nano Banana',
+            provider: 'google',
+            available: true,
+            cost: 1,
+            tags: ['fast', 'gemini-2.5-flash'],
+            parameters: [
+                {
+                    id: 'aspectRatio',
+                    label: 'Aspect Ratio',
+                    type: 'select',
+                    options: ['1:1', '16:9', '9:16', '3:2', '2:3'],
+                    default: '1:1'
+                },
+                {
+                    id: 'guidanceScale',
+                    label: 'Guidance Scale',
+                    type: 'slider',
+                    min: 1,
+                    max: 20,
+                    step: 0.5,
+                    default: 7.5
                 }
             ]
         },

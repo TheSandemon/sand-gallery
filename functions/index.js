@@ -110,23 +110,31 @@ exports.generateImage = onCall({
         } else if (provider === 'google') {
             // Google Gemini Image Generation via REST API
 
-            // Use Gemini 3 models (2026)
+            // --- MODEL MAPPING DOCUMENTATION ---
+            // "Nano Banana Pro" -> Model ID: 'gemini-3-pro-image-preview'
+            // "Nano Banana"    -> Model ID: 'gemini-2.5-flash-image'
+            // Both use the GOOGLE_API_KEY_NT secret.
+            // -----------------------------------
+
             let modelName;
-            let activeGoogleKey = getGoogleKey(); // Default to standard key
+            let activeGoogleKey = getGoogleKey(); // Default to standard key for other Google models
 
             if (modelId === 'nano-banana') {
-                modelName = 'gemini-3-flash-preview';
-                activeGoogleKey = getGoogleKeyNt(); // Use NT key for Nano/Flash
+                // User specification: Nano Banana = gemini-2.5-flash-image
+                modelName = 'gemini-2.5-flash-image';
+                activeGoogleKey = getGoogleKeyNt();
             } else if (modelId === 'gemini-3-pro-image-preview') {
-                modelName = 'gemini-3-pro-image-preview'; // Verify correct model name upstream
-                activeGoogleKey = getGoogleKeyNt(); // Use NT key
+                // User specification: Nano Banana Pro = gemini-3-pro-image-preview
+                modelName = 'gemini-3-pro-image-preview';
+                activeGoogleKey = getGoogleKeyNt();
             } else {
+                // Default fallback or other Gemini models (e.g. gemini-3-pro-preview)
                 modelName = 'gemini-3-pro-preview';
             }
 
             if (!activeGoogleKey) throw new HttpsError("failed-precondition", "Google API key missing for this model.");
 
-            const googleKey = activeGoogleKey; // Re-assign for clarity in URL construction
+            const googleKey = activeGoogleKey;
 
             const { temperature, topP, topK, candidateCount, safetySettings, grounding } = request.data;
 
