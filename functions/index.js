@@ -162,13 +162,21 @@ exports.generateImage = onCall({
             // STRICT OVERRIDE for Nano Banana (Gemini 2.5 Flash Image)
             // This model can hallucinate tool calls if not strictly controlled.
             if (modelId === 'nano-banana') {
-                bodyPayload.system_instruction = {
-                    parts: [{ text: "Generate the image. Do not use tools." }]
+                // Remove system instruction completely to avoid "I am an AI behavior"
+                delete bodyPayload.system_instruction;
+
+                // Explicitly disable function calling
+                bodyPayload.tool_config = {
+                    function_calling_config: { mode: "NONE" }
                 };
-                // Ensure toolConfig is explicitly disabling tools if possible, 
-                // but for REST API simple system instruction is usually best.
-                // We also remove safety settings to prevent false positives interfering.
+
+                // Force Modality
                 generationConfig.responseModalities = ["IMAGE"];
+
+                // Modify content to be a direct command
+                bodyPayload.contents = [{
+                    parts: [{ text: "Generate an image of: " + prompt }]
+                }];
             }
 
             // Safety Settings
