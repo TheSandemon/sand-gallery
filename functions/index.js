@@ -22,6 +22,7 @@ const db = admin.firestore();
 // Set these via: firebase functions:secrets:set REPLICATE_API_TOKEN
 // Or use .env file with firebase functions:config:export
 
+const googleApiKey = defineSecret("GOOGLE_API_KEY");
 const googleApiKeyNt = defineSecret("GOOGLE_API_KEY_NT"); // For Nano Banana models
 const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
 const openRouterApiKey = defineSecret("OPENROUTER_API_KEY");
