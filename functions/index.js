@@ -141,12 +141,13 @@ exports.generateImage = onCall({
 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
 
+            // Mapping to Snake Case for REST API
             const generationConfig = {
-                responseModalities: ["TEXT", "IMAGE"],
+                response_modalities: ["TEXT", "IMAGE"],
                 temperature: temperature || 0.4,
-                topP: topP || 0.95,
-                topK: topK || 32,
-                candidateCount: candidateCount || 1,
+                top_p: topP || 0.95,
+                top_k: topK || 32,
+                candidate_count: candidateCount || 1,
             };
 
             const bodyPayload = {
@@ -160,27 +161,28 @@ exports.generateImage = onCall({
             };
 
             // STRICT OVERRIDE for Nano Banana (Gemini 2.5 Flash Image)
-            // This model can hallucinate tool calls if not strictly controlled.
             if (modelId === 'nano-banana') {
-                // Remove system instruction completely to avoid "I am an AI behavior"
                 delete bodyPayload.system_instruction;
 
-                // Explicitly disable function calling
                 bodyPayload.tool_config = {
                     function_calling_config: { mode: "NONE" }
                 };
 
-                // Force Modality
-                generationConfig.responseModalities = ["IMAGE"];
+                generationConfig.response_modalities = ["IMAGE"];
 
-                // Modify content to be a direct command
                 bodyPayload.contents = [{
                     parts: [{ text: "Generate an image of: " + prompt }]
                 }];
-            }
 
-            // Safety Settings
-            if (safetySettings === 'None (Creative)') {
+                // Force disable safety filters for this model
+                bodyPayload.safetySettings = [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ];
+            } else if (safetySettings === 'None (Creative)') {
+                // Standard safety settings
                 bodyPayload.safetySettings = [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
