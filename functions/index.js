@@ -176,13 +176,23 @@ exports.generateImage = onCall({
                 }];
             }
 
-            // Common Safety Logic (Applied to Nano Banana too)
-            if (safetySettings === 'None (Creative)') {
+            // Common Safety Logic
+            // Nano Banana (Gemini 2.5 Flash) is extremely sensitive and requires BLOCK_NONE to function reliably.
+            // We force BLOCK_NONE for Nano Banana regardless of UI setting to prevent "NO_IMAGE".
+            if (modelId === 'nano-banana' || safetySettings === 'None (Creative)') {
                 bodyPayload.safetySettings = [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ];
+            } else {
+                // Standard safety settings
+                bodyPayload.safetySettings = [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
                 ];
             }
         }
@@ -221,15 +231,12 @@ exports.generateImage = onCall({
 
             throw new Error(msg);
         }
+        return { success: true, imageUrl };
+
+    } catch (e) {
+        console.error(e);
+        throw new HttpsError("internal", e.message);
     }
-
-        await saveCreation(uid, "image", prompt, imageUrl, COST);
-    return { success: true, imageUrl };
-
-} catch (e) {
-    console.error(e);
-    throw new HttpsError("internal", e.message);
-}
 });
 
 exports.generateText = onCall({
