@@ -151,6 +151,11 @@ exports.generateImage = onCall({
                 candidate_count: candidateCount || 1,
             };
 
+            // Only add aspect ratio if it's a valid string (avoid null/undefined issues)
+            if (aspectRatio && typeof aspectRatio === 'string') {
+                generationConfig.aspect_ratio = aspectRatio;
+            }
+
             const bodyPayload = {
                 system_instruction: {
                     parts: [{ text: "You are an expert image generator. Generate the image requested by the user. Do not use any tools. Do not output JSON. Directly generate the image." }]
