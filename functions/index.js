@@ -195,10 +195,10 @@ exports.generateImage = onCall({
                     generationConfig.response_modalities = ["IMAGE"];
                     // Flash supports aspect_ratio in generationConfig
                 } else if (isNanoBananaPro) {
-                    // Pro Preview: More flexible, but still requires clean config.
-                    // Remove modality constraint to avoid "Internal Error".
-                    // aspectRatio is now correctly handled in imageConfig (not prompt injection).
-                    delete generationConfig.response_modalities;
+                    // Pro Preview: Also requires IMAGE modality to be explicit (like Flash).
+                    // Previous attempts to delete it caused the model to default to TEXT.
+                    // aspectRatio is now correctly handled in imageConfig.
+                    generationConfig.response_modalities = ["IMAGE"];
                 }
 
                 // Enhanced prompting for reliability
