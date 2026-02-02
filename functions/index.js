@@ -196,10 +196,8 @@ exports.generateImage = onCall({
                     // Remove modality constraint to avoid "Internal Error"
                     delete generationConfig.response_modalities;
 
-                    // Pro Preview often crashes with aspect_ratio in config. 
-                    // Move it to prompt instruction instead.
-                    delete generationConfig.aspect_ratio;
-                    prompt += ` (Aspect Ratio: ${request.data.aspectRatio || "1:1"})`;
+                    // RESTORED: aspect_ratio in config seems supported if modality is not strict
+                    // prompt += ` (Aspect Ratio: ${request.data.aspectRatio || "1:1"})`;
                 }
 
                 // Enhanced prompting for reliability
