@@ -166,17 +166,22 @@ exports.generateImage = onCall({
                 generationConfig
             };
 
-            // STRICT OVERRIDE for Nano Banana (Gemini 2.5 Flash Image)
-            if (modelId === 'nano-banana') {
-                delete bodyPayload.system_instruction;
+            // STRICT OVERRIDE for Nano Banana family (Gemini Image Models)
+            const isNanoBanana = modelId === 'nano-banana';
+            const isNanoBananaPro = modelId === 'gemini-3-pro-image-preview';
 
-                bodyPayload.tool_config = {
-                    function_calling_config: { mode: "NONE" }
-                };
+            if (isNanoBanana || isNanoBananaPro) {
+                if (isNanoBanana) {
+                    delete bodyPayload.system_instruction;
+                    bodyPayload.tool_config = {
+                        function_calling_config: { mode: "NONE" }
+                    };
+                }
 
-                // Nano Banana specific setup
+                // Force IMAGE mode for both to ensure parameters like aspect_ratio are respected
                 generationConfig.response_modalities = ["IMAGE"];
 
+                // Enhanced prompting for reliability
                 bodyPayload.contents = [{
                     parts: [{ text: "Generate an image of: " + prompt }]
                 }];
