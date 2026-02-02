@@ -151,9 +151,11 @@ exports.generateImage = onCall({
                 candidate_count: candidateCount || 1,
             };
 
-            // Only add aspect ratio if it's a valid string (avoid null/undefined issues)
+            // Image generation config (separate from generationConfig per API docs)
+            const imageConfig = {};
             if (aspectRatio && typeof aspectRatio === 'string') {
-                generationConfig.aspect_ratio = aspectRatio;
+                // Official API uses camelCase 'aspectRatio' in imageConfig
+                imageConfig.aspectRatio = aspectRatio;
             }
 
             const bodyPayload = {
@@ -163,7 +165,8 @@ exports.generateImage = onCall({
                 contents: [{
                     parts: [{ text: prompt }]
                 }],
-                generationConfig
+                generationConfig,
+                imageConfig  // Add imageConfig to payload
             };
 
             // STRICT OVERRIDE for Nano Banana family (Gemini Image Models)
@@ -192,16 +195,10 @@ exports.generateImage = onCall({
                     generationConfig.response_modalities = ["IMAGE"];
                     // Flash supports aspect_ratio in generationConfig
                 } else if (isNanoBananaPro) {
-                    // Pro Preview is more flexible but fragile with strict params
-                    // Remove modality constraint to avoid "Internal Error"
+                    // Pro Preview: More flexible, but still requires clean config.
+                    // Remove modality constraint to avoid "Internal Error".
+                    // aspectRatio is now correctly handled in imageConfig (not prompt injection).
                     delete generationConfig.response_modalities;
-
-                    // RESTORED: aspect_ratio in config seems supported if modality is not strict
-                    // prompt += ` (Aspect Ratio: ${request.data.aspectRatio || "1:1"})`;
-
-                    // FORCE: Pro Preview often requires prompt engineering for AR
-                    const ar = request.data.aspectRatio || "1:1";
-                    prompt = `[Aspect Ratio: ${ar}] ${prompt}`;
                 }
 
                 // Enhanced prompting for reliability
