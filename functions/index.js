@@ -225,11 +225,11 @@ exports.generateImage = onCall({
                     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
                 ];
             }
-        }
 
-        // Grounding (Google Search)
-        if (grounding === 'Enabled') {
-            bodyPayload.tools = [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }];
+            // Grounding (Google Search) - inside provider block
+            if (grounding === 'Enabled') {
+                bodyPayload.tools = [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }];
+            }
         }
 
         const response = await fetch(apiUrl, {
