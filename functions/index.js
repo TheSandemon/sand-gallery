@@ -198,6 +198,10 @@ exports.generateImage = onCall({
 
                     // RESTORED: aspect_ratio in config seems supported if modality is not strict
                     // prompt += ` (Aspect Ratio: ${request.data.aspectRatio || "1:1"})`;
+
+                    // FORCE: Pro Preview often requires prompt engineering for AR
+                    const ar = request.data.aspectRatio || "1:1";
+                    prompt = `[Aspect Ratio: ${ar}] ${prompt}`;
                 }
 
                 // Enhanced prompting for reliability
