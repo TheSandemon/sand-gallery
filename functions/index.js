@@ -142,7 +142,7 @@ exports.generateImage = onCall({
 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
 
-            // Mapping to Snake Case for REST API
+            // Mapping to Snake Case for REST API (Updated for correct ImageConfig)
             const generationConfig = {
                 response_modalities: ["TEXT", "IMAGE"],
                 temperature: temperature || 0.4,
