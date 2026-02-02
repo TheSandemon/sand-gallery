@@ -181,22 +181,32 @@ exports.generateImage = onCall({
                 };
 
                 // 3. Remove Text-Generation Parameters from generationConfig
-                // These cause internal errors if passed to pure image generation context
                 delete generationConfig.temperature;
                 delete generationConfig.top_p;
                 delete generationConfig.top_k;
                 delete generationConfig.candidate_count;
-                // keep aspect_ratio if it exists
 
-                // 4. Force IMAGE modality
-                generationConfig.response_modalities = ["IMAGE"];
+                // 4. Model-Specific Tweaks
+                if (isNanoBanana) {
+                    // Flash REQUIRES explicit permissions to be an image generator
+                    generationConfig.response_modalities = ["IMAGE"];
+                    // Flash supports aspect_ratio in generationConfig
+                } else if (isNanoBananaPro) {
+                    // Pro Preview is more flexible but fragile with strict params
+                    // Remove modality constraint to avoid "Internal Error"
+                    delete generationConfig.response_modalities;
+
+                    // Pro Preview often crashes with aspect_ratio in config. 
+                    // Move it to prompt instruction instead.
+                    delete generationConfig.aspect_ratio;
+                    prompt += ` (Aspect Ratio: ${request.data.aspectRatio || "1:1"})`;
+                }
 
                 // Enhanced prompting for reliability
                 bodyPayload.contents = [{
                     parts: [{ text: "Generate an image of: " + prompt }]
                 }];
             }
-
             // Common Safety Logic
             // Nano Banana (Gemini 2.5 Flash) is extremely sensitive and requires BLOCK_NONE to function reliably.
             // We force BLOCK_NONE for Nano Banana regardless of UI setting to prevent "NO_IMAGE".
@@ -232,7 +242,8 @@ exports.generateImage = onCall({
 
         if (json.error) {
             console.error("Gemini API Error:", JSON.stringify(json.error));
-            throw new Error(json.error.message || "Google API Error");
+            // Return full error details to user for debugging
+            throw new Error(JSON.stringify(json.error));
         }
 
         // Gemini returns base64 images in inlineData
