@@ -226,43 +226,45 @@ exports.generateImage = onCall({
                 ];
             }
 
+
             // Grounding (Google Search) - inside provider block
             if (grounding === 'Enabled') {
                 bodyPayload.tools = [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }];
             }
+
+            // FETCH moved inside block to access apiUrl
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bodyPayload)
+            });
+            const json = await response.json();
+
+            if (json.error) {
+                console.error("Gemini API Error:", JSON.stringify(json.error));
+                // Return full error details to user for debugging
+                throw new Error(JSON.stringify(json.error));
+            }
+
+            // Gemini returns base64 images in inlineData
+            const candidates = json.candidates || [];
+            // We search ALL parts for the image, as text might come first (Thinking model)
+            const parts = candidates[0]?.content?.parts || [];
+            const imagePart = parts.find(p => p.inlineData);
+
+            if (imagePart && imagePart.inlineData) {
+                imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            } else {
+                // Debug: If we got text but no image, log it.
+                const textPart = parts.find(p => p.text);
+                let msg = "No image found.";
+                if (textPart) msg += " Model text: " + textPart.text.substring(0, 200);
+                else msg += " Debug: " + JSON.stringify(json).substring(0, 300);
+
+                throw new Error(msg);
+            }
+            return { success: true, imageUrl };
         }
-
-        const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(bodyPayload)
-        });
-        const json = await response.json();
-
-        if (json.error) {
-            console.error("Gemini API Error:", JSON.stringify(json.error));
-            // Return full error details to user for debugging
-            throw new Error(JSON.stringify(json.error));
-        }
-
-        // Gemini returns base64 images in inlineData
-        const candidates = json.candidates || [];
-        // We search ALL parts for the image, as text might come first (Thinking model)
-        const parts = candidates[0]?.content?.parts || [];
-        const imagePart = parts.find(p => p.inlineData);
-
-        if (imagePart && imagePart.inlineData) {
-            imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-        } else {
-            // Debug: If we got text but no image, log it.
-            const textPart = parts.find(p => p.text);
-            let msg = "No image found.";
-            if (textPart) msg += " Model text: " + textPart.text.substring(0, 200);
-            else msg += " Debug: " + JSON.stringify(json).substring(0, 300);
-
-            throw new Error(msg);
-        }
-        return { success: true, imageUrl };
 
     } catch (e) {
         console.error(e);
