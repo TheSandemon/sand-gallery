@@ -171,14 +171,24 @@ exports.generateImage = onCall({
             const isNanoBananaPro = modelId === 'gemini-3-pro-image-preview';
 
             if (isNanoBanana || isNanoBananaPro) {
-                if (isNanoBanana) {
-                    delete bodyPayload.system_instruction;
-                    bodyPayload.tool_config = {
-                        function_calling_config: { mode: "NONE" }
-                    };
-                }
+                // Both models require a clean "Image Only" payload.
+                // 1. Remove System Instructions (unsupported in strict image mode)
+                delete bodyPayload.system_instruction;
 
-                // Force IMAGE mode for both to ensure parameters like aspect_ratio are respected
+                // 2. Disable Tools explicitly
+                bodyPayload.tool_config = {
+                    function_calling_config: { mode: "NONE" }
+                };
+
+                // 3. Remove Text-Generation Parameters from generationConfig
+                // These cause internal errors if passed to pure image generation context
+                delete generationConfig.temperature;
+                delete generationConfig.top_p;
+                delete generationConfig.top_k;
+                delete generationConfig.candidate_count;
+                // keep aspect_ratio if it exists
+
+                // 4. Force IMAGE modality
                 generationConfig.response_modalities = ["IMAGE"];
 
                 // Enhanced prompting for reliability
