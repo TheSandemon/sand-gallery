@@ -1,8 +1,8 @@
 import React from 'react';
 
 const Footer = () => {
-    // Hardcoded version string as requested (updated manually per deployment)
-    const VERSION = "v2026.02.03-1545 GMT";
+    // Automated version string from CI/CD
+    const VERSION = import.meta.env.VITE_APP_VERSION || "DEV_MODE";
 
     return (
         <footer className="w-full py-6 mt-auto border-t border-white/5 bg-black/40 backdrop-blur-sm text-center">
