@@ -167,11 +167,12 @@ exports.generateImage = onCall({
             };
 
             // STRICT OVERRIDE for Nano Banana family (Gemini Image Models)
+            // CRITICAL: REST API uses strict protobuf schema. Only valid fields allowed.
+            // SDK abstractions like image_config/thinking_config do NOT work in raw REST.
             const isNanoBanana = modelId === 'nano-banana';
             const isNanoBananaPro = modelId === 'gemini-3-pro-image-preview';
 
             if (isNanoBanana || isNanoBananaPro) {
-                // Both models require a clean "Image Only" payload.
                 // 1. Remove System Instructions (unsupported in strict image mode)
                 delete bodyPayload.system_instruction;
 
@@ -180,47 +181,38 @@ exports.generateImage = onCall({
                     function_calling_config: { mode: "NONE" }
                 };
 
-                // 3. Remove Text-Generation Parameters from generationConfig
+                // 3. Remove ALL non-standard fields from generationConfig
+                // REST API only allows: response_modalities (for image models)
                 delete generationConfig.temperature;
                 delete generationConfig.top_p;
                 delete generationConfig.top_k;
                 delete generationConfig.candidate_count;
-                // CRITICAL: Remove aspect_ratio from top-level (it was wrong placement)
-                delete generationConfig.aspect_ratio;
+                delete generationConfig.aspect_ratio; // Not valid in REST API
 
-                // 4. Build image_config per API spec 
-                // Per docs: image_config: { aspect_ratio, resolution }
+                // 4. Set response modality
                 const { thinking, resolution } = request.data;
-                const ar = aspectRatio || "1:1";
+                const isThinking = isNanoBananaPro && thinking === 'On';
 
-                generationConfig.image_config = {
-                    aspect_ratio: ar
-                };
-
-                // Map resolution to API values
-                if (resolution === 'High (2K)') {
-                    generationConfig.image_config.resolution = "2K";
-                } else if (resolution === 'Ultra (4K)') {
-                    generationConfig.image_config.resolution = "4K";
-                }
-                // "Standard" = no resolution field (let API default)
-
-                // 5. Model-Specific Tweaks
-                if (isNanoBanana) {
-                    // Flash: Strict IMAGE only
+                if (isThinking) {
+                    // TEXT+IMAGE for thinking mode to capture reasoning
+                    generationConfig.response_modalities = ["TEXT", "IMAGE"];
+                } else {
+                    // Strict IMAGE only
                     generationConfig.response_modalities = ["IMAGE"];
-                } else if (isNanoBananaPro) {
-                    // Pro: Support Thinking mode
-                    const isThinking = thinking === 'On';
-
-                    if (isThinking) {
-                        generationConfig.response_modalities = ["TEXT", "IMAGE"];
-                        // Per docs: thinking_config: { include_thoughts: true }
-                        generationConfig.thinking_config = { include_thoughts: true };
-                    } else {
-                        generationConfig.response_modalities = ["IMAGE"];
-                    }
                 }
+
+                // 5. Build enhanced prompt with all parameters (prompt injection)
+                const ar = aspectRatio || "1:1";
+                let promptParts = [];
+                promptParts.push(`[Aspect Ratio: ${ar}]`);
+
+                if (resolution === 'High (2K)') promptParts.push("[Resolution: 2K]");
+                else if (resolution === 'Ultra (4K)') promptParts.push("[Resolution: 4K]");
+
+                if (isThinking) promptParts.push("[Show your reasoning process]");
+
+                // Construct final prompt
+                prompt = promptParts.join(" ") + " " + prompt;
 
                 // Enhanced prompting for reliability
                 bodyPayload.contents = [{
