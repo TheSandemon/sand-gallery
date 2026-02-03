@@ -1,0 +1,6 @@
+## Summary
+Refinements to Admin UI Button and Console Links.
+
+## Changes
+- **Admin Dashboard**: Relocated "OPEN CRM" button to top-right header area. Used `Link` for client-side routing.
+- **Admin CRM**: Corrected external links to Firebase Console (Firestore & Storage) to use robust deep-link formats.

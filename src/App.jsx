@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import CircuitEffect from './components/CircuitEffect';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -25,8 +26,9 @@ function App() {
           <Route path="/crm" element={<CRM />} />
           <Route path="/pricing" element={<Pricing />} />
         </Routes>
+        <Footer />
       </Router>
-    </AuthProvider>
+    </AuthProvider >
   );
 }
 
