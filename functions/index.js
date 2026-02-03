@@ -66,7 +66,7 @@ exports.generateImage = onCall({
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
-    const { prompt, provider, modelId, version, aspectRatio = "1:1" } = request.data;
+    let { prompt, provider, modelId, version, aspectRatio = "1:1" } = request.data;
 
     if (!prompt) throw new HttpsError("invalid-argument", "Prompt required.");
 
