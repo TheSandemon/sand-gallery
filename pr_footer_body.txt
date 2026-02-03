@@ -1,0 +1,7 @@
+## Summary
+Added Version Footer and Refined Admin UI.
+
+## Changes
+- **Footer**: Added `Footer.jsx` showing `v2026.02.03-1545 GMT` (Dynamic timestamps can be added later).
+- **Admin Dashboard**: Moved 'OPEN CRM' button to the 'User Management' section for better layout.
+- **Console Links**: Updated Firestore/Storage links to dynamically use the current Firebase Project ID and Bucket configuration, ensuring they work in both dev/lab and production environments.

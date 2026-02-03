@@ -42,6 +42,7 @@ Do not try to be a hero. If you are touching these complex systems, **READ THE M
 | **Git / Deploy / PRs** | `critical-git-workflow` | **MANDATORY**. Defines the branch naming and Preview URL handover process. |
 | **UI / Components** | `frontend-design` | Branding guidelines, glassmorphism CSS, and layout tokens. |
 | **Firebase / Database** | `firebase-manager` | Firestore rules, indexes, and storage patterns. |
+| **AI Critic / CRM** | `ai-critic-ecosystem` | **NEW**. Architecture of Video Analysis, Admin Dashboard, and Data Flow. |
 
 ---
 
