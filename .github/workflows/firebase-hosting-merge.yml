@@ -36,5 +36,7 @@ jobs:
       - name: Install Firebase Tools and Deploy Functions
         run: |
           npm install -g firebase-tools
+          cd functions && npm ci
+          cd ..
           firebase deploy --only functions --project sand-gallery-lab --force
 
