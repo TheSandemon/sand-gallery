@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
     const { user, getAllUsers, grantCredits } = useAuth();
@@ -45,22 +46,28 @@ const AdminDashboard = () => {
 
     return (
         <div style={{ paddingTop: '120px', maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '2rem' }}>
-                ADMIN <span style={{ color: 'var(--neon-green)' }}>DASHBOARD</span>
-                <a href="/crm" style={{
-                    marginLeft: '2rem',
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '3rem', margin: 0 }}>
+                    ADMIN <span style={{ color: 'var(--neon-green)' }}>DASHBOARD</span>
+                </h1>
+                <Link to="/crm" style={{
                     fontSize: '1rem',
-                    padding: '0.5rem 1rem',
+                    padding: '0.8rem 1.5rem',
                     background: 'var(--neon-green)',
                     color: 'black',
-                    borderRadius: '8px',
+                    borderRadius: '12px',
                     textDecoration: 'none',
-                    fontWeight: 'bold',
-                    verticalAlign: 'middle'
-                }}>
+                    fontWeight: '900',
+                    letterSpacing: '1px',
+                    boxShadow: '0 0 15px rgba(0, 143, 78, 0.4)',
+                    transition: 'all 0.3s ease'
+                }}
+                    onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                >
                     OPEN CRM
-                </a>
-            </h1>
+                </Link>
+            </div>
 
             <div style={{ marginBottom: '3rem' }}>
                 <h2 style={{ borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>User Management</h2>

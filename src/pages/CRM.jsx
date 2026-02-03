@@ -249,7 +249,7 @@ const AdminCRM = () => {
                                                         <div className="text-right">
                                                             <div className="flex gap-2 mb-2 justify-end">
                                                                 <a
-                                                                    href={`https://console.firebase.google.com/u/0/project/sand-gallery/firestore/data/users/${u.id}`}
+                                                                    href={`https://console.firebase.google.com/project/sand-gallery/firestore/databases/-default-/data/users/${u.id}`}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded hover:bg-blue-500/20 transition-colors flex items-center gap-1"
@@ -257,7 +257,7 @@ const AdminCRM = () => {
                                                                     <Database size={10} /> Firestore
                                                                 </a>
                                                                 <a
-                                                                    href={`https://console.firebase.google.com/u/0/project/sand-gallery/storage/bucket/sand-gallery.appspot.com/files/~2Fuser_uploads~2F${u.id}`}
+                                                                    href={`https://console.firebase.google.com/project/sand-gallery/storage/bucket/sand-gallery.appspot.com/files/~2Fuser_uploads~2F${u.id}`}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded hover:bg-orange-500/20 transition-colors flex items-center gap-1"
