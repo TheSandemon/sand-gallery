@@ -22,6 +22,20 @@ export const MODELS = {
                     default: '1:1'
                 },
                 {
+                    id: 'resolution',
+                    label: 'Resolution',
+                    type: 'select',
+                    options: ['Standard', 'High (2K)', 'Ultra (4K)'],
+                    default: 'Standard'
+                },
+                {
+                    id: 'thinking',
+                    label: 'Thinking',
+                    type: 'select',
+                    options: ['Off', 'On'],
+                    default: 'Off'
+                },
+                {
                     id: 'safetySettings',
                     label: 'Safety Filter',
                     type: 'select',
