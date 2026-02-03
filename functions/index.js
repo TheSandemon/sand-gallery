@@ -152,8 +152,11 @@ exports.generateImage = onCall({
             };
 
             // Add aspect_ratio to generationConfig (snake_case for REST API)
+            // ERROR FIX: Raw REST API rejects 'aspect_ratio' in generationConfig.
+            // We use PROMPT INJECTION (Pulse) instead for compatibility.
             if (aspectRatio && typeof aspectRatio === 'string') {
-                generationConfig.aspect_ratio = aspectRatio;
+                // generationConfig.aspect_ratio = aspectRatio; // REMOVED causing 400 Error
+                prompt = `[Aspect Ratio: ${aspectRatio}] ${prompt}`;
             }
 
             const bodyPayload = {
@@ -202,9 +205,8 @@ exports.generateImage = onCall({
                 }
 
                 // 5. Build enhanced prompt with all parameters (prompt injection)
-                const ar = aspectRatio || "1:1";
+                // Note: Aspect Ratio is already injected globally above.
                 let promptParts = [];
-                promptParts.push(`[Aspect Ratio: ${ar}]`);
 
                 if (resolution === 'High (2K)') promptParts.push("[Resolution: 2K]");
                 else if (resolution === 'Ultra (4K)') promptParts.push("[Resolution: 4K]");
@@ -212,7 +214,9 @@ exports.generateImage = onCall({
                 if (isThinking) promptParts.push("[Show your reasoning process]");
 
                 // Construct final prompt
-                prompt = promptParts.join(" ") + " " + prompt;
+                if (promptParts.length > 0) {
+                    prompt = promptParts.join(" ") + " " + prompt;
+                }
 
                 // Enhanced prompting for reliability
                 bodyPayload.contents = [{
