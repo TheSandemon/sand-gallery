@@ -1,378 +1,289 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Film, Scissors, Zap, Award, Star, Activity, AlertCircle, CheckCircle } from 'lucide-react';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { getAuth } from "firebase/auth";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
-import { doc, onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
+import { collection, query, getDocs, doc, updateDoc, where, orderBy, limit } from "firebase/firestore";
+import { Search, Edit, Save, X, Shield, ShieldAlert, Award, ChevronDown, ChevronUp, User, Database, Coins } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const HolographicCard = ({ title, score, icon: Icon, color, delay }) => {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20, rotateX: 10 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ delay: delay * 0.1, duration: 0.6, type: "spring" }}
-            className="relative group perspective-1000"
-        >
-            <div className={`
-        relative overflow-hidden rounded-xl border border-white/10
-        bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-md
-        p-6 flex flex-col items-center justify-center gap-4
-        shadow-[0_0_15px_rgba(0,0,0,0.5)]
-        hover:shadow-[0_0_25px_var(--neon-color)]
-        transition-all duration-300
-      `}
-                style={{ '--neon-color': color }}
-            >
-                {/* Holographic Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-200%] group-hover:animate-shine" />
+const AdminCRM = () => {
+    const { user } = useAuth();
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [expandedUserId, setExpandedUserId] = useState(null);
+    const [userAnalyses, setUserAnalyses] = useState({}); // Cache for analyses
+    const [editingUser, setEditingUser] = useState(null); // { id, credits, role }
 
-                <div className="p-3 rounded-full bg-white/5 border border-white/10 group-hover:border-[var(--neon-color)] transition-colors">
-                    <Icon size={32} style={{ color: color }} />
-                </div>
-
-                <div className="text-center">
-                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-1">{title}</h3>
-                    <div className="text-4xl font-black text-white drop-shadow-[0_0_10px_var(--neon-color)]">
-                        <span style={{ color: color }}>{score}</span>
-                        <span className="text-lg text-gray-600 ml-1">/100</span>
-                    </div>
-                </div>
-
-                {/* Scanline Overlay */}
-                <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20" />
-            </div>
-        </motion.div>
-    );
-};
-
-const CRM = () => {
-    const [file, setFile] = useState(null);
-    const [dragActive, setDragActive] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [uploadStatus, setUploadStatus] = useState('idle'); // idle, uploading, analyzing, complete, error
-    const [analysisResult, setAnalysisResult] = useState(null);
-    const [latestAnalysis, setLatestAnalysis] = useState(null);
-
-    const auth = getAuth();
-    const fileInputRef = useRef(null);
-
-    // Load latest analysis on mount
     useEffect(() => {
-        if (!auth.currentUser) return;
+        if (user?.role === 'owner' || user?.role === 'admin') {
+            fetchUsers();
+        }
+    }, [user]);
 
-        const q = query(
-            collection(db, "users", auth.currentUser.uid, "video_analyses"),
-            orderBy("timestamp", "desc"),
-            limit(1)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                setLatestAnalysis(snapshot.docs[0].data());
-            }
-        });
-
-        return () => unsubscribe();
-    }, [auth.currentUser]);
-
-
-    const handleDrag = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActive(true);
-        } else if (e.type === "dragleave") {
-            setDragActive(false);
+    const fetchUsers = async () => {
+        try {
+            setLoading(true);
+            const q = query(collection(db, "users"));
+            const snapshot = await getDocs(q);
+            const userList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUsers(userList);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFile(e.dataTransfer.files[0]);
+    const fetchAnalyses = async (userId) => {
+        if (userAnalyses[userId]) return; // Already fetched
+
+        try {
+            const q = query(
+                collection(db, "users", userId, "video_analyses"),
+                orderBy("timestamp", "desc"),
+                limit(5)
+            );
+            const snapshot = await getDocs(q);
+            const analyses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUserAnalyses(prev => ({ ...prev, [userId]: analyses }));
+        } catch (error) {
+            console.error("Error fetching analyses:", error);
         }
     };
 
-    const handleChange = (e) => {
-        e.preventDefault();
-        if (e.target.files && e.target.files[0]) {
-            handleFile(e.target.files[0]);
-        }
-    };
-
-    const handleFile = (file) => {
-        if (file.type.startsWith('video/')) {
-            setFile(file);
-            setUploadStatus('idle');
-            setAnalysisResult(null);
+    const handleExpandUser = (userId) => {
+        if (expandedUserId === userId) {
+            setExpandedUserId(null);
+            setEditingUser(null);
         } else {
-            alert("Please upload a valid video file.");
+            setExpandedUserId(userId);
+            setEditingUser(null);
+            fetchAnalyses(userId);
         }
     };
 
-    const startAnalysis = async () => {
-        if (!file || !auth.currentUser) return;
-
-        setUploadStatus('uploading');
-        setUploadProgress(0);
-
-        const storage = getStorage();
-        const timestamp = Date.now();
-        const storagePath = `user_uploads/${auth.currentUser.uid}/${timestamp}_${file.name}`;
-        const storageRef = ref(storage, storagePath);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadProgress(progress);
-            },
-            (error) => {
-                console.error("Upload Error:", error);
-                setUploadStatus('error');
-            },
-            async () => {
-                setUploadStatus('analyzing');
-
-                try {
-                    const functions = getFunctions();
-                    // Increase timeout for long Gemini 1.5/3.0 processing
-                    // Note: Client-side timeout config might need to be set in initialization if default 60s is too short
-                    const analyzeVideo = httpsCallable(functions, 'analyzeVideo', { timeout: 300000 });
-
-                    const result = await analyzeVideo({ storagePath });
-                    setAnalysisResult(result.data);
-                    setUploadStatus('complete');
-                } catch (error) {
-                    console.error("Analysis Error:", error);
-                    setUploadStatus('error');
-                }
-            }
-        );
+    const handleEditStart = (u) => {
+        setEditingUser({ id: u.id, credits: u.credits || 0, role: u.role || 'user' });
     };
 
-    // Use either the just-completed result or the latest from DB
-    const displayData = analysisResult || latestAnalysis;
+    const handleEditSave = async () => {
+        if (!editingUser) return;
+        try {
+            const userRef = doc(db, "users", editingUser.id);
+            await updateDoc(userRef, {
+                credits: Number(editingUser.credits),
+                role: editingUser.role
+            });
+
+            // Update local state
+            setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, credits: Number(editingUser.credits), role: editingUser.role } : u));
+            setEditingUser(null);
+        } catch (error) {
+            console.error("Error updating user:", error);
+            alert("Failed to update user.");
+        }
+    };
+
+    // Filter users
+    const filteredUsers = users.filter(u =>
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.id.includes(searchTerm)
+    );
+
+    if (!user || (user.role !== 'owner' && user.role !== 'admin')) {
+        return (
+            <div className="min-h-screen pt-[120px] bg-[var(--bg-dark)] flex items-center justify-center text-white">
+                <div className="text-center p-8 bg-white/5 border border-red-500/30 rounded-2xl backdrop-blur-md">
+                    <ShieldAlert size={48} className="text-red-500 mx-auto mb-4" />
+                    <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+                    <p className="text-gray-400">You do not have permission to view the CRM Dashboard.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-[var(--bg-dark)] pt-[120px] pb-24 px-4 sm:px-6 lg:px-8 text-white font-sans overflow-hidden">
+        <div className="min-h-screen bg-[var(--bg-dark)] pt-[100px] pb-12 px-4 sm:px-6 lg:px-8 text-white font-sans">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tighter flex items-center gap-3">
+                            <Database className="text-[var(--neon-gold)]" />
+                            ADMIN <span className="text-[var(--neon-green)]">CRM</span>
+                        </h1>
+                        <p className="text-gray-400 text-sm mt-1">Manage users, credits, and review generative history.</p>
+                    </div>
 
-            {/* Background Ambience */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-[var(--neon-green)] opacity-[0.03] blur-[128px] rounded-full" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[var(--neon-gold)] opacity-[0.03] blur-[128px] rounded-full" />
-            </div>
-
-            <div className="max-w-7xl mx-auto relative z-10">
-
-                {/* Header */}
-                <div className="mb-12 text-center">
-                    <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-                        AI <span className="text-[var(--neon-gold)]">CRITIC</span>
-                    </h1>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                        Upload your cut. Get a brutal, professional analysis from Gemini 3.0 Pro.
-                        Improve your Edit, FX, and Storytelling.
-                    </p>
+                    <div className="relative w-full md:w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search users (email, name, ID)..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors"
+                        />
+                    </div>
                 </div>
 
-                {/* Upload Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 items-stretch">
-                    {/* Dropzone */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col h-full"
-                    >
-                        <div
-                            className={`
-                        flex-1 border-2 border-dashed rounded-2xl transition-all duration-300
-                        flex flex-col items-center justify-center p-12 text-center cursor-pointer
-                        bg-white/5 backdrop-blur-sm group
-                        ${dragActive ? 'border-[var(--neon-green)] bg-[var(--neon-green)]/5' : 'border-white/10 hover:border-white/30'}
-                    `}
-                            onDragEnter={handleDrag}
-                            onDragLeave={handleDrag}
-                            onDragOver={handleDrag}
-                            onDrop={handleDrop}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                className="hidden"
-                                accept="video/*"
-                                onChange={handleChange}
-                            />
-
-                            <div className="w-20 h-20 mb-6 rounded-full bg-[var(--bg-dark)] flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform shadow-xl">
-                                {file ? <Film className="text-[var(--neon-gold)]" size={32} /> : <Upload className="text-gray-400" size={32} />}
-                            </div>
-
-                            {file ? (
-                                <div>
-                                    <p className="text-xl font-bold text-white mb-2">{file.name}</p>
-                                    <p className="text-sm text-gray-400">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                                        className="mt-4 px-4 py-2 text-xs font-bold text-red-400 hover:text-red-300 uppercase tracking-widest border border-red-500/30 rounded hover:bg-red-500/10 transition-colors"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            ) : (
-                                <div>
-                                    <p className="text-xl font-bold text-white mb-2">Drag & Drop Video</p>
-                                    <p className="text-sm text-gray-400">or click to browse</p>
-                                    <p className="text-xs text-gray-600 mt-4 uppercase tracking-widest">Supports MP4, MOV, WEBM</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Status Bar */}
-                        {file && (
-                            <div className="mt-6">
-                                {uploadStatus === 'idle' && (
-                                    <button
-                                        onClick={startAnalysis}
-                                        className="w-full py-4 bg-[var(--neon-green)] text-black font-black text-lg uppercase tracking-widest rounded-xl hover:bg-[#00b060] transition-colors shadow-[0_0_20px_rgba(0,143,78,0.4)] hover:shadow-[0_0_30px_rgba(0,143,78,0.6)] active:scale-[0.98]"
-                                    >
-                                        Judge My Cut
-                                    </button>
-                                )}
-
-                                {uploadStatus === 'uploading' && (
-                                    <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                                        <div className="flex justify-between text-sm mb-2 text-gray-400">
-                                            <span>Uploading to Secure Storage...</span>
-                                            <span>{Math.round(uploadProgress)}%</span>
-                                        </div>
-                                        <div className="h-2 bg-black/50 rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-[var(--neon-green)]"
-                                                style={{ width: `${uploadProgress}%` }}
-                                                animate={{ width: `${uploadProgress}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {uploadStatus === 'analyzing' && (
-                                    <div className="bg-white/5 rounded-xl p-6 border border-white/10 flex items-center justify-center gap-4 animate-pulse">
-                                        <Activity className="text-[var(--neon-gold)] animate-spin" />
-                                        <span className="text-[var(--neon-gold)] font-bold tracking-widest">GEMINI 3.0 PRO IS ANALYZING...</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </motion.div>
-
-                    {/* Holographic Dashboard */}
-                    <div className="flex flex-col gap-6">
-                        {!displayData ? (
-                            <div className="h-full rounded-2xl border border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center text-gray-500 p-12">
-                                <Activity className="mb-4 opacity-20" size={48} />
-                                <p>No analysis data yet.</p>
-                                <p className="text-sm opacity-50">Upload a video to see your skills.</p>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    <HolographicCard
-                                        title="Editing"
-                                        score={displayData.scores?.editing || 0}
-                                        icon={Scissors}
-                                        color="#3b82f6" // Blue
-                                        delay={0}
-                                    />
-                                    <HolographicCard
-                                        title="Effects"
-                                        score={displayData.scores?.fx || 0}
-                                        icon={Zap}
-                                        color="#a855f7" // Purple
-                                        delay={1}
-                                    />
-                                    <HolographicCard
-                                        title="Pacing"
-                                        score={displayData.scores?.pacing || 0}
-                                        icon={Activity}
-                                        color="#ef4444" // Red
-                                        delay={2}
-                                    />
-                                    <HolographicCard
-                                        title="Story"
-                                        score={displayData.scores?.storytelling || 0}
-                                        icon={Film}
-                                        color="#f97316" // Orange
-                                        delay={3}
-                                    />
-                                    <HolographicCard
-                                        title="Quality"
-                                        score={displayData.scores?.quality || 0}
-                                        icon={Star}
-                                        color="#008f4e" // Green (Neon)
-                                        delay={4}
-                                    />
-                                    <div className="flex flex-col items-center justify-center p-4">
-                                        <div className="text-xs text-center text-gray-500 uppercase tracking-widest mb-2">Overall Grade</div>
-                                        <div className="text-5xl font-black text-white">
-                                            {Math.round((
-                                                (displayData.scores?.editing || 0) +
-                                                (displayData.scores?.fx || 0) +
-                                                (displayData.scores?.pacing || 0) +
-                                                (displayData.scores?.storytelling || 0) +
-                                                (displayData.scores?.quality || 0)
-                                            ) / 5)}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Critical Feedback Stream */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.6 }}
-                                    className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 overflow-hidden relative"
-                                >
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-[var(--neon-gold)]" />
-                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                        <Award className="text-[var(--neon-gold)]" size={20} />
-                                        CRITICAL ANALYSIS
-                                    </h3>
-
-                                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                        {displayData.critique && Object.entries(displayData.critique).map(([key, value]) => (
-                                            <div key={key} className="p-4 rounded-lg bg-white/5 border border-white/5">
-                                                <h4 className="text-xs font-bold text-gray-400 uppercase mb-1 tracking-wider">
-                                                    {key.replace('_', ' ')}
-                                                </h4>
-                                                <p className="text-sm text-gray-200 leading-relaxed font-light">
-                                                    {value}
-                                                </p>
-                                            </div>
-                                        ))}
-
-                                        {displayData.reasoning_trace && (
-                                            <div className="mt-6 pt-6 border-t border-white/10">
-                                                <h4 className="text-xs font-bold text-[var(--neon-green)] uppercase mb-2">AI Reasoning Trace</h4>
-                                                <p className="text-xs text-gray-500 font-mono leading-relaxed">
-                                                    {displayData.reasoning_trace}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
+                <div className="bg-black/20 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 bg-white/5 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        <div className="col-span-4 md:col-span-3">User</div>
+                        <div className="col-span-3 md:col-span-3">Role</div>
+                        <div className="col-span-3 md:col-span-3">Credits</div>
+                        <div className="col-span-2 md:col-span-3 text-right">Actions</div>
                     </div>
+
+                    {loading ? (
+                        <div className="p-12 text-center text-gray-500">Loading Users...</div>
+                    ) : filteredUsers.length === 0 ? (
+                        <div className="p-12 text-center text-gray-500">No users found.</div>
+                    ) : (
+                        <div className="divide-y divide-white/5">
+                            {filteredUsers.map(u => (
+                                <div key={u.id} className="group">
+                                    {/* User Row */}
+                                    <div className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors">
+                                        {/* User Info */}
+                                        <div className="col-span-4 md:col-span-3 flex items-center gap-3 overflow-hidden">
+                                            {u.photoURL ? (
+                                                <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-white/10" />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                                                    <User size={14} className="text-gray-400" />
+                                                </div>
+                                            )}
+                                            <div className="min-w-0">
+                                                <div className="font-bold text-sm truncate">{u.displayName || 'Unknown User'}</div>
+                                                <div className="text-xs text-gray-500 truncate">{u.email}</div>
+                                                <div className="text-[10px] text-gray-600 font-mono truncate">{u.id}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Role */}
+                                        <div className="col-span-3 md:col-span-3">
+                                            {editingUser?.id === u.id ? (
+                                                <select
+                                                    value={editingUser.role}
+                                                    onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
+                                                    className="bg-black border border-white/20 rounded px-2 py-1 text-xs"
+                                                >
+                                                    <option value="user">User</option>
+                                                    <option value="admin">Admin</option>
+                                                    <option value="owner">Owner</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`
+                                                    inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                                    ${u.role === 'owner' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
+                                                        u.role === 'admin' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                                                            'bg-gray-500/20 text-gray-400 border border-gray-500/30'}
+                                                `}>
+                                                    {u.role === 'owner' && <ShieldAlert size={10} />}
+                                                    {u.role === 'admin' && <Shield size={10} />}
+                                                    {u.role || 'USER'}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Credits */}
+                                        <div className="col-span-3 md:col-span-3 flex items-center gap-2 font-mono text-sm">
+                                            <Coins size={14} className="text-[var(--neon-gold)]" />
+                                            {editingUser?.id === u.id ? (
+                                                <input
+                                                    type="number"
+                                                    value={editingUser.credits}
+                                                    onChange={e => setEditingUser({ ...editingUser, credits: e.target.value })}
+                                                    className="w-20 bg-black border border-white/20 rounded px-2 py-1 text-xs"
+                                                />
+                                            ) : (
+                                                <span className="text-[var(--neon-gold)]">{u.credits || 0}</span>
+                                            )}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="col-span-2 md:col-span-3 text-right flex items-center justify-end gap-2">
+                                            {editingUser?.id === u.id ? (
+                                                <>
+                                                    <button onClick={handleEditSave} className="p-1.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30">
+                                                        <Save size={14} />
+                                                    </button>
+                                                    <button onClick={() => setEditingUser(null)} className="p-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30">
+                                                        <X size={14} />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button onClick={() => handleEditStart(u)} className="p-1.5 rounded bg-white/5 text-gray-400 hover:text-white hover:bg-white/10">
+                                                    <Edit size={14} />
+                                                </button>
+                                            )}
+
+                                            <button
+                                                onClick={() => handleExpandUser(u.id)}
+                                                className={`p-1.5 rounded transition-colors ${expandedUserId === u.id ? 'bg-[var(--neon-green)] text-black' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                                            >
+                                                {expandedUserId === u.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded Details */}
+                                    <AnimatePresence>
+                                        {expandedUserId === u.id && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden bg-black/40 border-t border-white/5"
+                                            >
+                                                <div className="p-6">
+                                                    <h3 className="text-sm font-bold text-[var(--neon-green)] mb-4 flex items-center gap-2">
+                                                        <Award size={16} /> RECENT ANALYSES
+                                                    </h3>
+
+                                                    {!userAnalyses[u.id] ? (
+                                                        <div className="text-sm text-gray-500 animate-pulse">Loading history...</div>
+                                                    ) : userAnalyses[u.id].length === 0 ? (
+                                                        <div className="text-sm text-gray-500">No video analyses found for this user.</div>
+                                                    ) : (
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            {userAnalyses[u.id].map(analysis => (
+                                                                <div key={analysis.id} className="bg-white/5 border border-white/5 p-4 rounded-xl">
+                                                                    <div className="flex justify-between items-start mb-2">
+                                                                        <div className="text-xs font-mono text-gray-500">{new Date(analysis.timestamp?.seconds * 1000).toLocaleDateString()}</div>
+                                                                        <div className="text-xs font-bold text-[var(--neon-gold)]">{analysis.model}</div>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-5 gap-1 mb-3">
+                                                                        {Object.entries(analysis.scores || {}).map(([key, score]) => (
+                                                                            <div key={key} className="text-center">
+                                                                                <div className="text-[10px] uppercase text-gray-500">{key.slice(0, 3)}</div>
+                                                                                <div className={`text-sm font-bold ${score >= 80 ? 'text-green-400' : score >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>{score}</div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    {analysis.critique?.quality_notes && (
+                                                                        <p className="text-xs text-gray-400 italic line-clamp-2">"{analysis.critique.quality_notes}"</p>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
 };
 
-export default CRM;
+export default AdminCRM;

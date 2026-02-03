@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import VideoAnalysis from '../components/VideoAnalysis';
 
 const Profile = () => {
     const { user } = useAuth();
@@ -61,6 +62,10 @@ const Profile = () => {
                         {user.credits || 0} <span style={{ fontSize: '1rem' }}>CREDITS</span>
                     </p>
                 </div>
+            </div>
+
+            <div style={{ marginTop: '3rem', marginBottom: '3rem' }}>
+                <VideoAnalysis userId={user.uid} />
             </div>
 
             <CreationsGallery userId={user.uid} />
