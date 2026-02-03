@@ -185,47 +185,41 @@ exports.generateImage = onCall({
                 delete generationConfig.top_p;
                 delete generationConfig.top_k;
                 delete generationConfig.candidate_count;
+                // CRITICAL: Remove aspect_ratio from top-level (it was wrong placement)
+                delete generationConfig.aspect_ratio;
 
-                // 4. Model-Specific Tweaks
+                // 4. Build image_config per API spec 
+                // Per docs: image_config: { aspect_ratio, resolution }
+                const { thinking, resolution } = request.data;
+                const ar = aspectRatio || "1:1";
+
+                generationConfig.image_config = {
+                    aspect_ratio: ar
+                };
+
+                // Map resolution to API values
+                if (resolution === 'High (2K)') {
+                    generationConfig.image_config.resolution = "2K";
+                } else if (resolution === 'Ultra (4K)') {
+                    generationConfig.image_config.resolution = "4K";
+                }
+                // "Standard" = no resolution field (let API default)
+
+                // 5. Model-Specific Tweaks
                 if (isNanoBanana) {
-                    // Flash REQUIRES explicit permissions to be an image generator
+                    // Flash: Strict IMAGE only
                     generationConfig.response_modalities = ["IMAGE"];
-                    // aspect_ratio in generationConfig works for Flash
                 } else if (isNanoBananaPro) {
-                    // Logic from user request: 
-                    // thinking_config: { include_thoughts: true } 
-                    // response_modalities: ['Text', 'Image']
-
-                    const { thinking, resolution } = request.data;
+                    // Pro: Support Thinking mode
                     const isThinking = thinking === 'On';
 
                     if (isThinking) {
-                        // Enable thinking/reasoning
                         generationConfig.response_modalities = ["TEXT", "IMAGE"];
-                        // Note: current REST API support for thinking_config might vary, 
-                        // but per user instructions we add it. 
-                        // However, standard REST 'generateContent' puts 'thinking_config' 
-                        // sometimes inside 'generationConfig' or at top level? 
-                        // User example: 
-                        // config=types.GenerateContentConfig(..., thinking_config=types.ThinkingConfig(include_thoughts=True))
-                        // In raw JSON, this usually maps to 'thinkingConfig' inside 'generationConfig' or top level.
-                        // We will try putting it in generationConfig as snake_case 'thinking_config'.
+                        // Per docs: thinking_config: { include_thoughts: true }
                         generationConfig.thinking_config = { include_thoughts: true };
                     } else {
-                        // Strict Image Mode
                         generationConfig.response_modalities = ["IMAGE"];
                     }
-
-                    // Resolution Handling (Prompt Injection)
-                    let resPrompt = "";
-                    if (resolution === 'High (2K)') resPrompt = ", 2k resolution";
-                    if (resolution === 'Ultra (4K)') resPrompt = ", 4k resolution";
-
-                    // Pro sometimes ignores aspect_ratio param, so also inject into prompt
-                    const ar = aspectRatio || "1:1";
-
-                    // Construct final prompt
-                    prompt = `[Aspect Ratio: ${ar}] ${prompt}${resPrompt}`;
                 }
 
                 // Enhanced prompting for reliability
