@@ -5,6 +5,8 @@ const crypto = require("crypto");
 const Replicate = require("replicate");
 const cors = require("cors")({ origin: true });
 
+/* eslint-disable no-unused-vars */
+
 admin.initializeApp();
 const db = admin.firestore();
 
@@ -345,6 +347,7 @@ async function deductCredits(uid, amount) {
     });
 }
 
+// exports.saveCreation = saveCreation; // verify usage first
 async function saveCreation(uid, type, prompt, url, cost) {
     let finalUrl = url;
 
