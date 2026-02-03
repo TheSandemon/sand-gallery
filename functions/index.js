@@ -187,7 +187,6 @@ exports.generateImage = onCall({
                 delete generationConfig.candidate_count;
 
                 // 4. Model-Specific Tweaks
-                // 4. Model-Specific Tweaks
                 if (isNanoBanana) {
                     // Flash REQUIRES explicit permissions to be an image generator
                     generationConfig.response_modalities = ["IMAGE"];
