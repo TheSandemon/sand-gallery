@@ -27,7 +27,6 @@ const Navbar = () => {
     const navLinks = [
         { path: '/', label: 'WORK' },
         { path: '/studio', label: 'STUDIO' },
-        { path: '/crm', label: 'CRM' },
         { path: '/pricing', label: 'PRICING' },
         ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
         { path: '/profile', label: 'PROFILE' },
