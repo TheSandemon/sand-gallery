@@ -1,0 +1,5 @@
+## Summary
+Updated Agent Documentation.
+
+## Changes
+- **AGENTS.md**: Added reference to the new `ai-critic-ecosystem` skill. This ensures future agents know where to find the architectural documentation for the Video Analysis and Admin CRM features.

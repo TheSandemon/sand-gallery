@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Film, Scissors, Zap, Award, Star, Activity } from 'lucide-react';
 import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
 import { onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
 
 const HolographicCard = ({ title, score, icon: Icon, color, delay }) => {
@@ -118,7 +118,6 @@ const VideoAnalysis = ({ userId }) => {
         setUploadStatus('uploading');
         setUploadProgress(0);
 
-        const storage = getStorage();
         const timestamp = Date.now();
         const storagePath = `user_uploads/${userId}/${timestamp}_${file.name}`;
         const storageRef = ref(storage, storagePath);
