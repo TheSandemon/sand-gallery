@@ -284,20 +284,20 @@ exports.generateImage = onCall({
             }
         }
         // return { success: true, imageUrl }; // Removed early return to allow saving
-    }
+
 
         if (imageUrl) {
-        console.log("Saving creation to Firestore/Storage...");
-        // saveCreation handles Base64 upload for Google and direct URL for others
-        await saveCreation(uid, 'image', prompt, imageUrl, COST);
+            console.log("Saving creation to Firestore/Storage...");
+            // saveCreation handles Base64 upload for Google and direct URL for others
+            await saveCreation(uid, 'image', prompt, imageUrl, COST);
+        }
+
+        return { success: true, imageUrl, _version: "v2026.02.02.3 - Save Logic Fixed" };
+
+    } catch (e) {
+        console.error(e);
+        throw new HttpsError("internal", e.message);
     }
-
-    return { success: true, imageUrl, _version: "v2026.02.02.3 - Save Logic Fixed" };
-
-} catch (e) {
-    console.error(e);
-    throw new HttpsError("internal", e.message);
-}
 });
 
 exports.generateText = onCall({
