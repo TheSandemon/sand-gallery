@@ -142,7 +142,7 @@ exports.generateImage = onCall({
 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
 
-            // Mapping to Snake Case for REST API (Updated for correct ImageConfig)
+            // Mapping to Snake Case for REST API
             const generationConfig = {
                 response_modalities: ["TEXT", "IMAGE"],
                 temperature: temperature || 0.4,
@@ -151,11 +151,9 @@ exports.generateImage = onCall({
                 candidate_count: candidateCount || 1,
             };
 
-            // Image generation config (separate from generationConfig per API docs)
-            const imageConfig = {};
+            // Add aspect_ratio to generationConfig (snake_case for REST API)
             if (aspectRatio && typeof aspectRatio === 'string') {
-                // Official API uses camelCase 'aspectRatio' in imageConfig
-                imageConfig.aspectRatio = aspectRatio;
+                generationConfig.aspect_ratio = aspectRatio;
             }
 
             const bodyPayload = {
@@ -165,8 +163,7 @@ exports.generateImage = onCall({
                 contents: [{
                     parts: [{ text: prompt }]
                 }],
-                generationConfig,
-                imageConfig  // Add imageConfig to payload
+                generationConfig
             };
 
             // STRICT OVERRIDE for Nano Banana family (Gemini Image Models)
@@ -193,12 +190,13 @@ exports.generateImage = onCall({
                 if (isNanoBanana) {
                     // Flash REQUIRES explicit permissions to be an image generator
                     generationConfig.response_modalities = ["IMAGE"];
-                    // Flash supports aspect_ratio in generationConfig
+                    // aspect_ratio in generationConfig works for Flash
                 } else if (isNanoBananaPro) {
                     // Pro Preview: Also requires IMAGE modality to be explicit (like Flash).
-                    // Previous attempts to delete it caused the model to default to TEXT.
-                    // aspectRatio is now correctly handled in imageConfig.
                     generationConfig.response_modalities = ["IMAGE"];
+                    // Pro sometimes ignores aspect_ratio param, so also inject into prompt
+                    const ar = aspectRatio || "1:1";
+                    prompt = `[Aspect Ratio: ${ar}] ${prompt}`;
                 }
 
                 // Enhanced prompting for reliability
