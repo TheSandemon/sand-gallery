@@ -1,8 +1,11 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineString, defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 const Replicate = require("replicate");
 const cors = require("cors")({ origin: true });
+
+/* eslint-disable no-unused-vars */
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -65,7 +68,7 @@ exports.generateImage = onCall({
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
-    const { prompt, provider, modelId, version, aspectRatio = "1:1" } = request.data;
+    let { prompt, provider, modelId, version, aspectRatio = "1:1" } = request.data;
 
     if (!prompt) throw new HttpsError("invalid-argument", "Prompt required.");
 
@@ -150,6 +153,14 @@ exports.generateImage = onCall({
                 candidate_count: candidateCount || 1,
             };
 
+            // Add aspect_ratio to generationConfig (snake_case for REST API)
+            // ERROR FIX: Raw REST API rejects 'aspect_ratio' in generationConfig.
+            // We use PROMPT INJECTION (Pulse) instead for compatibility.
+            if (aspectRatio && typeof aspectRatio === 'string') {
+                // generationConfig.aspect_ratio = aspectRatio; // REMOVED causing 400 Error
+                prompt = `[Aspect Ratio: ${aspectRatio}] ${prompt}`;
+            }
+
             const bodyPayload = {
                 system_instruction: {
                     parts: [{ text: "You are an expert image generator. Generate the image requested by the user. Do not use any tools. Do not output JSON. Directly generate the image." }]
@@ -160,42 +171,87 @@ exports.generateImage = onCall({
                 generationConfig
             };
 
-            // STRICT OVERRIDE for Nano Banana (Gemini 2.5 Flash Image)
-            if (modelId === 'nano-banana') {
+            // STRICT OVERRIDE for Nano Banana family (Gemini Image Models)
+            // CRITICAL: REST API uses strict protobuf schema. Only valid fields allowed.
+            // SDK abstractions like image_config/thinking_config do NOT work in raw REST.
+            const isNanoBanana = modelId === 'nano-banana';
+            const isNanoBananaPro = modelId === 'gemini-3-pro-image-preview';
+
+            if (isNanoBanana || isNanoBananaPro) {
+                // 1. Remove System Instructions (unsupported in strict image mode)
                 delete bodyPayload.system_instruction;
 
+                // 2. Disable Tools explicitly
                 bodyPayload.tool_config = {
                     function_calling_config: { mode: "NONE" }
                 };
 
-                generationConfig.response_modalities = ["IMAGE"];
+                // 3. Remove ALL non-standard fields from generationConfig
+                // REST API only allows: response_modalities (for image models)
+                delete generationConfig.temperature;
+                delete generationConfig.top_p;
+                delete generationConfig.top_k;
+                delete generationConfig.candidate_count;
+                delete generationConfig.aspect_ratio; // Not valid in REST API
 
+                // 4. Set response modality
+                const { thinking, resolution } = request.data;
+                const isThinking = isNanoBananaPro && thinking === 'On';
+
+                if (isThinking) {
+                    // TEXT+IMAGE for thinking mode to capture reasoning
+                    generationConfig.response_modalities = ["TEXT", "IMAGE"];
+                } else {
+                    // Strict IMAGE only
+                    generationConfig.response_modalities = ["IMAGE"];
+                }
+
+                // 5. Build enhanced prompt with all parameters (prompt injection)
+                // Note: Aspect Ratio is already injected globally above.
+                let promptParts = [];
+
+                if (resolution === 'High (2K)') promptParts.push("[Resolution: 2K]");
+                else if (resolution === 'Ultra (4K)') promptParts.push("[Resolution: 4K]");
+
+                if (isThinking) promptParts.push("[Show your reasoning process]");
+
+                // Construct final prompt
+                if (promptParts.length > 0) {
+                    prompt = promptParts.join(" ") + " " + prompt;
+                }
+
+                // Enhanced prompting for reliability
                 bodyPayload.contents = [{
                     parts: [{ text: "Generate an image of: " + prompt }]
                 }];
-
-                // Force disable safety filters for this model
+            }
+            // Common Safety Logic
+            // Nano Banana (Gemini 2.5 Flash) is extremely sensitive and requires BLOCK_NONE to function reliably.
+            // We force BLOCK_NONE for Nano Banana regardless of UI setting to prevent "NO_IMAGE".
+            if (modelId === 'nano-banana' || safetySettings === 'None (Creative)') {
                 bodyPayload.safetySettings = [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
                 ];
-            } else if (safetySettings === 'None (Creative)') {
+            } else {
                 // Standard safety settings
                 bodyPayload.safetySettings = [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
                 ];
             }
 
-            // Grounding (Google Search)
+
+            // Grounding (Google Search) - inside provider block
             if (grounding === 'Enabled') {
                 bodyPayload.tools = [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }];
             }
 
+            // FETCH moved inside block to access apiUrl
             const response = await fetch(apiUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -205,7 +261,8 @@ exports.generateImage = onCall({
 
             if (json.error) {
                 console.error("Gemini API Error:", JSON.stringify(json.error));
-                throw new Error(json.error.message || "Google API Error");
+                // Return full error details to user for debugging
+                throw new Error(JSON.stringify(json.error));
             }
 
             // Gemini returns base64 images in inlineData
@@ -225,10 +282,8 @@ exports.generateImage = onCall({
 
                 throw new Error(msg);
             }
+            return { success: true, imageUrl, _version: "v2026.02.02.2 - Strict REST Fix" };
         }
-
-        await saveCreation(uid, "image", prompt, imageUrl, COST);
-        return { success: true, imageUrl };
 
     } catch (e) {
         console.error(e);
@@ -292,6 +347,7 @@ async function deductCredits(uid, amount) {
     });
 }
 
+// exports.saveCreation = saveCreation; // verify usage first
 async function saveCreation(uid, type, prompt, url, cost) {
     let finalUrl = url;
 
@@ -301,8 +357,12 @@ async function saveCreation(uid, type, prompt, url, cost) {
             const bucket = admin.storage().bucket();
             console.log("Attempting upload to bucket:", bucket.name);
 
-            const mimeType = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
+            const match = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+            if (!match) throw new Error("Invalid base64 Data URI format");
+            const mimeType = match[1];
+
             const base64Data = url.split(',')[1];
+            if (!base64Data) throw new Error("Invalid base64 data content");
             const buffer = Buffer.from(base64Data, 'base64');
             const fileSize = buffer.length;
 

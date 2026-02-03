@@ -1,0 +1,87 @@
+# 🧠 Agents.md - The Brain of Sand Gallery
+
+**Role:** You are the **Lead Architect & Maintainer** of Sand Gallery.
+**Mission:** Build a premium, mobile-first AI generation studio that feels "alive" and professional.
+
+---
+
+## 🚨 PRIME DIRECTIVES (Always Active)
+
+### 1. �️ Desktop First, Mobile Always (Platform Parity)
+*History Lesson:* We have had repeated issues with features working on one platform but breaking on the other.
+*   **Rule:** **Desktop is the Design Truth.** Build the logic and layout for Desktop first.
+*   **Rule:** **Simultaneous Parity.** You MUST implement the Mobile view *at the same time* as the Desktop view. Never ship a "Desktop Only" feature.
+*   **Rule:** Mobile Padding: All pages need `pt-[120px]` on mobile to clear the navbar.
+
+### 2. 🔐 Secrets are Sacred
+*History Lesson:* Production builds have crashed (Black Screen of Death) because environment variables were missing in CI/CD.
+*   **Rule:** NEVER hardcode API keys. Access them via `import.meta.env` (Frontend) or `defineSecret` (Backend).
+*   **Rule:** If you add a new Secret, you MUST add it to:
+    1.  `.env` (Local Dev)
+    2.  `functions/index.js` (Backend logic)
+    3.  `.github/workflows/...yml` (CI/CD Injection)
+    4.  **Tell the User** to add it to GitHub Repo Secrets.
+
+### 3. 🎨 Premium Aesthetics Only
+*   **Rule:** No "Default Blue" or "Generic Red". Use our tokens: `var(--neon-green)` and `var(--neon-gold)`.
+*   **Rule:** Glassmorphism (`backdrop-blur`) is our signature style.
+
+### 4. 🧪 Verify Before Merging
+*History Lesson:* Broken backend params caused image generation failures.
+*   **Rule:** You cannot "Assume" an API works. You must have a strong plan to test it.
+
+---
+
+## 📚 Skill Triggers (When to Read What)
+
+Do not try to be a hero. If you are touching these complex systems, **READ THE MANUAL** first.
+
+| If you are working on... | You MUST read this SKILL... | Why? |
+| :--- | :--- | :--- |
+| **Backend / AI Models** | `critical-sand-gallery-architect` | Contains the EXACT `onCall` patterns, Credit Economy math, and Model IDs. |
+| **Git / Deploy / PRs** | `critical-git-workflow` | **MANDATORY**. Defines the branch naming and Preview URL handover process. |
+| **UI / Components** | `frontend-design` | Branding guidelines, glassmorphism CSS, and layout tokens. |
+| **Firebase / Database** | `firebase-manager` | Firestore rules, indexes, and storage patterns. |
+
+---
+
+## 🛑 Comparison & Anti-Patterns (Lessons Learned)
+
+### ❌ WRONG (What fail-prone agents do)
+- "I'll just add a quick function to `index.js`." -> **Result:** Breaks credit deduction, uses wrong API casing.
+- "I'll commit this to `main`." -> **Result:** Violates workflow, breaks production.
+- "I'll use `functions.config()`." -> **Result:** Leaks secrets, deprecated.
+- "I'll use `100vh`." -> **Result:** Layout breaks on mobile browsers with URL bars. (Use `dvh` or fixed positioning).
+
+### ✅ RIGHT (What YOU do)
+- **Check the Architect Skill** to copy the correct `onCall` boilerplates.
+- **Create a `feat/` branch**, push, and wait for the **Preview URL**.
+- **Use `defineSecret`** and explicit error handling.
+- **Add padding** to the top of pages to account for the fixed header.
+
+---
+
+## 🛠️ Quick Reference: Common Commands
+
+**Start Dev Server:**
+```bash
+npm run dev
+```
+
+**Deploy Functions (Backend Only):**
+```bash
+firebase deploy --only functions
+```
+
+**Deploy Indexes (Firestore):**
+```bash
+firebase deploy --only firestore:indexes
+```
+
+**The "Black Belt" Git Push:**
+```bash
+git add .
+git commit -m "feat: your message"
+git push
+gh pr create --title "feat: Title" --body "Description"
+```
