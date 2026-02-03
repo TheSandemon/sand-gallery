@@ -50,27 +50,29 @@ const AdminDashboard = () => {
                 <h1 style={{ fontSize: '3rem', margin: 0 }}>
                     ADMIN <span style={{ color: 'var(--neon-green)' }}>DASHBOARD</span>
                 </h1>
-                <Link to="/crm" style={{
-                    fontSize: '1rem',
-                    padding: '0.8rem 1.5rem',
-                    background: 'var(--neon-green)',
-                    color: 'black',
-                    borderRadius: '12px',
-                    textDecoration: 'none',
-                    fontWeight: '900',
-                    letterSpacing: '1px',
-                    boxShadow: '0 0 15px rgba(0, 143, 78, 0.4)',
-                    transition: 'all 0.3s ease'
-                }}
-                    onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-                >
-                    OPEN CRM
-                </Link>
             </div>
 
             <div style={{ marginBottom: '3rem' }}>
-                <h2 style={{ borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>User Management</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
+                    <h2 style={{ margin: 0 }}>User Management</h2>
+                    <Link to="/crm" style={{
+                        fontSize: '0.9rem',
+                        padding: '0.5rem 1rem',
+                        background: 'rgba(0, 143, 78, 0.2)',
+                        color: 'var(--neon-green)',
+                        border: '1px solid var(--neon-green)',
+                        borderRadius: '8px',
+                        textDecoration: 'none',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.5px',
+                        transition: 'all 0.3s ease'
+                    }}
+                        onMouseOver={(e) => { e.target.style.background = 'var(--neon-green)'; e.target.style.color = 'black'; }}
+                        onMouseOut={(e) => { e.target.style.background = 'rgba(0, 143, 78, 0.2)'; e.target.style.color = 'var(--neon-green)'; }}
+                    >
+                        OPEN CRM TOOL
+                    </Link>
+                </div>
                 {loading ? (
                     <p>Loading users...</p>
                 ) : (
