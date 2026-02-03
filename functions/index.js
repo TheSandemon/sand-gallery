@@ -280,7 +280,7 @@ exports.generateImage = onCall({
 
                 throw new Error(msg);
             }
-            return { success: true, imageUrl };
+            return { success: true, imageUrl, _version: "v2026.02.02.2 - Strict REST Fix" };
         }
 
     } catch (e) {
