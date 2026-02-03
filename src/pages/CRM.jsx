@@ -239,9 +239,38 @@ const AdminCRM = () => {
                                                 className="overflow-hidden bg-black/40 border-t border-white/5"
                                             >
                                                 <div className="p-6">
-                                                    <h3 className="text-sm font-bold text-[var(--neon-green)] mb-4 flex items-center gap-2">
-                                                        <Award size={16} /> RECENT ANALYSES
-                                                    </h3>
+                                                    <div className="flex justify-between items-start mb-6 border-b border-white/5 pb-4">
+                                                        <div>
+                                                            <h3 className="text-sm font-bold text-[var(--neon-green)] flex items-center gap-2 mb-1">
+                                                                <Award size={16} /> RECENT ANALYSES
+                                                            </h3>
+                                                            <p className="text-xs text-gray-500">History of AI critiques.</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="flex gap-2 mb-2 justify-end">
+                                                                <a
+                                                                    href={`https://console.firebase.google.com/u/0/project/sand-gallery/firestore/data/users/${u.id}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded hover:bg-blue-500/20 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    <Database size={10} /> Firestore
+                                                                </a>
+                                                                <a
+                                                                    href={`https://console.firebase.google.com/u/0/project/sand-gallery/storage/bucket/sand-gallery.appspot.com/files/~2Fuser_uploads~2F${u.id}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded hover:bg-orange-500/20 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    <Search size={10} /> Storage
+                                                                </a>
+                                                            </div>
+                                                            <div className="text-[10px] text-gray-600 font-mono">
+                                                                <div>Created: {u.metadata?.creationTime ? new Date(u.metadata.creationTime).toLocaleDateString() : 'N/A'}</div>
+                                                                <div>Last Login: {u.metadata?.lastSignInTime ? new Date(u.metadata.lastSignInTime).toLocaleDateString() : 'N/A'}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
                                                     {!userAnalyses[u.id] ? (
                                                         <div className="text-sm text-gray-500 animate-pulse">Loading history...</div>

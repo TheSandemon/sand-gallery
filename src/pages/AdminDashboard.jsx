@@ -47,6 +47,19 @@ const AdminDashboard = () => {
         <div style={{ paddingTop: '120px', maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
             <h1 style={{ fontSize: '3rem', marginBottom: '2rem' }}>
                 ADMIN <span style={{ color: 'var(--neon-green)' }}>DASHBOARD</span>
+                <a href="/crm" style={{
+                    marginLeft: '2rem',
+                    fontSize: '1rem',
+                    padding: '0.5rem 1rem',
+                    background: 'var(--neon-green)',
+                    color: 'black',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    fontWeight: 'bold',
+                    verticalAlign: 'middle'
+                }}>
+                    OPEN CRM
+                </a>
             </h1>
 
             <div style={{ marginBottom: '3rem' }}>
