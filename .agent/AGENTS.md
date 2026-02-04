@@ -64,6 +64,9 @@ Do not try to be a hero. If you are touching these complex systems, **READ THE M
 - **Create a `feat/` branch**, push, and wait for the **Preview URL**.
 - **Use `defineSecret`** and explicit error handling.
 - **Add padding** to the top of pages to account for the fixed header.
+- **Cloud Functions Storage**: Explicitly use `admin.storage().bucket("sand-gallery-lab.firebasestorage.app")`.
+- **Google File API**: Use SINGLE fetch for resumable uploads (do not double-call).
+- **Gemini Video**: Use `gemini-3-pro-preview` with explicit JSON Schema prompting.
 
 ---
 
