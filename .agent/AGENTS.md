@@ -35,6 +35,12 @@
 *   **Rule:** It MUST include the **Time and Date** of the last commit.
 *   **Rule:** **NEVER** hardcode the version string in `Footer.jsx`. Use the `__APP_VERSION__` global.
 
+### 6. 🤖 AI Critic & Judge Personas
+*   **Protocol:** We do not use generic "AI Analysis". We use **Specific Judge Personas** (e.g., "The Technical Director", "The Roast Master").
+*   **Rule:** **NO GLAZING**. The system prompt must explicitly forbid fake praise. "50/100 is average."
+*   **Rule:** Analysis must be driven by **Real Metrics** (bitrate, cut pacing, lighting ratios), not just "vibes".
+*   **Rule:** The Frontend must support both **Preset Judges** and **Custom Personas** (via text input).
+
 ---
 
 ## 📚 Skill Triggers (When to Read What)

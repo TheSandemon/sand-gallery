@@ -86,9 +86,17 @@ const VideoAnalysis = ({ userId }) => {
     const [analysisResult, setAnalysisResult] = useState(null);
     const [latestAnalysis, setLatestAnalysis] = useState(null);
 
-    // New State for Parameters
-    const [harshness, setHarshness] = useState('Normal');
-    const [perspective, setPerspective] = useState('Overall');
+    // Judge Agent State
+    const [judgeId, setJudgeId] = useState('technical');
+    const [customPersona, setCustomPersona] = useState('');
+
+    const PRESET_JUDGES = [
+        { id: 'technical', name: 'The Technical Director', prompt: "You are a Technical Director. Focus strictly on bitrate, color grading, lighting, and audio clarity. Ignore the 'vibe'. Technical perfection only. If it looks amateur, say so." },
+        { id: 'viral', name: 'The Viral Algorithm', prompt: "You are The Algorithm. Ignore art. Focus purely on retention, hook timing, pacing, and calls to action. Would a Gen Z swipe away? Be brutal about boredom." },
+        { id: 'arthouse', name: 'The Art House Critic', prompt: "You are a snobby Art House Critic. Focus on emotional depth, narrative structure, and symbolic imagery. Hate anything that feels 'commercial' or 'generic'. Demand soul." },
+        { id: 'roast', name: 'The Roast Master', prompt: "You are a Roast Master. Be savage. Funny. Destroy the user's ego but give accurate technical feedback. Mock their choices if they are bad." },
+        { id: 'custom', name: 'Custom Persona', prompt: "" }
+    ];
 
     const fileInputRef = useRef(null);
 
@@ -175,10 +183,13 @@ const VideoAnalysis = ({ userId }) => {
                     const functions = getFunctions();
                     const analyzeVideo = httpsCallable(functions, 'analyzeVideo', { timeout: 300000 });
 
+                    // Determine final persona prompt
+                    const selectedJudge = PRESET_JUDGES.find(j => j.id === judgeId);
+                    const finalPersona = judgeId === 'custom' ? customPersona : selectedJudge.prompt;
+
                     const result = await analyzeVideo({
                         storagePath,
-                        harshness,
-                        perspective
+                        judgePersona: finalPersona
                     });
 
                     // FIX: Nested data check. Callable returns { data: { success: true, data: { ... } } } usually, 
@@ -276,36 +287,37 @@ const VideoAnalysis = ({ userId }) => {
                         <div className="mt-4">
                             {uploadStatus === 'idle' && (
                                 <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {/* Harshness Dropdown */}
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {/* Judge Agent Dropdown */}
                                         <div className="flex flex-col gap-1">
-                                            <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Harshness</label>
+                                            <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Select Judge Agent</label>
                                             <select
-                                                value={harshness}
-                                                onChange={(e) => setHarshness(e.target.value)}
-                                                className="bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors"
+                                                value={judgeId}
+                                                onChange={(e) => setJudgeId(e.target.value)}
+                                                className="bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors w-full"
                                             >
-                                                <option value="Nice">Nice</option>
-                                                <option value="Normal">Normal</option>
-                                                <option value="Harsh">Harsh</option>
-                                                <option value="Roast">Roast</option>
+                                                {PRESET_JUDGES.map(judge => (
+                                                    <option key={judge.id} value={judge.id}>{judge.name}</option>
+                                                ))}
                                             </select>
                                         </div>
 
-                                        {/* Perspective Dropdown */}
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Perspective</label>
-                                            <select
-                                                value={perspective}
-                                                onChange={(e) => setPerspective(e.target.value)}
-                                                className="bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors"
+                                        {/* Custom Persona Textarea (Conditional) */}
+                                        {judgeId === 'custom' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="flex flex-col gap-1"
                                             >
-                                                <option value="Overall">Overall</option>
-                                                <option value="Advertising">Advertising</option>
-                                                <option value="AI">AI</option>
-                                                <option value="Cinematic">Cinematic</option>
-                                            </select>
-                                        </div>
+                                                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Custom Persona Prompt</label>
+                                                <textarea
+                                                    value={customPersona}
+                                                    onChange={(e) => setCustomPersona(e.target.value)}
+                                                    placeholder="e.g. You are a paranoid conspiracy theorist who thinks every cut is a hidden message..."
+                                                    className="bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors w-full min-h-[80px]"
+                                                />
+                                            </motion.div>
+                                        )}
                                     </div>
 
                                     <button
