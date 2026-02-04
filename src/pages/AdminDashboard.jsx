@@ -68,10 +68,28 @@ const AdminDashboard = () => {
 
     return (
         <div style={{ paddingTop: '120px', maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <h1 style={{ fontSize: '3rem', margin: 0 }}>
                     ADMIN <span style={{ color: 'var(--neon-green)' }}>DASHBOARD</span>
                 </h1>
+                <Link to="/admin/editor" style={{
+                    padding: '12px 24px',
+                    background: 'linear-gradient(135deg, var(--neon-gold) 0%, #b8860b 100%)',
+                    color: 'black',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)',
+                    transition: 'all 0.3s ease',
+                }}
+                    onMouseOver={(e) => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 20px rgba(212, 175, 55, 0.6)'; }}
+                    onMouseOut={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 15px rgba(212, 175, 55, 0.4)'; }}
+                >
+                    🎨 Launch Editor
+                </Link>
             </div>
 
             <div style={{ marginBottom: '3rem' }}>
