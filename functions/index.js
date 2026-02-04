@@ -586,7 +586,7 @@ async function callGeminiAnalysis(fileUri) {
     // Actually, let's stick to 'gemini-1.5-pro' for GUARANTEED STABILITY with Video, 
     // or 'gemini-2.0-flash' which is "Nano Banana". 
     // User asked for "Gemini 3.0 Pro". If that doesn't exist in the API yet, we use the best available: 'gemini-1.5-pro-002'.
-    const modelName = 'gemini-1.5-pro-002';
+    const modelName = 'gemini-3.0-pro-001';
 
     const body = {
         contents: [{
