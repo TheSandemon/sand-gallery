@@ -30,6 +30,11 @@
 *History Lesson:* Broken backend params caused image generation failures.
 *   **Rule:** You cannot "Assume" an API works. You must have a strong plan to test it.
 
+### 5. 🏷️ Automated Versioning
+*   **Rule:** The footer version is **automatically generated** by GitHub Actions (`VITE_APP_VERSION: "v${{ github.sha }}"`).
+*   **Rule:** **NEVER** hardcode the version string in `Footer.jsx`.
+*   **Rule:** You MUST ensure `VITE_APP_VERSION` is present in the `env:` block of any new workflow you create.
+
 ---
 
 ## 📚 Skill Triggers (When to Read What)

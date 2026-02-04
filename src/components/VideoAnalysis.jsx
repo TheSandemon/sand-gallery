@@ -251,6 +251,21 @@ const VideoAnalysis = ({ userId }) => {
                                     <span className="text-[var(--neon-gold)] text-xs font-bold tracking-widest">ANALYZING...</span>
                                 </div>
                             )}
+
+                            {uploadStatus === 'error' && (
+                                <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30 text-center">
+                                    <p className="text-red-400 text-xs font-bold mb-2">UPLOAD FAILED</p>
+                                    <p className="text-gray-400 text-[10px] mb-3">
+                                        Check console for details. Common issues: Storage Rules, CORS, or File Size.
+                                    </p>
+                                    <button
+                                        onClick={() => setUploadStatus('idle')}
+                                        className="text-[10px] bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1 rounded transition-colors"
+                                    >
+                                        TRY AGAIN
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </motion.div>
