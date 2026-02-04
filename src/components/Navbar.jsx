@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import UserButton from './UserButton';
 import { useAuth } from '../context/AuthContext';
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from '../firebase';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [showHiddenPages, setShowHiddenPages] = useState(false);
     const location = useLocation();
     const { user } = useAuth();
 
@@ -14,7 +17,18 @@ const Navbar = () => {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+
+        // Listen for Global UI Settings
+        const unsub = onSnapshot(doc(db, "config", "ui_settings"), (doc) => {
+            if (doc.exists()) {
+                setShowHiddenPages(doc.data().showHiddenPages || false);
+            }
+        });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            unsub();
+        };
     }, []);
 
     // Close mobile menu on route change
@@ -26,8 +40,10 @@ const Navbar = () => {
 
     const navLinks = [
         { path: '/', label: 'WORK' },
-        { path: '/studio', label: 'STUDIO' },
-        { path: '/pricing', label: 'PRICING' },
+        ...(showHiddenPages ? [
+            { path: '/studio', label: 'STUDIO' },
+            { path: '/pricing', label: 'PRICING' }
+        ] : []),
         ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
         { path: '/profile', label: 'PROFILE' },
     ];

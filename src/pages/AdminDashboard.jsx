@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { db } from '../firebase';
 
 const AdminDashboard = () => {
     const { user, getAllUsers, grantCredits } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showHidden, setShowHidden] = useState(false);
 
     useEffect(() => {
         fetchUsers();
+
+        // Listen to UI Settings
+        const unsub = onSnapshot(doc(db, "config", "ui_settings"), (doc) => {
+            if (doc.exists()) {
+                setShowHidden(doc.data().showHiddenPages || false);
+            }
+        });
+        return () => unsub();
     }, []);
 
     const fetchUsers = async () => {
@@ -32,6 +43,17 @@ const AdminDashboard = () => {
         if (success) {
             alert(`Granted ${amount} credits!`);
             fetchUsers(); // Refresh list
+        }
+    };
+
+    const toggleHiddenPages = async () => {
+        const newState = !showHidden;
+        try {
+            await setDoc(doc(db, "config", "ui_settings"), { showHiddenPages: newState }, { merge: true });
+            // State updates via onSnapshot
+        } catch (error) {
+            console.error("Error updating settings:", error);
+            alert("Failed to update settings.");
         }
     };
 
@@ -127,6 +149,30 @@ const AdminDashboard = () => {
                         </tbody>
                     </table>
                 )}
+            </div>
+
+            <div style={{ marginBottom: '3rem', background: '#1a1a1a', padding: '20px', borderRadius: '10px', border: '1px solid #333' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ margin: '0 0 5px 0' }}>Global Visibility Settings</h3>
+                        <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>Control the visibility of beta/hidden pages (Studio, Pricing).</p>
+                    </div>
+                    <button
+                        onClick={toggleHiddenPages}
+                        style={{
+                            padding: '8px 16px',
+                            background: showHidden ? 'var(--neon-green)' : '#333',
+                            color: showHidden ? 'black' : 'white',
+                            border: showHidden ? 'none' : '1px solid #555',
+                            borderRadius: '6px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {showHidden ? 'VISIBLE' : 'HIDDEN'}
+                    </button>
+                </div>
             </div>
 
             <div style={{ background: '#111', padding: '20px', borderRadius: '10px' }}>
