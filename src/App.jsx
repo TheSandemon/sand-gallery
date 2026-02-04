@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Studio from './pages/Studio';
 import Pricing from './pages/Pricing';
 import CRM from './pages/CRM';
+import Editor from './pages/admin/Editor';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/editor" element={<Editor />} />
           <Route path="/studio" element={<Studio />} />
           <Route path="/crm" element={<CRM />} />
           <Route path="/pricing" element={<Pricing />} />
