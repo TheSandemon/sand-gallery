@@ -1,8 +1,8 @@
 import React from 'react';
 
 const Footer = () => {
-    // Automated version string from CI/CD
-    const VERSION = import.meta.env.VITE_APP_VERSION || "DEV_MODE";
+    // Automated version string from Vite Config (Git Commit Date)
+    const VERSION = __APP_VERSION__ || "DEV_MODE";
 
     return (
         <footer className="w-full py-6 mt-auto border-t border-white/5 bg-black/40 backdrop-blur-sm text-center">

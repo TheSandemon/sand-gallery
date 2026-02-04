@@ -31,9 +31,9 @@
 *   **Rule:** You cannot "Assume" an API works. You must have a strong plan to test it.
 
 ### 5. 🏷️ Automated Versioning
-*   **Rule:** The footer version is **automatically generated** by GitHub Actions (`VITE_APP_VERSION: "v${{ github.sha }}"`).
-*   **Rule:** **NEVER** hardcode the version string in `Footer.jsx`.
-*   **Rule:** You MUST ensure `VITE_APP_VERSION` is present in the `env:` block of any new workflow you create.
+*   **Rule:** The footer version is **automatically generated** by `vite.config.js` using `git log`.
+*   **Rule:** It MUST include the **Time and Date** of the last commit.
+*   **Rule:** **NEVER** hardcode the version string in `Footer.jsx`. Use the `__APP_VERSION__` global.
 
 ---
 
