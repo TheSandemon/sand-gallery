@@ -119,3 +119,10 @@ gh pr create --title "feat: Title" --body "Description"
 - **Rule:** The effect must sit **behind** the UI (`zIndex: 0` or negative).
 - **Rule:** **Input Capture:** Clicks on interactive elements (buttons, inputs) MUST NOT trigger sparks.
 - **Rule:** **Delta Time:** Animation loops must use `timestamp - lastTime` to ensure consistent speed across devices.
+
+### 🙈 Global UI Settings (Hidden Pages)
+- **State:** Controlled by Firestore document `config/ui_settings` -> `showHiddenPages` (boolean).
+- **Default:** `false` (Hidden).
+- **Toggle:** Found in the **Admin Dashboard** (User Role: Owner).
+- **Effect:** Hides "STUDIO" and "PRICING" from the Navbar. Pages remain accessible via direct URL but are considered "Beta/Maintenance".
+- **Rule:** When adding new "Beta" pages, add them to `showHiddenPages` conditional in Navbar.

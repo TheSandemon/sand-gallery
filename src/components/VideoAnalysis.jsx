@@ -12,60 +12,72 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay, critique, isA
             layout
             initial={{ opacity: 0, y: 20, rotateX: 10 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300, layout: { duration: 0.3 } }}
+            transition={{ type: "spring", damping: 30, stiffness: 400, layout: { duration: 0.3 } }}
             className={`
                 relative group perspective-1000 z-10
-                ${isActive ? 'col-span-1 md:col-span-2 lg:col-span-3' : 'col-span-1'}
+                ${isActive ? 'col-span-1 md:col-span-2 lg:col-span-3 h-auto' : 'col-span-1 h-[250px]'}
             `}
-            onClick={onToggle}
+            onClick={(e) => {
+                // Prevent click if clicking inner interactive elements (if any)
+                onToggle();
+            }}
         >
-            <div className={`
-        relative overflow-hidden rounded-xl border border-white/10
-        bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-md
-        p-6 flex flex-col items-center justify-center gap-4
-        shadow-[0_0_15px_rgba(0,0,0,0.5)]
-        hover:shadow-[0_0_25px_var(--neon-color)]
-        transition-all duration-300 cursor-pointer
-        h-full
-      `}
+            <motion.div
+                layout
+                className={`
+                    relative overflow-hidden rounded-xl border border-white/10
+                    bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-md
+                    p-6 flex gap-6
+                    shadow-[0_0_15px_rgba(0,0,0,0.5)]
+                    hover:shadow-[0_0_25px_var(--neon-color)]
+                    transition-shadow duration-300 cursor-pointer
+                    h-full w-full
+                    ${isActive ? 'flex-row items-center text-left' : 'flex-col items-center justify-center text-center'}
+                `}
                 style={{ '--neon-color': color }}
             >
                 {/* Holographic Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-200%] group-hover:animate-shine" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-200%] group-hover:animate-shine pointer-events-none" />
 
-                <div className="flex flex-row items-center gap-4 w-full justify-between px-4">
-                    <div className="p-3 rounded-full bg-white/5 border border-white/10 group-hover:border-[var(--neon-color)] transition-colors">
-                        <Icon size={32} style={{ color: color }} />
-                    </div>
+                {/* Header Section: Icon & Score */}
+                <motion.div
+                    layout="position"
+                    className={`flex flex-col gap-2 ${isActive ? 'w-1/4 items-center border-r border-white/10 pr-6' : 'w-full items-center'}`}
+                >
+                    <motion.div
+                        layout="position"
+                        className="p-3 rounded-full bg-white/5 border border-white/10 group-hover:border-[var(--neon-color)] transition-colors"
+                    >
+                        <Icon size={isActive ? 48 : 32} style={{ color: color }} />
+                    </motion.div>
 
-                    <div className="text-right">
+                    <motion.div layout="position" className="flex flex-col items-center">
                         <h3 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-1">{title}</h3>
-                        <div className="text-4xl font-black text-white drop-shadow-[0_0_10px_var(--neon-color)]">
+                        <div className="text-4xl font-black text-white drop-shadow-[0_0_10px_var(--neon-color)] whitespace-nowrap">
                             <span style={{ color: color }}>{score}</span>
                             <span className="text-lg text-gray-600 ml-1">/100</span>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
 
-                {/* Expandable Critique Section */}
-                <AnimatePresence>
+                {/* Expanded Content: Critique */}
+                <AnimatePresence mode="popLayout">
                     {isActive && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                            animate={{ height: "auto", opacity: 1, marginTop: 16 }}
-                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                            className="w-full overflow-hidden"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20, transition: { duration: 0.1 } }}
+                            className="flex-1 flex flex-col justify-center min-w-0"
                         >
-                            <div className="pt-4 border-t border-white/10 text-sm text-gray-300 leading-relaxed font-light text-left">
-                                <p className="font-bold text-[var(--neon-color)] mb-2 uppercase tracking-widest text-xs">Analysis</p>
-                                <p>{critique || "No specific feedback provided."}</p>
-                            </div>
+                            <p className="font-bold text-[var(--neon-color)] mb-2 uppercase tracking-widest text-xs">Analysis</p>
+                            <p className="text-sm text-gray-300 leading-relaxed font-light">{critique || "No specific feedback provided."}</p>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {/* Chevron/Indicator */}
                 <motion.div
+                    layout="position"
                     animate={{ rotate: isActive ? 180 : 0 }}
                     className="absolute top-4 right-4 text-white/20 group-hover:text-white/50"
                 >
@@ -76,7 +88,7 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay, critique, isA
 
                 {/* Scanline Overlay */}
                 <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20" />
-            </div>
+            </motion.div>
         </motion.div>
     );
 };
