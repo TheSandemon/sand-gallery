@@ -433,7 +433,6 @@ const VideoAnalysis = ({ userId }) => {
                 </div>
             </div>
         </div>
-        </div >
     );
 };
 
