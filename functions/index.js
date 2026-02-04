@@ -598,11 +598,22 @@ async function callGeminiAnalysis(fileUri, harshness, perspective) {
     if (perspective === 'AI') roleDescription = "You are an advanced AGI Film Critic analyzing technical coherence, generative artifacts, and temporal stability.";
     if (perspective === 'Cinematic') roleDescription = "You are a legendary Cinema Director (like Scorsese or Kubrick) focusing on composition, lighting, and emotional depth.";
 
-    // Define Harshness/Tone
+    // Define Harshness/Tone (UPDATED: Much Stricter)
     let toneInstruction = "Be constructive but honest.";
-    if (harshness === 'Nice') toneInstruction = "Be very encouraging, focus on the positives, and gently suggest improvements.";
-    if (harshness === 'Harsh') toneInstruction = "Be extremely critical. Nitpick every detail. Don't hold back.";
-    if (harshness === 'Roast') toneInstruction = "Roast this video. Be savage, sarcastic, and funny. Destroy the user's ego (but keep it helpful deep down).";
+    if (harshness === 'Nice') toneInstruction = "Be encouraging, but don't lie. Point out flaws gently.";
+    if (harshness === 'Normal') toneInstruction = "Be CRITICAL. Do not give 100/100 unless it is a Hollywood masterpiece. Average content should get 50-60. Point out every technical flaw.";
+    if (harshness === 'Harsh') toneInstruction = "Be RUTHLESS. Standards are perfection. If a frame is dropped, a cut is late, or color is flat, deduct points heavily. 70/100 is a high score here.";
+    if (harshness === 'Roast') toneInstruction = "ROAST IT. Be savage, sarcastic, and funny. Mock the editing choices, the effects, and the pacing. Destroy the user's ego but maintain accurate technical feedback.";
+
+    // RUBRIC INJECTION
+    const rubric = `
+    CRITERIA FOR SCORING:
+    - Editing: Flow, continuity coverage, cut timing, motivation of cuts.
+    - FX: Quality of composites, motion tracking, color grading, realism/style integration.
+    - Pacing: Rhythm, engagement retention, does it drag? Is it too fast?
+    - Storytelling: Clarity of narrative, emotional impact, hook.
+    - Quality: Resolution, compression artifacts, lighting, audio mix/clarity.
+    `;
 
     const body = {
         contents: [{
@@ -612,6 +623,8 @@ async function callGeminiAnalysis(fileUri, harshness, perspective) {
                     text: `
 ${roleDescription}
 ${toneInstruction}
+
+${rubric}
 
 Analyze this video clip.
 Provide a JSON response strictly following this schema:

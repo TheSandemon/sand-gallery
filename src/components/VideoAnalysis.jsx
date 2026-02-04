@@ -180,7 +180,18 @@ const VideoAnalysis = ({ userId }) => {
                         harshness,
                         perspective
                     });
-                    setAnalysisResult(result.data);
+
+                    // FIX: Nested data check. Callable returns { data: { success: true, data: { ... } } } usually, 
+                    // or just { data: { ... } }. My cloud function returns { success: true, data: ... }.
+                    // trace: result.data -> { success: true, data: { analysisId... } }
+                    // So we need result.data.data
+                    if (result.data && result.data.data) {
+                        setAnalysisResult(result.data.data);
+                    } else if (result.data) {
+                        // Fallback in case I changed structure
+                        setAnalysisResult(result.data);
+                    }
+
                     setUploadStatus('complete');
                 } catch (error) {
                     console.error("Analysis Error:", error);
@@ -190,8 +201,11 @@ const VideoAnalysis = ({ userId }) => {
         );
     };
 
-    // Use either the just-completed result or the latest from DB
-    const displayData = analysisResult || latestAnalysis;
+    // Use either the just-completed result, OR if not available, show empty. 
+    // ONLY show latestAnalysis if explicitly desired? User said "If no video is currently loaded, the scores should be '-'".
+    // This implies we default to empty.
+    const displayData = analysisResult || {};
+    // Removed automatic fallback to 'latestAnalysis' to prevent showing old data on fresh load.
 
     return (
         <div className="w-full">
@@ -346,64 +360,70 @@ const VideoAnalysis = ({ userId }) => {
 
                 {/* Holographic Dashboard */}
                 <div className="flex flex-col gap-4">
-                    {!displayData ? (
-                        <div className="h-full rounded-2xl border border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center text-gray-500 p-8">
+                    {!displayData.scores ? (
+                        <div className="h-full rounded-2xl border border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center text-gray-500 p-8 min-h-[400px]">
                             <Activity className="mb-4 opacity-20" size={32} />
-                            <p className="text-sm">No analysis history.</p>
+                            <p className="text-sm">Ready to Judge.</p>
+                            <p className="text-xs text-gray-600 mt-2">Upload a video to begin analysis.</p>
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative">
                                 <HolographicCard
                                     title="Editing"
-                                    score={displayData.scores?.editing || 0}
+                                    score={displayData.scores?.editing}
                                     critique={displayData.critique?.editing_notes}
+                                    criteria="Cuts, Transitions, Flow, Continuity"
                                     icon={Scissors}
                                     color="#3b82f6" // Blue
                                     delay={0}
                                 />
                                 <HolographicCard
                                     title="Effects"
-                                    score={displayData.scores?.fx || 0}
+                                    score={displayData.scores?.fx}
                                     critique={displayData.critique?.fx_notes}
+                                    criteria="VFX integration, Color Grading, Sound Design"
                                     icon={Zap}
                                     color="#a855f7" // Purple
                                     delay={1}
                                 />
                                 <HolographicCard
                                     title="Pacing"
-                                    score={displayData.scores?.pacing || 0}
+                                    score={displayData.scores?.pacing}
                                     critique={displayData.critique?.pacing_notes}
+                                    criteria="Rhythm, Speed, Engagement retention"
                                     icon={Activity}
                                     color="#ef4444" // Red
                                     delay={2}
                                 />
                                 <HolographicCard
                                     title="Story"
-                                    score={displayData.scores?.storytelling || 0}
+                                    score={displayData.scores?.storytelling}
                                     critique={displayData.critique?.storytelling_notes}
+                                    criteria="Narrative Arc, Emotional Hook, Clarity"
                                     icon={Film}
                                     color="#f97316" // Orange
                                     delay={3}
                                 />
                                 <HolographicCard
                                     title="Quality"
-                                    score={displayData.scores?.quality || 0}
+                                    score={displayData.scores?.quality}
                                     critique={displayData.critique?.quality_notes}
+                                    criteria="Resolution, Compression, Lighting, Audio Clarity"
                                     icon={Star}
                                     color="#008f4e" // Green (Neon)
                                     delay={4}
                                 />
-                                <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl border border-white/10 min-h-[200px]">
+                                <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl border border-white/10 min-h-[200px] z-0">
                                     <div className="text-[10px] text-center text-gray-500 uppercase tracking-widest mb-1">Overall Grade</div>
                                     <div className="text-5xl font-black text-white mb-2">
-                                        {Math.round((
+                                        {displayData.scores ? Math.round((
                                             (displayData.scores?.editing || 0) +
                                             (displayData.scores?.fx || 0) +
                                             (displayData.scores?.pacing || 0) +
                                             (displayData.scores?.storytelling || 0) +
                                             (displayData.scores?.quality || 0)
-                                        ) / 5)}
+                                        ) / 5) : '-'}
                                     </div>
                                     <div className="text-xs text-center text-gray-400">Average Score</div>
                                 </div>
@@ -413,6 +433,7 @@ const VideoAnalysis = ({ userId }) => {
                 </div>
             </div>
         </div>
+        </div >
     );
 };
 
