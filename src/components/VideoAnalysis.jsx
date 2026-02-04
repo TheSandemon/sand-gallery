@@ -6,13 +6,16 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, storage } from '../firebase';
 import { onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
 
-const HolographicCard = ({ title, score, icon: Icon, color, delay }) => {
+const HolographicCard = ({ title, score, icon: Icon, color, delay, critique }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20, rotateX: 10 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
             transition={{ delay: delay * 0.1, duration: 0.6, type: "spring" }}
-            className="relative group perspective-1000"
+            className="relative group perspective-1000 z-10"
+            onClick={() => setIsExpanded(!isExpanded)}
         >
             <div className={`
         relative overflow-hidden rounded-xl border border-white/10
@@ -20,7 +23,7 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay }) => {
         p-6 flex flex-col items-center justify-center gap-4
         shadow-[0_0_15px_rgba(0,0,0,0.5)]
         hover:shadow-[0_0_25px_var(--neon-color)]
-        transition-all duration-300
+        transition-all duration-300 cursor-pointer
       `}
                 style={{ '--neon-color': color }}
             >
@@ -39,6 +42,35 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay }) => {
                     </div>
                 </div>
 
+                {/* Expandable Critique Section */}
+                <AnimatePresence>
+                    {isExpanded && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                            animate={{ height: "auto", opacity: 1, marginTop: 16 }}
+                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                            className="w-full overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        // Stop propagation so clicking text doesn't toggle immediately if we want selectable text
+                        // But usually desirable to toggle on card click. Let's keep card toggle for simplicity unless user selects text.
+                        >
+                            <div className="pt-4 border-t border-white/10 text-xs text-gray-300 leading-relaxed font-light text-left">
+                                <p>{critique || "No specific feedback provided."}</p>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Chevron/Indicator */}
+                <motion.div
+                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                    className="absolute top-4 right-4 text-white/20 group-hover:text-white/50"
+                >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </motion.div>
+
                 {/* Scanline Overlay */}
                 <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20" />
             </div>
@@ -53,6 +85,10 @@ const VideoAnalysis = ({ userId }) => {
     const [uploadStatus, setUploadStatus] = useState('idle'); // idle, uploading, analyzing, complete, error
     const [analysisResult, setAnalysisResult] = useState(null);
     const [latestAnalysis, setLatestAnalysis] = useState(null);
+
+    // New State for Parameters
+    const [harshness, setHarshness] = useState('Normal');
+    const [perspective, setPerspective] = useState('Overall');
 
     const fileInputRef = useRef(null);
 
@@ -139,7 +175,11 @@ const VideoAnalysis = ({ userId }) => {
                     const functions = getFunctions();
                     const analyzeVideo = httpsCallable(functions, 'analyzeVideo', { timeout: 300000 });
 
-                    const result = await analyzeVideo({ storagePath });
+                    const result = await analyzeVideo({
+                        storagePath,
+                        harshness,
+                        perspective
+                    });
                     setAnalysisResult(result.data);
                     setUploadStatus('complete');
                 } catch (error) {
@@ -221,12 +261,46 @@ const VideoAnalysis = ({ userId }) => {
                     {file && (
                         <div className="mt-4">
                             {uploadStatus === 'idle' && (
-                                <button
-                                    onClick={startAnalysis}
-                                    className="w-full py-3 bg-[var(--neon-green)] text-black font-black text-sm uppercase tracking-widest rounded-xl hover:bg-[#00b060] transition-colors shadow-[0_0_20px_rgba(0,143,78,0.4)] hover:shadow-[0_0_30px_rgba(0,143,78,0.6)] active:scale-[0.98]"
-                                >
-                                    Judge My Cut
-                                </button>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Harshness Dropdown */}
+                                        <div className="flex flex-col gap-1">
+                                            <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Harshness</label>
+                                            <select
+                                                value={harshness}
+                                                onChange={(e) => setHarshness(e.target.value)}
+                                                className="bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors"
+                                            >
+                                                <option value="Nice">Nice</option>
+                                                <option value="Normal">Normal</option>
+                                                <option value="Harsh">Harsh</option>
+                                                <option value="Roast">Roast</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Perspective Dropdown */}
+                                        <div className="flex flex-col gap-1">
+                                            <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Perspective</label>
+                                            <select
+                                                value={perspective}
+                                                onChange={(e) => setPerspective(e.target.value)}
+                                                className="bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[var(--neon-green)] transition-colors"
+                                            >
+                                                <option value="Overall">Overall</option>
+                                                <option value="Advertising">Advertising</option>
+                                                <option value="AI">AI</option>
+                                                <option value="Cinematic">Cinematic</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={startAnalysis}
+                                        className="w-full py-3 bg-[var(--neon-green)] text-black font-black text-sm uppercase tracking-widest rounded-xl hover:bg-[#00b060] transition-colors shadow-[0_0_20px_rgba(0,143,78,0.4)] hover:shadow-[0_0_30px_rgba(0,143,78,0.6)] active:scale-[0.98]"
+                                    >
+                                        Judge My Cut
+                                    </button>
+                                </div>
                             )}
 
                             {uploadStatus === 'uploading' && (
@@ -279,10 +353,11 @@ const VideoAnalysis = ({ userId }) => {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <HolographicCard
                                     title="Editing"
                                     score={displayData.scores?.editing || 0}
+                                    critique={displayData.critique?.editing_notes}
                                     icon={Scissors}
                                     color="#3b82f6" // Blue
                                     delay={0}
@@ -290,6 +365,7 @@ const VideoAnalysis = ({ userId }) => {
                                 <HolographicCard
                                     title="Effects"
                                     score={displayData.scores?.fx || 0}
+                                    critique={displayData.critique?.fx_notes}
                                     icon={Zap}
                                     color="#a855f7" // Purple
                                     delay={1}
@@ -297,6 +373,7 @@ const VideoAnalysis = ({ userId }) => {
                                 <HolographicCard
                                     title="Pacing"
                                     score={displayData.scores?.pacing || 0}
+                                    critique={displayData.critique?.pacing_notes}
                                     icon={Activity}
                                     color="#ef4444" // Red
                                     delay={2}
@@ -304,6 +381,7 @@ const VideoAnalysis = ({ userId }) => {
                                 <HolographicCard
                                     title="Story"
                                     score={displayData.scores?.storytelling || 0}
+                                    critique={displayData.critique?.storytelling_notes}
                                     icon={Film}
                                     color="#f97316" // Orange
                                     delay={3}
@@ -311,13 +389,14 @@ const VideoAnalysis = ({ userId }) => {
                                 <HolographicCard
                                     title="Quality"
                                     score={displayData.scores?.quality || 0}
+                                    critique={displayData.critique?.quality_notes}
                                     icon={Star}
                                     color="#008f4e" // Green (Neon)
                                     delay={4}
                                 />
-                                <div className="flex flex-col items-center justify-center p-2 bg-white/5 rounded-xl border border-white/10">
-                                    <div className="text-[10px] text-center text-gray-500 uppercase tracking-widest mb-1">Grade</div>
-                                    <div className="text-3xl font-black text-white">
+                                <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl border border-white/10 min-h-[200px]">
+                                    <div className="text-[10px] text-center text-gray-500 uppercase tracking-widest mb-1">Overall Grade</div>
+                                    <div className="text-5xl font-black text-white mb-2">
                                         {Math.round((
                                             (displayData.scores?.editing || 0) +
                                             (displayData.scores?.fx || 0) +
@@ -326,35 +405,9 @@ const VideoAnalysis = ({ userId }) => {
                                             (displayData.scores?.quality || 0)
                                         ) / 5)}
                                     </div>
+                                    <div className="text-xs text-center text-gray-400">Average Score</div>
                                 </div>
                             </div>
-
-                            {/* Critical Feedback Stream */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.6 }}
-                                className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-hidden relative"
-                            >
-                                <div className="absolute top-0 left-0 w-1 h-full bg-[var(--neon-gold)]" />
-                                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                                    <Award className="text-[var(--neon-gold)]" size={16} />
-                                    CRITICAL ANALYSIS
-                                </h3>
-
-                                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {displayData.critique && Object.entries(displayData.critique).map(([key, value]) => (
-                                        <div key={key} className="p-3 rounded-lg bg-white/5 border border-white/5">
-                                            <h4 className="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">
-                                                {key.replace('_', ' ')}
-                                            </h4>
-                                            <p className="text-xs text-gray-200 leading-relaxed font-light">
-                                                {value}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.div>
                         </>
                     )}
                 </div>

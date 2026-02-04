@@ -440,7 +440,7 @@ exports.analyzeVideo = onCall({
 }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
     const uid = request.auth.uid;
-    const { storagePath } = request.data;
+    const { storagePath, harshness = "Normal", perspective = "Overall" } = request.data;
 
     console.log(`Analyzing Video (${uid}): ${storagePath}`);
 
@@ -484,7 +484,8 @@ exports.analyzeVideo = onCall({
         if (fileState === "FAILED") throw new Error("Video processing failed by Google.");
 
         // 4. Call Gemini 3.0 Pro
-        const analysis = await callGeminiAnalysis(fileUri);
+        // 4. Call Gemini 3.0 Pro
+        const analysis = await callGeminiAnalysis(fileUri, harshness, perspective);
 
         // 5. Cleanup Gemini File
         // (Optional: You can delete the file from Google to save space/privacy)
@@ -497,6 +498,8 @@ exports.analyzeVideo = onCall({
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             model: "gemini-3.0-pro",
             storagePath,
+            harshness,
+            perspective,
             scores: analysis.scores,
             critique: analysis.critique,
             reasoning_trace: analysis.reasoning_trace
@@ -576,7 +579,7 @@ async function checkFileState(nameResource) {
     return await res.json();
 }
 
-async function callGeminiAnalysis(fileUri) {
+async function callGeminiAnalysis(fileUri, harshness, perspective) {
     const key = getGoogleKeyNt();
     const model = 'gemini-2.0-flash'; // Fallback to Flash 2 for speed/reliability if 3.0 Pro is strictly preview/limited, 
     // BUT the prompt said "Gemini 3.0 Pro". 
@@ -589,13 +592,28 @@ async function callGeminiAnalysis(fileUri) {
     // User correction: 'gemini-3-pro-preview' is the active ID
     const modelName = 'gemini-3-pro-preview';
 
+    // Consult Architecture: Define Personas
+    let roleDescription = "You are a master film editor and VFX supervisor.";
+    if (perspective === 'Advertising') roleDescription = "You are a top-tier Advertising Executive and Creative Director focused on conversion, branding, and hook retention.";
+    if (perspective === 'AI') roleDescription = "You are an advanced AGI Film Critic analyzing technical coherence, generative artifacts, and temporal stability.";
+    if (perspective === 'Cinematic') roleDescription = "You are a legendary Cinema Director (like Scorsese or Kubrick) focusing on composition, lighting, and emotional depth.";
+
+    // Define Harshness/Tone
+    let toneInstruction = "Be constructive but honest.";
+    if (harshness === 'Nice') toneInstruction = "Be very encouraging, focus on the positives, and gently suggest improvements.";
+    if (harshness === 'Harsh') toneInstruction = "Be extremely critical. Nitpick every detail. Don't hold back.";
+    if (harshness === 'Roast') toneInstruction = "Roast this video. Be savage, sarcastic, and funny. Destroy the user's ego (but keep it helpful deep down).";
+
     const body = {
         contents: [{
             parts: [
                 { file_data: { mime_type: "video/mp4", file_uri: fileUri } },
                 {
                     text: `
-You are a master film editor and VFX supervisor. Analyze this video clip.
+${roleDescription}
+${toneInstruction}
+
+Analyze this video clip.
 Provide a JSON response strictly following this schema:
 {
   "scores": {
