@@ -42,22 +42,10 @@ const CircuitEffect = () => {
             ctx.shadowBlur = 10;
             ctx.shadowColor = this.color;
 
-            // Fade visual: Draw segments with decreasing opacity from head to tail? or fading the whole thing?
-            // "Fade over time from front to back" -> Let's interpret as the 'front' (newest point) stays bright, back fades? 
-            // OR maybe the user wants the electricity to "travel" and leave a gap?
-            // "lines fade over time from front to back" -> Visualizing a lightning strike that disappears starting from where it hit.
-            // So the *oldest* points (tail) remain visible longer? That's inverted logic.
-            // Let's stick to a standard electric trail where opacity is mapped to history index, 
-            // but modulated by 'life'.
-
             for (let i = 0; i < this.history.length - 1; i++) {
                 const point = this.history[i];
                 const nextPoint = this.history[i + 1];
 
-                // Calculate opacity: 
-                // i=0 is tail (oldest), i=length is head (newest).
-                // "Fade front to back" might mean newest fades first?? 
-                // I will make the whole line fade with life, but the tail is naturally thinner.
                 const opacity = (this.life / 100) * (i / this.history.length);
 
                 ctx.beginPath();
@@ -75,7 +63,9 @@ const CircuitEffect = () => {
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        let lastClickTime = 0; // Throttling tracker
+        let lastClickTime = 0;
+        let animationFrameId;
+        let lastTime = 0; // For delta time
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
@@ -87,13 +77,12 @@ const CircuitEffect = () => {
 
         const handleClick = (e) => {
             const now = Date.now();
-            if (now - lastClickTime < 1000) return; // 1s Limit
+            if (now - lastClickTime < 500) return; // Reduced throttle to 500ms
 
-            // Skip if clicking on an interactive element
-            const interactiveTags = ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT', 'LABEL'];
-            const isInteractive = interactiveTags.includes(e.target.tagName) ||
-                e.target.closest('button, a, input, textarea, select, label, [role="button"]');
-            if (isInteractive) return;
+            // Improved input capture check
+            // Check if target is interactive or inside interactive element
+            const interactiveSelectors = 'button, a, input, textarea, select, label, [role="button"], video, audio';
+            if (e.target.closest(interactiveSelectors)) return;
 
             lastClickTime = now;
 
@@ -110,13 +99,34 @@ const CircuitEffect = () => {
 
         window.addEventListener('click', handleClick);
 
-        const animate = () => {
+        const animate = (timestamp) => {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            // Normalize speed based on 60fps (approx 16.6ms per frame)
+            // If deltaTime is 33ms (30fps), factor is 2.0x
+            const timeFactor = deltaTime / 16.66;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Update and draw sparks
             for (let i = sparks.current.length - 1; i >= 0; i--) {
                 const spark = sparks.current[i];
-                spark.update();
+
+                // Update spark with timeFactor
+                spark.life -= 2 * timeFactor;
+
+                if (Math.random() < 0.1 * timeFactor) {
+                    spark.angle += (Math.random() < 0.5 ? -1 : 1) * (Math.PI / 2);
+                }
+
+                spark.x += Math.cos(spark.angle) * spark.speed * timeFactor;
+                spark.y += Math.sin(spark.angle) * spark.speed * timeFactor;
+
+                spark.history.push({ x: spark.x, y: spark.y });
+                if (spark.history.length > 20) spark.history.shift();
+
                 spark.draw(ctx);
 
                 if (spark.life <= 0) {
@@ -124,15 +134,15 @@ const CircuitEffect = () => {
                 }
             }
 
-            requestAnimationFrame(animate);
+            animationFrameId = requestAnimationFrame(animate);
         };
 
-        const animationId = requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
 
         return () => {
             window.removeEventListener('resize', resizeCanvas);
             window.removeEventListener('click', handleClick);
-            cancelAnimationFrame(animationId);
+            cancelAnimationFrame(animationFrameId);
         };
     }, []);
 
@@ -146,7 +156,7 @@ const CircuitEffect = () => {
                 width: '100%',
                 height: '100%',
                 pointerEvents: 'none',
-                zIndex: 9999,
+                zIndex: 0, // Behind UI (which usually has default auto, or specific index)
             }}
         />
     );

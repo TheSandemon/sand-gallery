@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import VideoAnalysis from '../components/VideoAnalysis';
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
 
     if (!user) return <div style={{ paddingTop: '100px', textAlign: 'center' }}>Please log in to view profile.</div>;
 
@@ -22,13 +22,13 @@ const Profile = () => {
                 border: '1px solid rgba(0, 143, 78, 0.3)',
                 backdropFilter: 'blur(10px)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
                     <img
                         src={user.photoURL}
                         alt={user.displayName}
                         style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid var(--neon-green)' }}
                     />
-                    <div>
+                    <div style={{ flex: 1 }}>
                         <h1 style={{ margin: 0, fontSize: '2rem' }}>{user.displayName}</h1>
                         <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{user.email}</p>
                         <span style={{
@@ -42,6 +42,28 @@ const Profile = () => {
                             fontWeight: 'bold'
                         }}>{user.role || 'USER'}</span>
                     </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button
+                        onClick={() => {
+                            logout();
+                        }}
+                        style={{
+                            padding: '0.5rem 1.5rem',
+                            background: 'rgba(255, 50, 50, 0.1)',
+                            border: '1px solid rgba(255, 50, 50, 0.3)',
+                            color: '#ff4444',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => e.target.style.background = 'rgba(255, 50, 50, 0.2)'}
+                        onMouseLeave={e => e.target.style.background = 'rgba(255, 50, 50, 0.1)'}
+                    >
+                        LOG OUT
+                    </button>
                 </div>
             </div>
 
