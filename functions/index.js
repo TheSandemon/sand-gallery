@@ -586,7 +586,8 @@ async function callGeminiAnalysis(fileUri) {
     // Actually, let's stick to 'gemini-1.5-pro' for GUARANTEED STABILITY with Video, 
     // or 'gemini-2.0-flash' which is "Nano Banana". 
     // User asked for "Gemini 3.0 Pro". If that doesn't exist in the API yet, we use the best available: 'gemini-1.5-pro-002'.
-    const modelName = 'gemini-3.0-pro-001';
+    // User correction: 'gemini-3-pro-preview' is the active ID
+    const modelName = 'gemini-3-pro-preview';
 
     const body = {
         contents: [{
@@ -595,10 +596,24 @@ async function callGeminiAnalysis(fileUri) {
                 {
                     text: `
 You are a master film editor and VFX supervisor. Analyze this video clip.
-Provide a JSON response with:
-1. Scores (0-100) for: editing, fx, pacing, storytelling, quality.
-2. Critique: Brief, harsh, constructive notes for each category (editing_notes, fx_notes, etc).
-3. Reasoning Trace: A paragraph explaining your thought process.
+Provide a JSON response strictly following this schema:
+{
+  "scores": {
+    "editing": 0-100,
+    "fx": 0-100,
+    "pacing": 0-100,
+    "storytelling": 0-100,
+    "quality": 0-100
+  },
+  "critique": {
+    "editing_notes": "string",
+    "fx_notes": "string",
+    "pacing_notes": "string",
+    "storytelling_notes": "string",
+    "quality_notes": "string"
+  },
+  "reasoning_trace": "string explanation"
+}
 
 Return ONLY raw JSON. No markdown formatting.
 ` }
@@ -620,5 +635,7 @@ Return ONLY raw JSON. No markdown formatting.
     if (json.error) throw new Error(JSON.stringify(json.error));
 
     const text = json.candidates[0].content.parts[0].text;
-    return JSON.parse(text);
+    // Strip constraints just in case
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanText);
 }
