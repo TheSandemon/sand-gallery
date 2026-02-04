@@ -363,7 +363,7 @@ async function saveCreation(uid, type, prompt, url, cost) {
     // Check if url is a base64 string (data:image/...)
     if (url && url.startsWith('data:')) {
         try {
-            const bucket = admin.storage().bucket();
+            const bucket = admin.storage().bucket("sand-gallery-lab.firebasestorage.app");
             console.log("Attempting upload to bucket:", bucket.name);
 
             const match = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
@@ -447,7 +447,8 @@ exports.analyzeVideo = onCall({
     // COST: 10 Credits for Deep Analysis
     await deductCredits(uid, 10);
 
-    const bucket = admin.storage().bucket();
+    // Verify we use the Correct Bucket (must match frontend upload target)
+    const bucket = admin.storage().bucket("sand-gallery-lab.firebasestorage.app");
     const file = bucket.file(storagePath);
     const fs = require('fs');
     const os = require('os');
