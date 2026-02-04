@@ -575,8 +575,20 @@ async function uploadToGemini(filePath, mimeType) {
         body: fileBuffer
     });
 
-    const uploadJson = await uploadRes.json();
-    return uploadJson;
+    const responseText = await uploadRes.text();
+    if (!uploadRes.ok) {
+        throw new Error(`Google Upload Failed: ${uploadRes.status} ${uploadRes.statusText} - ${responseText}`);
+    }
+
+    try {
+        return JSON.parse(responseText);
+    } catch (e) {
+        // Fallback: If success but not JSON, construct a mock object if possible, or throw
+        // Sometimes the API returns the file metadata in JSON, sometimes it might be empty on success?
+        // Actually, the 'finalize' command should return the File resource.
+        console.warn("Google Upload returned non-JSON:", responseText);
+        throw new Error(`Google Upload returned invalid JSON: ${responseText.substring(0, 100)}`);
+    }
 }
 
 async function checkFileState(nameResource) {
