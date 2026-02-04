@@ -543,28 +543,7 @@ async function uploadToGemini(filePath, mimeType) {
     // 2. Upload Bytes
     const fileBuffer = fs.readFileSync(filePath); // Read fully into memory (Careful with large files > 2GB)
 
-    await fetch(uploadUrl, {
-        method: "POST",
-        headers: {
-            "Content-Length": numBytes,
-            "X-Goog-Upload-Offset": "0",
-            "X-Goog-Upload-Command": "upload, finalize"
-        },
-        body: fileBuffer
-    });
-
-    // 3. Get File Info (The response from upload step often contains it, but let's query list/latest to be sure or check response)
-    // Actually the upload response body contains the file resource
-    // Let's redo step 2 to capture response
-    // Fetch doesn't support easy stream upload in Node without keeping in memory unless using 'fs.createReadStream' with 'duplex' which native fetch might not support fully yet. 
-    // Using Buffer for simplicity for files < 500MB (Function RAM limits).
-
-    // We need to re-fetch the upload result properly.
-    // Actually, the body of the upload request returns the File resource.
-    // Let's assume the previous fetch succeeded. We can't capture the body easily if we don't assign it.
-
-    // Let's query the file list or just parse the upload response.
-    // Re-implementing Step 2 with response capture:
+    // Perform the Upload and Capture Response (Single Step)
     const uploadRes = await fetch(uploadUrl, {
         method: "POST",
         headers: {
