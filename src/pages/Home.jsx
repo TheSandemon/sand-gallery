@@ -1,14 +1,26 @@
 import React from 'react';
-import Hero from '../components/Hero';
+import usePageContent from '../hooks/usePageContent';
+import DynamicRenderer from '../components/cms/DynamicRenderer';
 
 const Home = () => {
+    const { data, loading } = usePageContent('home');
+
+    if (loading) {
+        return (
+            <div style={{ height: '100vh', background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Fallback loading state (optional: could mock the Hero skeleton) */}
+            </div>
+        );
+    }
+
     return (
         <main>
-            <Hero />
-            {/* Placeholder for future sections */}
-            <section style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: 'var(--text-secondary)' }}>More content coming soon...</p>
-            </section>
+            {data && data.sections ? (
+                <DynamicRenderer sections={data.sections} />
+            ) : (
+                /* Fallback if data loading completely fails, though hook handles defaults */
+                <DynamicRenderer sections={[]} />
+            )}
         </main>
     );
 };

@@ -39,5 +39,17 @@ service cloud.firestore {
       // Users can read their own creations; Owners can read all
       allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
     }
+
+    match /pages/{pageId} {
+      // CMS Pages: Public read, Admin write
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /config/{configId} {
+      // UI Settings: Public read, Admin write
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }
