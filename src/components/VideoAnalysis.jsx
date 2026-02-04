@@ -6,16 +6,18 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, storage } from '../firebase';
 import { onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
 
-const HolographicCard = ({ title, score, icon: Icon, color, delay, critique }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
+const HolographicCard = ({ title, score, icon: Icon, color, delay, critique, isActive, onToggle }) => {
     return (
         <motion.div
+            layout
             initial={{ opacity: 0, y: 20, rotateX: 10 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ delay: delay * 0.1, duration: 0.6, type: "spring" }}
-            className="relative group perspective-1000 z-10"
-            onClick={() => setIsExpanded(!isExpanded)}
+            transition={{ type: "spring", damping: 25, stiffness: 300, layout: { duration: 0.3 } }}
+            className={`
+                relative group perspective-1000 z-10
+                ${isActive ? 'col-span-1 md:col-span-2 lg:col-span-3' : 'col-span-1'}
+            `}
+            onClick={onToggle}
         >
             <div className={`
         relative overflow-hidden rounded-xl border border-white/10
@@ -24,37 +26,38 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay, critique }) =
         shadow-[0_0_15px_rgba(0,0,0,0.5)]
         hover:shadow-[0_0_25px_var(--neon-color)]
         transition-all duration-300 cursor-pointer
+        h-full
       `}
                 style={{ '--neon-color': color }}
             >
                 {/* Holographic Shine Effect */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-200%] group-hover:animate-shine" />
 
-                <div className="p-3 rounded-full bg-white/5 border border-white/10 group-hover:border-[var(--neon-color)] transition-colors">
-                    <Icon size={32} style={{ color: color }} />
-                </div>
+                <div className="flex flex-row items-center gap-4 w-full justify-between px-4">
+                    <div className="p-3 rounded-full bg-white/5 border border-white/10 group-hover:border-[var(--neon-color)] transition-colors">
+                        <Icon size={32} style={{ color: color }} />
+                    </div>
 
-                <div className="text-center">
-                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-1">{title}</h3>
-                    <div className="text-4xl font-black text-white drop-shadow-[0_0_10px_var(--neon-color)]">
-                        <span style={{ color: color }}>{score}</span>
-                        <span className="text-lg text-gray-600 ml-1">/100</span>
+                    <div className="text-right">
+                        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-1">{title}</h3>
+                        <div className="text-4xl font-black text-white drop-shadow-[0_0_10px_var(--neon-color)]">
+                            <span style={{ color: color }}>{score}</span>
+                            <span className="text-lg text-gray-600 ml-1">/100</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Expandable Critique Section */}
                 <AnimatePresence>
-                    {isExpanded && (
+                    {isActive && (
                         <motion.div
                             initial={{ height: 0, opacity: 0, marginTop: 0 }}
                             animate={{ height: "auto", opacity: 1, marginTop: 16 }}
                             exit={{ height: 0, opacity: 0, marginTop: 0 }}
                             className="w-full overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        // Stop propagation so clicking text doesn't toggle immediately if we want selectable text
-                        // But usually desirable to toggle on card click. Let's keep card toggle for simplicity unless user selects text.
                         >
-                            <div className="pt-4 border-t border-white/10 text-xs text-gray-300 leading-relaxed font-light text-left">
+                            <div className="pt-4 border-t border-white/10 text-sm text-gray-300 leading-relaxed font-light text-left">
+                                <p className="font-bold text-[var(--neon-color)] mb-2 uppercase tracking-widest text-xs">Analysis</p>
                                 <p>{critique || "No specific feedback provided."}</p>
                             </div>
                         </motion.div>
@@ -63,7 +66,7 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay, critique }) =
 
                 {/* Chevron/Indicator */}
                 <motion.div
-                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                    animate={{ rotate: isActive ? 180 : 0 }}
                     className="absolute top-4 right-4 text-white/20 group-hover:text-white/50"
                 >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,6 +92,11 @@ const VideoAnalysis = ({ userId }) => {
     // Judge Agent State
     const [judgeId, setJudgeId] = useState('technical');
     const [customPersona, setCustomPersona] = useState('');
+    const [activeCard, setActiveCard] = useState(null);
+
+    const handleCardToggle = (cardTitle) => {
+        setActiveCard(prev => prev === cardTitle ? null : cardTitle);
+    };
 
     const PRESET_JUDGES = [
         { id: 'technical', name: 'The Technical Director', prompt: "You are a Technical Director. Focus strictly on bitrate, color grading, lighting, and audio clarity. Ignore the 'vibe'. Technical perfection only. If it looks amateur, say so." },
@@ -380,7 +388,7 @@ const VideoAnalysis = ({ userId }) => {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative items-start">
                                 <HolographicCard
                                     title="Editing"
                                     score={displayData.scores?.editing}
@@ -389,6 +397,8 @@ const VideoAnalysis = ({ userId }) => {
                                     icon={Scissors}
                                     color="#3b82f6" // Blue
                                     delay={0}
+                                    isActive={activeCard === 'Editing'}
+                                    onToggle={() => handleCardToggle('Editing')}
                                 />
                                 <HolographicCard
                                     title="Effects"
@@ -398,6 +408,8 @@ const VideoAnalysis = ({ userId }) => {
                                     icon={Zap}
                                     color="#a855f7" // Purple
                                     delay={1}
+                                    isActive={activeCard === 'Effects'}
+                                    onToggle={() => handleCardToggle('Effects')}
                                 />
                                 <HolographicCard
                                     title="Pacing"
@@ -407,6 +419,8 @@ const VideoAnalysis = ({ userId }) => {
                                     icon={Activity}
                                     color="#ef4444" // Red
                                     delay={2}
+                                    isActive={activeCard === 'Pacing'}
+                                    onToggle={() => handleCardToggle('Pacing')}
                                 />
                                 <HolographicCard
                                     title="Story"
@@ -416,6 +430,8 @@ const VideoAnalysis = ({ userId }) => {
                                     icon={Film}
                                     color="#f97316" // Orange
                                     delay={3}
+                                    isActive={activeCard === 'Story'}
+                                    onToggle={() => handleCardToggle('Story')}
                                 />
                                 <HolographicCard
                                     title="Quality"
@@ -425,8 +441,10 @@ const VideoAnalysis = ({ userId }) => {
                                     icon={Star}
                                     color="#008f4e" // Green (Neon)
                                     delay={4}
+                                    isActive={activeCard === 'Quality'}
+                                    onToggle={() => handleCardToggle('Quality')}
                                 />
-                                <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl border border-white/10 min-h-[200px] z-0">
+                                <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl border border-white/10 min-h-[200px] z-0 col-span-1">
                                     <div className="text-[10px] text-center text-gray-500 uppercase tracking-widest mb-1">Overall Grade</div>
                                     <div className="text-5xl font-black text-white mb-2">
                                         {displayData.scores ? Math.round((
