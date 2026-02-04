@@ -3,6 +3,7 @@ import usePageContent from '../hooks/usePageContent';
 import DynamicRenderer from '../components/cms/DynamicRenderer';
 
 const Home = () => {
+    // CMS Integration: usePageContent fetches 'home' doc from Firestore
     const { data, loading } = usePageContent('home');
 
     if (loading) {
