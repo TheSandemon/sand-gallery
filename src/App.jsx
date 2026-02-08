@@ -11,6 +11,7 @@ import Pricing from './pages/Pricing';
 import CRM from './pages/CRM';
 import Editor from './pages/admin/Editor';
 import Gallery from './pages/Gallery';
+import MushroomRunner from './pages/MushroomRunner';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -43,6 +44,7 @@ function App() {
             <Route path="/studio" element={<Studio />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/game" element={<MushroomRunner />} />
           </Routes>
         </AppLayout>
       </Router>
