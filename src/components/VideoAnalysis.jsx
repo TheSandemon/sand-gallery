@@ -5,6 +5,7 @@ import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, storage } from '../firebase';
 import { onSnapshot, collection, query, orderBy, limit } from "firebase/firestore";
+import { useAuth } from '../context/AuthContext';
 
 const HolographicCard = ({ title, score, icon: Icon, color, delay, critique, isActive, onToggle }) => {
     return (
@@ -94,6 +95,7 @@ const HolographicCard = ({ title, score, icon: Icon, color, delay, critique, isA
 };
 
 const VideoAnalysis = ({ userId }) => {
+    const { user, deductCredits } = useAuth();
     const [file, setFile] = useState(null);
     const [dragActive, setDragActive] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -178,6 +180,17 @@ const VideoAnalysis = ({ userId }) => {
 
     const startAnalysis = async () => {
         if (!file || !userId) return;
+
+        // 1. Role Check
+        if (user?.role !== 'owner') {
+            alert("ACCESS DENIED: The AI Critic is currently restricted to Owner accounts.");
+            return;
+        }
+
+        // 2. Cost Check & Deduction
+        const COST = 10;
+        const canProceed = await deductCredits(COST);
+        if (!canProceed) return;
 
         setUploadStatus('uploading');
         setUploadProgress(0);
@@ -342,9 +355,9 @@ const VideoAnalysis = ({ userId }) => {
 
                                     <button
                                         onClick={startAnalysis}
-                                        className="w-full py-3 bg-[var(--neon-green)] text-black font-black text-sm uppercase tracking-widest rounded-xl hover:bg-[#00b060] transition-colors shadow-[0_0_20px_rgba(0,143,78,0.4)] hover:shadow-[0_0_30px_rgba(0,143,78,0.6)] active:scale-[0.98]"
+                                        className="w-full py-3 bg-[var(--neon-green)] text-black font-black text-sm uppercase tracking-widest rounded-xl hover:bg-[#00b060] transition-colors shadow-[0_0_20px_rgba(0,143,78,0.4)] hover:shadow-[0_0_30px_rgba(0,143,78,0.6)] active:scale-[0.98] flex items-center justify-center gap-2"
                                     >
-                                        Judge My Cut
+                                        Judge My Cut <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded text-black/80 font-bold">-10 Credits</span>
                                     </button>
                                 </div>
                             )}

@@ -1,6 +1,18 @@
 import React from 'react';
 
-const Hero = () => {
+/**
+ * Hero Component - Main landing banner
+ * Supports dynamic props from CMS with sensible defaults.
+ */
+const Hero = ({
+    titleLine1 = 'CREATIVE',
+    titleLine2 = 'TECHNOLOGIST',
+    titleLine3 = '× AI',
+    subtitle = 'Bridging the gap between human imagination and machine intelligence. Building digital experiences that feel alive.',
+    ctaText = 'Explore Work',
+    ctaLink = '/studio',
+    cmsStyles = {},
+}) => {
     const styles = {
         section: {
             height: '100vh',
@@ -12,6 +24,7 @@ const Hero = () => {
             padding: '0 2rem',
             position: 'relative',
             zIndex: 1,
+            ...cmsStyles,
         },
         title: {
             fontSize: 'clamp(3rem, 8vw, 6rem)',
@@ -43,22 +56,30 @@ const Hero = () => {
             letterSpacing: '0.1em',
             transition: 'all 0.3s ease',
             boxShadow: '0 0 20px rgba(0, 143, 78, 0.4)',
+            border: 'none',
+            cursor: 'pointer',
         },
+    };
+
+    const handleClick = () => {
+        if (ctaLink) {
+            window.location.href = ctaLink;
+        }
     };
 
     return (
         <section style={styles.section}>
             <h1 style={styles.title}>
-                CREATIVE<br />
-                <span style={styles.highlight}>TECHNOLOGIST</span><br />
-                <span style={{ color: 'var(--neon-gold)' }}>× AI</span>
+                {titleLine1}<br />
+                <span style={styles.highlight}>{titleLine2}</span><br />
+                <span style={{ color: 'var(--neon-gold)' }}>{titleLine3}</span>
             </h1>
             <p style={styles.subtitle}>
-                Bridging the gap between human imagination and machine intelligence.
-                Building digital experiences that feel alive.
+                {subtitle}
             </p>
             <button
                 style={styles.cta}
+                onClick={handleClick}
                 onMouseEnter={(e) => {
                     e.target.style.backgroundColor = 'var(--text-primary)';
                     e.target.style.boxShadow = '0 0 30px rgba(255, 255, 255, 0.5)';
@@ -68,7 +89,7 @@ const Hero = () => {
                     e.target.style.boxShadow = '0 0 20px rgba(0, 143, 78, 0.4)';
                 }}
             >
-                Explore Work
+                {ctaText}
             </button>
         </section>
     );
