@@ -57,12 +57,18 @@ export const defaultPricingPageData = {
             id: 'pricing-header',
             type: 'RichText',
             props: {
-                content: '<h1 style="font-size: 3rem; margin-bottom: 0.5rem;">PRICING</h1><p style="color: var(--text-secondary);">Choose your plan</p>',
+                content: '<h1 style="font-size: 3rem; margin-bottom: 0.5rem;">POWER <span style="color: var(--neon-gold)">UP</span></h1><p style="color: var(--text-secondary); font-size: 1.2rem;">Secure instant credits to fuel your creation engine.</p>',
                 align: 'center',
             },
             styles: {
                 paddingTop: '120px',
             },
+        },
+        {
+            id: 'pricing-grid-main',
+            type: 'PricingGrid',
+            props: {}, // Uses internal default tiers
+            styles: {},
         },
     ],
 };
@@ -75,15 +81,10 @@ export const defaultStudioPageData = {
     },
     sections: [
         {
-            id: 'studio-header',
-            type: 'RichText',
-            props: {
-                content: '<h1 style="font-size: 3rem;">STUDIO</h1>',
-                align: 'center',
-            },
-            styles: {
-                paddingTop: '120px',
-            },
+            id: 'studio-app-embed',
+            type: 'StudioEmbed',
+            props: {},
+            styles: {},
         },
     ],
 };

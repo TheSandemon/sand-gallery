@@ -4,7 +4,8 @@
  */
 
 import Hero from '../components/Hero';
-// Future components will be added here
+import PricingGrid from '../components/cms/PricingGrid';
+import StudioEmbed from '../components/cms/StudioEmbed';
 
 /**
  * Registry of all CMS-editable components.
@@ -33,6 +34,18 @@ export const componentRegistry = {
             ctaText: 'Explore Work',
             ctaLink: '/studio',
         },
+    },
+    PricingGrid: {
+        component: PricingGrid,
+        label: 'Pricing Grid',
+        schema: {}, // Currently no editable props for ease, can add 'tiers' JSON editor later if needed
+        defaultProps: {},
+    },
+    StudioEmbed: {
+        component: StudioEmbed,
+        label: 'Studio Application',
+        schema: {}, // Read-only embed
+        defaultProps: {},
     },
     Spacer: {
         component: 'spacer', // Special case: handled inline
