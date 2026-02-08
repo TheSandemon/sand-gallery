@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-const PricingGrid = ({ tiers = [], cmsStyles = {} }) => {
+const PricingGrid = ({ tiers = [], cmsStyles = {}, isEditor = false }) => {
     const { user, grantCredits } = useAuth();
 
     const handleBuy = async (amount, price) => {
@@ -30,11 +30,12 @@ const PricingGrid = ({ tiers = [], cmsStyles = {} }) => {
     return (
         <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem',
-            padding: '2rem 0',
-            maxWidth: '1200px',
+            gridTemplateColumns: isEditor ? 'repeat(3, 1fr)' : 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: isEditor ? '0.5rem' : '2rem',
+            padding: isEditor ? '0.5rem' : '2rem 0',
+            maxWidth: isEditor ? '100%' : '1200px',
             margin: '0 auto',
+            height: isEditor ? '100%' : 'auto',
             ...cmsStyles
         }}>
             {displayTiers.map((tier, index) => (

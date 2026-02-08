@@ -173,7 +173,7 @@ const CategoryPanel = ({ category, onClose }) => {
     );
 };
 
-const GalleryGrid = ({ categories = [], cmsStyles = {} }) => {
+const GalleryGrid = ({ categories = [], cmsStyles = {}, isEditor = false }) => {
     const [activeCategory, setActiveCategory] = useState(null);
     const [viewMode, setViewMode] = useState('grid');
 
@@ -188,6 +188,34 @@ const GalleryGrid = ({ categories = [], cmsStyles = {} }) => {
             items: []
         }
     ];
+
+    // In editor mode, show a compact preview
+    if (isEditor) {
+        return (
+            <div
+                className="w-full h-full flex flex-col items-center justify-center"
+                style={{
+                    background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+                    ...cmsStyles
+                }}
+            >
+                <div className="text-3xl mb-2">🎮</div>
+                <div className="text-sm font-bold text-white">Gallery Grid</div>
+                <div className="text-xs text-gray-500 mt-1">{displayCategories.length} categories</div>
+                <div className="flex gap-2 mt-3">
+                    {displayCategories.slice(0, 4).map((cat, i) => (
+                        <div
+                            key={i}
+                            className="w-8 h-8 rounded flex items-center justify-center text-xs"
+                            style={{ background: cat.color + '20', color: cat.color }}
+                        >
+                            {cat.title?.[0] || '?'}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative min-h-[60vh] py-12 px-4" style={cmsStyles}>

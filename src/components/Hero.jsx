@@ -3,6 +3,7 @@ import React from 'react';
 /**
  * Hero Component - Main landing banner
  * Supports dynamic props from CMS with sensible defaults.
+ * Accepts isEditor prop for WYSIWYG editing mode.
  */
 const Hero = ({
     titleLine1 = 'CREATIVE',
@@ -12,42 +13,49 @@ const Hero = ({
     ctaText = 'Explore Work',
     ctaLink = '/studio',
     cmsStyles = {},
+    isEditor = false,
 }) => {
     const styles = {
         section: {
-            height: '100vh',
+            height: isEditor ? '100%' : '100vh',
+            minHeight: isEditor ? 'auto' : undefined,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             textAlign: 'center',
-            padding: '0 2rem',
+            padding: isEditor ? '1rem' : '0 2rem',
             position: 'relative',
             zIndex: 1,
             ...cmsStyles,
         },
         title: {
-            fontSize: 'clamp(3rem, 8vw, 6rem)',
+            fontSize: isEditor ? 'clamp(1.5rem, 4vw, 2.5rem)' : 'clamp(3rem, 8vw, 6rem)',
             fontWeight: '900',
             lineHeight: '1.1',
-            marginBottom: '1.5rem',
+            marginBottom: isEditor ? '0.75rem' : '1.5rem',
             color: 'var(--text-primary)',
             textShadow: '0 0 20px rgba(0, 143, 78, 0.3)',
         },
         highlight: {
             color: 'transparent',
-            WebkitTextStroke: '2px var(--neon-green)',
+            WebkitTextStroke: isEditor ? '1px var(--neon-green)' : '2px var(--neon-green)',
         },
         subtitle: {
-            fontSize: 'clamp(1rem, 2vw, 1.5rem)',
+            fontSize: isEditor ? '0.75rem' : 'clamp(1rem, 2vw, 1.5rem)',
             color: 'var(--text-secondary)',
-            maxWidth: '600px',
-            margin: '0 auto 3rem',
-            lineHeight: '1.6',
+            maxWidth: isEditor ? '90%' : '600px',
+            margin: isEditor ? '0 auto 1rem' : '0 auto 3rem',
+            lineHeight: '1.4',
+            overflow: isEditor ? 'hidden' : undefined,
+            textOverflow: isEditor ? 'ellipsis' : undefined,
+            display: isEditor ? '-webkit-box' : undefined,
+            WebkitLineClamp: isEditor ? 2 : undefined,
+            WebkitBoxOrient: isEditor ? 'vertical' : undefined,
         },
         cta: {
-            padding: '1rem 3rem',
-            fontSize: '1rem',
+            padding: isEditor ? '0.5rem 1.5rem' : '1rem 3rem',
+            fontSize: isEditor ? '0.75rem' : '1rem',
             fontWeight: '700',
             color: 'var(--bg-dark)',
             backgroundColor: 'var(--neon-green)',
