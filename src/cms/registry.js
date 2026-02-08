@@ -6,6 +6,7 @@
 import Hero from '../components/Hero';
 import PricingGrid from '../components/cms/PricingGrid';
 import StudioEmbed from '../components/cms/StudioEmbed';
+import GalleryGrid from '../components/cms/GalleryGrid';
 
 /**
  * Registry of all CMS-editable components.
@@ -46,6 +47,27 @@ export const componentRegistry = {
         label: 'Studio Application',
         schema: {}, // Read-only embed
         defaultProps: {},
+    },
+    GalleryGrid: {
+        component: GalleryGrid,
+        label: 'Gallery Grid (Explorable)',
+        schema: {
+            categories: { type: 'json', label: 'Categories (JSON)' }
+        },
+        defaultProps: {
+            categories: [
+                {
+                    id: 'games',
+                    title: 'GAMES',
+                    subtitle: 'Interactive Experiences',
+                    icon: 'Gamepad2',
+                    color: '#00ff88',
+                    items: [
+                        { id: 'arcade', name: 'Arcade', description: 'Retro fun', link: '/arcade' }
+                    ]
+                }
+            ]
+        }
     },
     Spacer: {
         component: 'spacer', // Special case: handled inline

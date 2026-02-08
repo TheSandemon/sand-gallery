@@ -1,0 +1,23 @@
+## Changes
+
+### Gallery Page (`/gallery`)
+- High-tech, explorable design with animated grid background
+- Four main categories: Games, Apps, Videos, Experiences  
+- Glassmorphic category nodes with hover effects and glows
+- Modal panel for sub-categories with smooth animations
+- Floating particle effects
+- View toggle (Grid/List)
+
+### AppWrapper Component
+- Reusable component to wrap any app/game
+- Firebase integration for user data persistence
+- Tracks: High scores, total plays, play time, custom data
+- Stats overlay UI showing user progress
+- Context-based API for child apps to save data
+
+### Infrastructure
+- Updated firestore.rules to allow users to read/write their own app data
+- Added /gallery route to App.jsx
+
+## Testing
+Navigate to /gallery and explore the categories. AppWrapper can be tested with any embedded app.

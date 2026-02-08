@@ -26,6 +26,12 @@ export const pageRegistry = [
         route: '/studio',
         icon: '🎨',
     },
+    {
+        id: 'gallery',
+        label: 'Gallery',
+        route: '/gallery',
+        icon: '🎮',
+    },
 ];
 
 /**

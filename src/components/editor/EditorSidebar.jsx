@@ -298,6 +298,33 @@ const EditorSidebar = ({
                                                 ))}
                                             </select>
                                         )}
+                                        {config.type === 'json' && (
+                                            <div style={{ position: 'relative' }}>
+                                                <textarea
+                                                    style={{ ...styles.textarea, fontFamily: 'monospace', fontSize: '0.8rem', whiteSpace: 'pre' }}
+                                                    value={
+                                                        typeof selectedSection.props[key] === 'string'
+                                                            ? selectedSection.props[key]
+                                                            : JSON.stringify(selectedSection.props[key], null, 2)
+                                                    }
+                                                    onChange={(e) => {
+                                                        // Temporarily store as string to allow typing
+                                                        updateSectionProp(key, e.target.value);
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        try {
+                                                            const parsed = JSON.parse(e.target.value);
+                                                            updateSectionProp(key, parsed);
+                                                        } catch (err) {
+                                                            alert('Invalid JSON: ' + err.message);
+                                                        }
+                                                    }}
+                                                />
+                                                <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '4px' }}>
+                                                    Edit as JSON. Validated on blur.
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
 
