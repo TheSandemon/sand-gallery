@@ -1,7 +1,7 @@
 /**
- * Initial CMS Data - Default Home Page Blueprint
- * This is the fallback structure if Firestore has no data.
- * It mirrors the current hardcoded Home page layout.
+ * Initial CMS Data - Default Page Blueprints
+ * These are the fallback structures if Firestore has no data.
+ * They mirror the current hardcoded page layouts.
  */
 
 export const defaultHomePageData = {
@@ -44,6 +44,64 @@ export const defaultHomePageData = {
             },
         },
     ],
+};
+
+export const defaultPricingPageData = {
+    id: 'pricing',
+    meta: {
+        title: 'Pricing | Sand Gallery',
+        description: 'Choose your plan for AI generation.',
+    },
+    sections: [
+        {
+            id: 'pricing-header',
+            type: 'RichText',
+            props: {
+                content: '<h1 style="font-size: 3rem; margin-bottom: 0.5rem;">PRICING</h1><p style="color: var(--text-secondary);">Choose your plan</p>',
+                align: 'center',
+            },
+            styles: {
+                paddingTop: '120px',
+            },
+        },
+    ],
+};
+
+export const defaultStudioPageData = {
+    id: 'studio',
+    meta: {
+        title: 'Studio | Sand Gallery',
+        description: 'AI Generation Studio.',
+    },
+    sections: [
+        {
+            id: 'studio-header',
+            type: 'RichText',
+            props: {
+                content: '<h1 style="font-size: 3rem;">STUDIO</h1>',
+                align: 'center',
+            },
+            styles: {
+                paddingTop: '120px',
+            },
+        },
+    ],
+};
+
+/**
+ * Get default page data by ID
+ */
+export const getDefaultPageData = (pageId) => {
+    switch (pageId) {
+        case 'home':
+            return defaultHomePageData;
+        case 'pricing':
+            return defaultPricingPageData;
+        case 'studio':
+            return defaultStudioPageData;
+        default:
+            return { id: pageId, meta: {}, sections: [] };
+    }
 };
 
 export default defaultHomePageData;
