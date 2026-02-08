@@ -83,7 +83,7 @@ const GridEditorCanvas = ({
             );
         }
 
-        // Special cases
+        // Special cases handled inline
         if (section.type === 'Spacer') {
             return (
                 <div
@@ -105,8 +105,54 @@ const GridEditorCanvas = ({
             );
         }
 
+        // For full-page components (Hero, etc.), render a scaled preview
+        if (section.type === 'Hero') {
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] p-4 overflow-hidden">
+                    <div className="text-center">
+                        <div className="text-2xl font-black text-white leading-tight mb-2">
+                            {section.props.titleLine1 || 'CREATIVE'}
+                        </div>
+                        <div className="text-xl font-black text-transparent" style={{ WebkitTextStroke: '1px var(--neon-green)' }}>
+                            {section.props.titleLine2 || 'TECHNOLOGIST'}
+                        </div>
+                        <div className="text-lg font-black text-[var(--neon-gold)]">
+                            {section.props.titleLine3 || '× AI'}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-2 max-w-[200px] truncate">
+                            {section.props.subtitle?.substring(0, 50) || 'Subtitle...'}
+                        </div>
+                        <div className="mt-3 px-3 py-1 text-xs bg-neon-green/20 text-neon-green rounded-full inline-block">
+                            {section.props.ctaText || 'CTA'}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // For complex components (PricingGrid, GalleryGrid, StudioEmbed), show a placeholder
+        if (['PricingGrid', 'GalleryGrid', 'StudioEmbed'].includes(section.type)) {
+            const labels = {
+                PricingGrid: '💰 Pricing Grid',
+                GalleryGrid: '🎮 Gallery Grid',
+                StudioEmbed: '🎨 Studio App',
+            };
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-[#222] text-gray-400">
+                    <div className="text-3xl mb-2">{labels[section.type]?.split(' ')[0]}</div>
+                    <div className="text-sm">{labels[section.type]}</div>
+                    <div className="text-xs text-gray-600 mt-1">(Live preview on actual page)</div>
+                </div>
+            );
+        }
+
+        // Fallback: try to render the component (may not work for all)
         const Component = config.component;
-        return <Component {...section.props} />;
+        return (
+            <div className="w-full h-full overflow-hidden" style={{ maxHeight: '100%' }}>
+                <Component {...section.props} />
+            </div>
+        );
     };
 
     return (
