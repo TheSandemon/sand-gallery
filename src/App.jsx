@@ -10,6 +10,7 @@ import Studio from './pages/Studio';
 import Pricing from './pages/Pricing';
 import CRM from './pages/CRM';
 import Editor from './pages/admin/Editor';
+import Gallery from './pages/Gallery';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -21,6 +22,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/editor" element={<Editor />} />
