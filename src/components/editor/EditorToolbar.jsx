@@ -48,6 +48,12 @@ const EditorToolbar = ({
 
     return (
         <div style={styles.toolbar}>
+            <Link
+                to="/admin"
+                style={{ ...styles.btn, ...styles.btnSecondary }}
+            >
+                ← Exit Editor
+            </Link>
             <button
                 style={{ ...styles.btn, ...styles.btnPrimary }}
                 onClick={onSave}

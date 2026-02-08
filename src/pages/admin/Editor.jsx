@@ -174,8 +174,7 @@ const Editor = () => {
     return (
         <div style={{
             display: 'flex',
-            height: 'calc(100vh - 60px)',
-            paddingTop: '60px',
+            height: '100vh',
             background: '#0a0a0a',
         }}>
             <EditorSidebar
