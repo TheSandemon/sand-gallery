@@ -3,11 +3,10 @@ import { componentRegistry } from '../../cms/registry';
 import { Responsive as ResponsiveGridLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { GRID_CONFIG } from '../../cms/gridConfig';
 
-// Constants matching Editor
-const GRID_COLS = 12;
-const ROW_HEIGHT = 50;
-const MARGIN = [16, 16];
+// Use constants from config
+const { cols: GRID_COLS, rowHeight: ROW_HEIGHT, margin: MARGIN, breakpoints: BREAKPOINTS, colsBreakpoints: COLS_BREAKPOINTS } = GRID_CONFIG;
 
 // Helper: WidthWrapper for responsive grid
 const WidthWrapper = ({ children, className, style }) => {
@@ -126,8 +125,8 @@ const DynamicRenderer = ({ sections = [], isEditing = false, selectedId = null, 
             <ResponsiveGridLayout
                 className="layout"
                 layouts={{ lg: layout }}
-                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                cols={{ lg: GRID_COLS, md: GRID_COLS, sm: 6, xs: 4, xxs: 2 }}
+                breakpoints={BREAKPOINTS}
+                cols={COLS_BREAKPOINTS}
                 rowHeight={ROW_HEIGHT}
                 margin={MARGIN}
                 isDraggable={false} // Always false in renderer (Editor uses Canvas)

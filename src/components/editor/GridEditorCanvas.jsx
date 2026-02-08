@@ -1,14 +1,15 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Responsive as ResponsiveGridLayout } from 'react-grid-layout';
+import { Responsive } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { componentRegistry } from '../../cms/registry';
+import { GRID_CONFIG } from '../../cms/gridConfig';
 import { GripVertical, Maximize2, Trash2 } from 'lucide-react';
 
-// Constants for the grid
-const GRID_COLS = 12;
-const ROW_HEIGHT = 50;
-const MARGIN = [16, 16];
+const ResponsiveGridLayout = Responsive;
+
+// Use constants from config
+const { cols: GRID_COLS, rowHeight: ROW_HEIGHT, margin: MARGIN, breakpoints: BREAKPOINTS, colsBreakpoints: COLS_BREAKPOINTS } = GRID_CONFIG;
 
 // Custom WidthProvider since the library export is flaky in ESM
 const WidthWrapper = ({ children, className, style }) => {
@@ -48,26 +49,38 @@ const GridEditorCanvas = ({
 }) => {
     const [showGrid, setShowGrid] = useState(true);
 
-    // Convert sections to layout format for react-grid-layout
+    // Track current layout to avoid loops
+    const currentLayoutRef = useRef([]);
+
+    // Generate grid items from sections
     const layout = useMemo(() => {
         return sections.map((section, index) => ({
             i: section.id,
             x: section.layout?.x ?? 0,
             y: section.layout?.y ?? index * 2,
             w: section.layout?.w ?? GRID_COLS,
-            h: section.layout?.h ?? 2,
+            h: section.layout?.h ?? 4, // Default height in new scale (4 * 25px = 100px)
             minW: 2,
             minH: 1,
         }));
     }, [sections]);
 
-    // Handle layout changes (drag/resize)
-    const handleLayoutChange = useCallback((newLayout) => {
+    // Handle layout change from react-grid-layout
+    const handleLayoutChange = useCallback((currentLayout) => {
+        // Map array back to ID map
+        const layoutMap = {};
+        currentLayout.forEach(item => {
+            layoutMap[item.i] = {
+                x: item.x,
+                y: item.y,
+                w: item.w,
+                h: item.h
+            };
+        });
+
+        // Only trigger if actually changed to avoid render loops
+        // Simple comparison check
         if (onLayoutChange) {
-            const layoutMap = {};
-            newLayout.forEach(item => {
-                layoutMap[item.i] = { x: item.x, y: item.y, w: item.w, h: item.h };
-            });
             onLayoutChange(layoutMap);
         }
     }, [onLayoutChange]);
@@ -151,20 +164,21 @@ const GridEditorCanvas = ({
                     <ResponsiveGridLayout
                         className="layout"
                         layouts={{ lg: layout }}
-                        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                        cols={{ lg: GRID_COLS, md: GRID_COLS, sm: 6, xs: 4, xxs: 2 }}
+                        breakpoints={BREAKPOINTS}
+                        cols={COLS_BREAKPOINTS}
                         rowHeight={ROW_HEIGHT}
                         margin={MARGIN}
-                        onLayoutChange={(layout) => handleLayoutChange(layout)}
+                        onLayoutChange={handleLayoutChange}
                         isDraggable={true}
                         isResizable={true}
+                        resizeHandles={['se', 's', 'e']}
                         draggableHandle=".drag-handle"
                         useCSSTransforms={true}
                         compactType="vertical"
                     >
                         {sections.map((section) => (
                             <div
-                                key={section.id} // Ensure key is top-level
+                                key={section.id}
                                 className={`group relative rounded-xl overflow-hidden transition-all duration-150
                                     ${selectedId === section.id
                                         ? 'ring-2 ring-neon-green shadow-lg shadow-neon-green/20'
