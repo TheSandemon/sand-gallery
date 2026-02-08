@@ -420,8 +420,38 @@ const EditorSidebar = ({
                             onClick={handleAddNavLink}
                             style={{ ...styles.btn, ...styles.btnSecondary, width: '100%', marginTop: '10px' }}
                         >
-                            + Add Link
+                            + Add Custom Link
                         </button>
+
+                        {/* Quick Add from Page Registry */}
+                        {(() => {
+                            const existingPaths = localNavLinks.map(l => l.path);
+                            const missingPages = pageRegistry.filter(page => !existingPaths.includes(page.route));
+                            if (missingPages.length === 0) return null;
+                            return (
+                                <div style={{ marginTop: '15px' }}>
+                                    <label style={{ ...styles.label, color: '#888', marginBottom: '8px', display: 'block' }}>Quick Add Pages</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {missingPages.map(page => (
+                                            <button
+                                                key={page.id}
+                                                onClick={() => setLocalNavLinks(prev => [...prev, { label: page.label.toUpperCase(), path: page.route, hidden: false }])}
+                                                style={{
+                                                    ...styles.btn,
+                                                    background: '#222',
+                                                    border: '1px solid #444',
+                                                    color: '#aaa',
+                                                    fontSize: '0.75rem',
+                                                    padding: '6px 10px',
+                                                }}
+                                            >
+                                                {page.icon} {page.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         <hr style={{ border: 'none', borderTop: '1px solid #333', margin: '20px 0' }} />
 

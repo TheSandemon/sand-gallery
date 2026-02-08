@@ -11,7 +11,7 @@ const ICON_MAP = {
     Sparkles,
 };
 
-// Optimization: Simple CSS Grid Background instead of heavy DOM elements
+// Optimization: Simple CSS Grid Background
 const GridBackground = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
@@ -19,33 +19,37 @@ const GridBackground = () => (
     </div>
 );
 
-// HexNode with reduced motion attributes
+// HexNode with GPU-accelerated glow
 const HexNode = ({ category, isActive, onClick, index }) => {
     const Icon = ICON_MAP[category.icon] || Sparkles;
-    const delay = index * 0.1;
+    const delay = index * 0.08;
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay, duration: 0.4 }}
+            transition={{ delay, duration: 0.3 }}
             onClick={onClick}
-            className="relative cursor-pointer group"
+            className="relative cursor-pointer group gallery-card"
+            style={{ '--glow-color': category.color }}
         >
-            {/* Main card - Reduced blur for performance */}
+            {/* GPU-accelerated glow layer (separate compositing layer) */}
             <div
-                className={`relative overflow-hidden rounded-2xl p-6 md:p-8 border transition-all duration-300
+                className="gallery-glow"
+                style={{ '--glow-color': category.color }}
+            />
+
+            {/* Main card */}
+            <div
+                className={`relative overflow-hidden rounded-2xl p-6 md:p-8 border transition-colors duration-200
                     ${isActive
                         ? 'bg-white/10 border-white/30'
                         : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
-                style={{
-                    boxShadow: isActive ? `0 0 30px ${category.color}40` : 'none'
-                }}
             >
                 {/* Icon container */}
                 <div
-                    className="w-16 h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden transition-transform duration-300 group-hover:scale-105"
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden transition-transform duration-200 group-hover:scale-105"
                     style={{
                         background: `linear-gradient(135deg, ${category.color}20, ${category.color}05)`,
                         border: `1px solid ${category.color}40`
@@ -78,7 +82,7 @@ const HexNode = ({ category, isActive, onClick, index }) => {
     );
 };
 
-// Expanded category panel
+// Expanded category panel with optimized glow
 const CategoryPanel = ({ category, onClose }) => {
     const navigate = useNavigate();
     const Icon = ICON_MAP[category.icon] || Sparkles;
@@ -90,26 +94,27 @@ const CategoryPanel = ({ category, onClose }) => {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-fade-in"
             onClick={onClose}
         >
-            {/* Backdrop - darker and reduced blur */}
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+            {/* Backdrop - NO blur for performance */}
+            <div className="absolute inset-0 bg-black/95" />
 
-            {/* Panel */}
+            {/* Panel with GPU-accelerated glow */}
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl bg-[#0a0a0a] border border-white/10 p-6 md:p-10 custom-scrollbar animate-slide-up"
-                style={{
-                    boxShadow: `0 0 50px ${category.color}20`
-                }}
+                className="relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl bg-[#0a0a0a] border border-white/10 p-6 md:p-10 custom-scrollbar animate-slide-up gallery-panel"
+                style={{ '--glow-color': category.color }}
             >
+                {/* Glow layer rendered as pseudo-element via CSS */}
+                <div className="gallery-panel-glow" style={{ '--glow-color': category.color }} />
+
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors"
+                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors"
                 >
                     <X size={20} />
                 </button>
 
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-8">
+                <div className="relative z-10 flex items-center gap-4 mb-8">
                     <div
                         className="w-14 h-14 rounded-xl flex items-center justify-center"
                         style={{
@@ -128,7 +133,7 @@ const CategoryPanel = ({ category, onClose }) => {
                 </div>
 
                 {/* Sub-categories grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {category.items?.map((item, index) => (
                         <div
                             key={item.id || index}
@@ -138,7 +143,7 @@ const CategoryPanel = ({ category, onClose }) => {
                                     else navigate(item.link);
                                 }
                             }}
-                            className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer transition-all"
+                            className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer transition-colors duration-150"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -155,6 +160,14 @@ const CategoryPanel = ({ category, onClose }) => {
                         </div>
                     ))}
                 </div>
+
+                {/* Empty state */}
+                {(!category.items || category.items.length === 0) && (
+                    <div className="relative z-10 text-center py-12 text-gray-500">
+                        <p>No items in this category yet.</p>
+                        <p className="text-sm mt-2">Add items via the Admin Editor.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -182,16 +195,16 @@ const GalleryGrid = ({ categories = [], cmsStyles = {} }) => {
 
             {/* View mode toggle */}
             <div className="relative z-10 flex justify-end max-w-6xl mx-auto mb-6">
-                <div className="flex gap-2 bg-black/40 backdrop-blur-sm p-1 rounded-lg border border-white/10">
+                <div className="flex gap-2 bg-black/40 p-1 rounded-lg border border-white/10">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
                     >
                         <Grid3X3 size={18} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
                     >
                         <Layers size={18} />
                     </button>
@@ -223,6 +236,7 @@ const GalleryGrid = ({ categories = [], cmsStyles = {} }) => {
                 )}
             </AnimatePresence>
 
+            {/* Optimized Styles: GPU-accelerated glows using will-change and transform */}
             <style>{`
                 .bg-grid-pattern {
                     background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -237,14 +251,50 @@ const GalleryGrid = ({ categories = [], cmsStyles = {} }) => {
                     to { opacity: 1; }
                 }
                 .animate-fade-in {
-                    animation: fade-in 0.3s ease-out forwards;
+                    animation: fade-in 0.2s ease-out forwards;
                 }
                 @keyframes slide-up {
-                    from { transform: translateY(20px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
+                    from { transform: translateY(20px) translateZ(0); opacity: 0; }
+                    to { transform: translateY(0) translateZ(0); opacity: 1; }
                 }
                 .animate-slide-up {
-                    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+
+                /* GPU-Accelerated Glow for Cards */
+                .gallery-card {
+                    position: relative;
+                }
+                .gallery-glow {
+                    position: absolute;
+                    inset: -20px;
+                    background: radial-gradient(circle at center, var(--glow-color, #00ff88) 0%, transparent 70%);
+                    opacity: 0;
+                    pointer-events: none;
+                    z-index: -1;
+                    will-change: opacity;
+                    transform: translateZ(0);
+                    transition: opacity 0.3s ease;
+                }
+                .gallery-card:hover .gallery-glow {
+                    opacity: 0.15;
+                }
+
+                /* GPU-Accelerated Glow for Panel */
+                .gallery-panel {
+                    position: relative;
+                    overflow: visible;
+                }
+                .gallery-panel-glow {
+                    position: absolute;
+                    inset: -40px;
+                    background: radial-gradient(ellipse at center, var(--glow-color, #00ff88) 0%, transparent 60%);
+                    opacity: 0.1;
+                    pointer-events: none;
+                    z-index: 0;
+                    will-change: opacity;
+                    transform: translateZ(0);
+                    filter: blur(40px);
                 }
             `}</style>
         </div>

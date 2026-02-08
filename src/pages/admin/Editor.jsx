@@ -7,11 +7,25 @@ import { getDefaultPageData } from '../../cms/initialData';
 import { getPageById } from '../../cms/pageRegistry';
 
 import EditorSidebar from '../../components/editor/EditorSidebar';
-import EditorCanvas from '../../components/editor/EditorCanvas';
+import GridEditorCanvas from '../../components/editor/GridEditorCanvas';
 import EditorToolbar from '../../components/editor/EditorToolbar';
+import { Monitor } from 'lucide-react';
+
+// Mobile detection hook
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+    return isMobile;
+};
 
 const Editor = () => {
     const { user } = useAuth();
+    const isMobile = useIsMobile();
     const [activePageId, setActivePageId] = useState('home');
     const [pageData, setPageData] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
@@ -66,6 +80,7 @@ const Editor = () => {
             type: componentType,
             props: { ...registryEntry.defaultProps },
             styles: {},
+            layout: { x: 0, y: Infinity, w: 12, h: 2 }, // Full width, at bottom
         };
 
         setPageData(prev => ({
@@ -75,18 +90,18 @@ const Editor = () => {
         setSelectedId(newSection.id);
     };
 
-    // Delete selected section
-    const deleteSection = () => {
-        if (!selectedId || !pageData) return;
+    // Delete section by ID
+    const deleteSection = (sectionId = selectedId) => {
+        if (!sectionId || !pageData) return;
         if (!window.confirm('Delete this section?')) return;
         setPageData(prev => ({
             ...prev,
-            sections: prev.sections.filter(s => s.id !== selectedId),
+            sections: prev.sections.filter(s => s.id !== sectionId),
         }));
-        setSelectedId(null);
+        if (selectedId === sectionId) setSelectedId(null);
     };
 
-    // Move section up/down
+    // Move section up/down (legacy, still supported via sidebar)
     const moveSection = (direction) => {
         if (!selectedId || !pageData) return;
         const index = pageData.sections.findIndex(s => s.id === selectedId);
@@ -97,6 +112,17 @@ const Editor = () => {
         const newSections = [...pageData.sections];
         [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
         setPageData(prev => ({ ...prev, sections: newSections }));
+    };
+
+    // Handle layout changes from GridEditorCanvas
+    const handleLayoutChange = (layoutMap) => {
+        setPageData(prev => ({
+            ...prev,
+            sections: prev.sections.map(s => ({
+                ...s,
+                layout: layoutMap[s.id] || s.layout,
+            })),
+        }));
     };
 
     // Save to Firestore
@@ -123,6 +149,20 @@ const Editor = () => {
         );
     }
 
+    // Mobile blocker
+    if (isMobile) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white p-8 text-center">
+                <Monitor size={64} className="text-neon-green mb-6" />
+                <h1 className="text-3xl font-bold mb-4">Desktop Only Feature</h1>
+                <p className="text-gray-400 max-w-md">
+                    The Website Editor requires a larger screen for the best experience.
+                    Please access this page from a desktop or laptop computer.
+                </p>
+            </div>
+        );
+    }
+
     if (loading) {
         return (
             <div style={{ paddingTop: '120px', textAlign: 'center' }}>
@@ -144,14 +184,17 @@ const Editor = () => {
                 selectedSection={selectedSection}
                 updateSectionProp={updateSectionProp}
                 addSection={addSection}
-                deleteSection={deleteSection}
+                deleteSection={() => deleteSection(selectedId)}
                 moveSection={moveSection}
             />
 
-            <EditorCanvas
+            <GridEditorCanvas
                 sections={pageData?.sections || []}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
+                onLayoutChange={handleLayoutChange}
+                onDeleteSection={deleteSection}
+                containerWidth={1100}
             />
 
             <EditorToolbar
