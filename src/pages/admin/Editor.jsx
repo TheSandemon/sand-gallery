@@ -194,7 +194,6 @@ const Editor = () => {
                 onSelect={setSelectedId}
                 onLayoutChange={handleLayoutChange}
                 onDeleteSection={deleteSection}
-                containerWidth={1100}
             />
 
             <EditorToolbar

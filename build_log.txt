@@ -1,0 +1,28 @@
+
+> sand-gallery@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2215 modules transformed.
+Γ£ù Build failed in 3.99s
+error during build:
+src/components/editor/GridEditorCanvas.jsx (2:21): "WidthProvider" is not exported by "node_modules/react-grid-layout/dist/index.mjs", imported by "src/components/editor/GridEditorCanvas.jsx".
+file: C:/Users/kylet/Desktop/Coding/sand-gallery/src/components/editor/GridEditorCanvas.jsx:2:21
+
+1: import React, { useState, useMemo, useCallback } from 'react';
+2: import GridLayout, { WidthProvider } from 'react-grid-layout';
+                        ^
+3: import 'react-grid-layout/css/styles.css';
+4: import 'react-resizable/css/styles.css';
+
+    at getRollupError (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
+    at error (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/parseAst.js:398:42)
+    at Module.error (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:17040:16)
+    at Module.traceVariable (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:17452:29)
+    at ModuleScope.findVariable (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:15070:39)
+    at Identifier.bind (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:5447:40)
+    at CallExpression.bind (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:2829:23)
+    at CallExpression.bind (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:12179:15)
+    at VariableDeclarator.bind (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:2829:23)
+    at VariableDeclaration.bind (file:///C:/Users/kylet/Desktop/Coding/sand-gallery/node_modules/rollup/dist/es/shared/node-entry.js:2825:28)

@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import GridLayout from 'react-grid-layout';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { Responsive as ResponsiveGridLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { componentRegistry } from '../../cms/registry';
@@ -10,9 +10,34 @@ const GRID_COLS = 12;
 const ROW_HEIGHT = 50;
 const MARGIN = [16, 16];
 
+// Custom WidthProvider since the library export is flaky in ESM
+const WidthWrapper = ({ children, className, style }) => {
+    const [width, setWidth] = useState(1200);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!ref.current) return;
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                // Use contentRect.width which excludes padding/border
+                setWidth(entry.contentRect.width);
+            }
+        });
+        observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={ref} className={className} style={style}>
+            {width > 0 && React.cloneElement(children, { width })}
+        </div>
+    );
+};
+
 /**
  * GridEditorCanvas - A Squarespace-like drag-and-drop editor canvas.
  * Uses react-grid-layout for positioning and resizing.
+ * Now wrapped with custom WidthWrapper for full-width support.
  */
 const GridEditorCanvas = ({
     sections = [],
@@ -20,7 +45,6 @@ const GridEditorCanvas = ({
     onSelect,
     onLayoutChange,
     onDeleteSection,
-    containerWidth = 1200,
 }) => {
     const [showGrid, setShowGrid] = useState(true);
 
@@ -105,10 +129,9 @@ const GridEditorCanvas = ({
             </div>
 
             {/* Canvas */}
-            <div
-                className="relative mx-auto"
+            <WidthWrapper
+                className="relative mx-auto w-full h-full"
                 style={{
-                    maxWidth: `${containerWidth}px`,
                     minHeight: 'calc(100vh - 200px)',
                     background: showGrid ? 'repeating-linear-gradient(90deg, transparent, transparent calc(100% / 12 - 1px), rgba(255,255,255,0.03) calc(100% / 12 - 1px), rgba(255,255,255,0.03) calc(100% / 12))' : 'transparent',
                 }}
@@ -120,14 +143,14 @@ const GridEditorCanvas = ({
                         <p className="text-xs">Use the "+ Add" panel on the left.</p>
                     </div>
                 ) : (
-                    <GridLayout
+                    <ResponsiveGridLayout
                         className="layout"
-                        layout={layout}
-                        cols={GRID_COLS}
+                        layouts={{ lg: layout }}
+                        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                        cols={{ lg: GRID_COLS, md: GRID_COLS, sm: 6, xs: 4, xxs: 2 }}
                         rowHeight={ROW_HEIGHT}
-                        width={containerWidth}
                         margin={MARGIN}
-                        onLayoutChange={handleLayoutChange}
+                        onLayoutChange={(layout) => handleLayoutChange(layout)}
                         isDraggable={true}
                         isResizable={true}
                         draggableHandle=".drag-handle"
@@ -136,7 +159,7 @@ const GridEditorCanvas = ({
                     >
                         {sections.map((section) => (
                             <div
-                                key={section.id}
+                                key={section.id} // Ensure key is top-level
                                 className={`group relative rounded-xl overflow-hidden transition-all duration-150
                                     ${selectedId === section.id
                                         ? 'ring-2 ring-neon-green shadow-lg shadow-neon-green/20'
@@ -180,9 +203,9 @@ const GridEditorCanvas = ({
                                 </div>
                             </div>
                         ))}
-                    </GridLayout>
+                    </ResponsiveGridLayout>
                 )}
-            </div>
+            </WidthWrapper>
 
             {/* Custom Styles for react-grid-layout */}
             <style>{`
