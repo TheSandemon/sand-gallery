@@ -33,6 +33,12 @@ service cloud.firestore {
          // unless we want them to delete their own.
          allow write: if isAdmin(); 
       }
+
+      // Sub-collection for App/Game data (scores, progress, etc.)
+      match /apps/{appId} {
+         // Users can read and write their own app data
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     match /creations/{creationId} {

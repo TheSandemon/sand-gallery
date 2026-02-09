@@ -120,9 +120,22 @@ gh pr create --title "feat: Title" --body "Description"
 - **Rule:** **Input Capture:** Clicks on interactive elements (buttons, inputs) MUST NOT trigger sparks.
 - **Rule:** **Delta Time:** Animation loops must use `timestamp - lastTime` to ensure consistent speed across devices.
 
-### 🙈 Global UI Settings (Hidden Pages)
-- **State:** Controlled by Firestore document `config/ui_settings` -> `showHiddenPages` (boolean).
-- **Default:** `false` (Hidden).
-- **Toggle:** Found in the **Admin Dashboard** (User Role: Owner).
-- **Effect:** Hides "STUDIO" and "PRICING" from the Navbar. Pages remain accessible via direct URL but are considered "Beta/Maintenance".
-- **Rule:** When adding new "Beta" pages, add them to `showHiddenPages` conditional in Navbar.
+### 🙈 Global UI Settings (Navbar & Navigation)
+- **Data Source:** Firestore document `config/site_settings` managed by `useSiteSettings` hook.
+- **Structure:**
+    ```json
+    {
+      "siteTitle": "SAND.GALLERY",
+      "showHiddenPages": false,
+      "navLinks": [
+        { "label": "WORK", "path": "/" },
+        { "label": "STUDIO", "path": "/studio", "hidden": true },
+        { "label": "PRICING", "path": "/pricing", "hidden": true },
+        { "label": "PROFILE", "path": "/profile" }
+      ]
+    }
+    ```
+- **Toggle (showHiddenPages):** Found in the **Admin Dashboard** (User Role: Owner) or the **Editor Settings**.
+- **Effect:** Links marked `hidden: true` are filtered from the Navbar unless `showHiddenPages` is `true`.
+- **Rule (Pointer Events):** The Navbar uses `pointer-events-none` on its container when transparent, with `pointer-events-auto` on children, to avoid blocking page content.
+- **Rule (Adding Pages):** New beta pages should be added to `navLinks` in Firestore with `hidden: true`.

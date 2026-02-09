@@ -4,7 +4,9 @@
  */
 
 import Hero from '../components/Hero';
-// Future components will be added here
+import PricingGrid from '../components/cms/PricingGrid';
+import StudioEmbed from '../components/cms/StudioEmbed';
+import GalleryGrid from '../components/cms/GalleryGrid';
 
 /**
  * Registry of all CMS-editable components.
@@ -33,6 +35,39 @@ export const componentRegistry = {
             ctaText: 'Explore Work',
             ctaLink: '/studio',
         },
+    },
+    PricingGrid: {
+        component: PricingGrid,
+        label: 'Pricing Grid',
+        schema: {}, // Currently no editable props for ease, can add 'tiers' JSON editor later if needed
+        defaultProps: {},
+    },
+    StudioEmbed: {
+        component: StudioEmbed,
+        label: 'Studio Application',
+        schema: {}, // Read-only embed
+        defaultProps: {},
+    },
+    GalleryGrid: {
+        component: GalleryGrid,
+        label: 'Gallery Grid (Explorable)',
+        schema: {
+            categories: { type: 'json', label: 'Categories (JSON)' }
+        },
+        defaultProps: {
+            categories: [
+                {
+                    id: 'games',
+                    title: 'GAMES',
+                    subtitle: 'Interactive Experiences',
+                    icon: 'Gamepad2',
+                    color: '#00ff88',
+                    items: [
+                        { id: 'arcade', name: 'Arcade', description: 'Retro fun', link: '/arcade' }
+                    ]
+                }
+            ]
+        }
     },
     Spacer: {
         component: 'spacer', // Special case: handled inline

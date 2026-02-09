@@ -2,33 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import UserButton from './UserButton';
 import { useAuth } from '../context/AuthContext';
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from '../firebase';
+import useSiteSettings from '../hooks/useSiteSettings';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [showHiddenPages, setShowHiddenPages] = useState(false);
     const location = useLocation();
     const { user } = useAuth();
+    const { settings } = useSiteSettings();
 
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
-
-        // Listen for Global UI Settings
-        const unsub = onSnapshot(doc(db, "config", "ui_settings"), (doc) => {
-            if (doc.exists()) {
-                setShowHiddenPages(doc.data().showHiddenPages || false);
-            }
-        });
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            unsub();
-        };
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     // Close mobile menu on route change
@@ -38,28 +26,24 @@ const Navbar = () => {
 
     const isActive = (path) => location.pathname === path;
 
+    // Build nav links from settings, filtering hidden pages unless showHiddenPages is true
     const navLinks = [
-        { path: '/', label: 'WORK' },
-        ...(showHiddenPages ? [
-            { path: '/studio', label: 'STUDIO' },
-            { path: '/pricing', label: 'PRICING' }
-        ] : []),
+        ...(settings.navLinks || []).filter(link => !link.hidden || settings.showHiddenPages),
         ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
-        { path: '/profile', label: 'PROFILE' },
     ];
 
     return (
         <>
-            <nav className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-300 px-4 md:px-8 py-4 md:py-6 flex justify-between items-center
-                ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-neon-green/20' : 'bg-transparent border-b border-transparent'}
+            <nav className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-300 px-4 md:px-8 py-4 md:py-6 flex justify-between items-center pointer-events-none
+                ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-neon-green/20 pointer-events-auto' : 'bg-transparent border-b border-transparent'}
             `}>
                 {/* Logo */}
-                <Link to="/" className="text-xl md:text-2xl font-bold tracking-tight text-white z-[1001] relative">
+                <Link to="/" className="text-xl md:text-2xl font-bold tracking-tight text-white z-[1001] relative pointer-events-auto">
                     SAND<span className="text-neon-green">.GALLERY</span>
                 </Link>
 
                 {/* Desktop Menu */}
-                <ul className="hidden md:flex items-center gap-8">
+                <ul className="hidden md:flex items-center gap-8 pointer-events-auto">
                     {navLinks.map(link => (
                         <li key={link.path}>
                             <Link
@@ -77,7 +61,7 @@ const Navbar = () => {
 
                 {/* Mobile Menu Toggle */}
                 <button
-                    className="md:hidden text-white z-[1001] relative p-2"
+                    className="md:hidden text-white z-[1001] relative p-2 pointer-events-auto"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
                     <div className={`w-6 h-0.5 bg-white mb-1.5 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />

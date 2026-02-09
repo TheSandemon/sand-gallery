@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { defaultHomePageData } from '../cms/initialData';
+import { getDefaultPageData } from '../cms/initialData';
 
 /**
  * usePageContent - Custom hook to fetch real-time CMS page data from Firestore.
  * Falls back to default data if Firestore document doesn't exist.
  * 
- * @param {string} pageId - The page ID (e.g., 'home')
+ * @param {string} pageId - The page ID (e.g., 'home', 'pricing', 'studio')
  * @returns {Object} { data, loading, error }
  */
 const usePageContent = (pageId) => {
@@ -21,6 +21,7 @@ const usePageContent = (pageId) => {
             return;
         }
 
+        setLoading(true);
         const docRef = doc(db, 'pages', pageId);
 
         const unsubscribe = onSnapshot(docRef,
@@ -30,11 +31,7 @@ const usePageContent = (pageId) => {
                 } else {
                     // Use default data if page doesn't exist in Firestore
                     console.log(`CMS: Page "${pageId}" not found in Firestore, using default data.`);
-                    if (pageId === 'home') {
-                        setData(defaultHomePageData);
-                    } else {
-                        setData(null);
-                    }
+                    setData(getDefaultPageData(pageId));
                 }
                 setLoading(false);
             },
@@ -43,9 +40,7 @@ const usePageContent = (pageId) => {
                 setError(err);
                 setLoading(false);
                 // Still fall back to defaults on error
-                if (pageId === 'home') {
-                    setData(defaultHomePageData);
-                }
+                setData(getDefaultPageData(pageId));
             }
         );
 
