@@ -335,7 +335,7 @@ class BackgroundLayer {
 // ============================================
 // MAIN GAME COMPONENT
 // ============================================
-const MushroomRunnerGame = () => {
+const MushroomRunnerGame = ({ width, height, isEditor = false }) => {
     const canvasRef = useRef(null);
     const gameRef = useRef({
         state: 'START', // START, PLAYING, GAMEOVER
@@ -351,6 +351,7 @@ const MushroomRunnerGame = () => {
         starField: [],
         shakeAmount: 0,
         lastTime: 0,
+        animationId: null,
     });
 
     const [gameState, setGameState] = useState('START');
@@ -384,75 +385,51 @@ const MushroomRunnerGame = () => {
         }
 
         setScore(0);
-    }, []);
-
-    // Create particle burst
-    const createParticleBurst = useCallback((x, y, color, count = 15) => {
-        const game = gameRef.current;
-        for (let i = 0; i < count; i++) {
-            const angle = (i / count) * Math.PI * 2;
-            const speed = Math.random() * 5 + 3;
-            game.particles.push(new Particle(x, y, color, {
-                x: Math.cos(angle) * speed,
-                y: Math.sin(angle) * speed
-            }));
+        // If in editor, force a draw but don't auto-start
+        if (isEditor) {
+            // Optional: draw initial state
         }
-    }, []);
+    }, [isEditor]);
 
-    // Check collision
-    const checkCollision = (rect1, rect2) => {
-        return rect1.x < rect2.x + rect2.width &&
-            rect1.x + rect1.width > rect2.x &&
-            rect1.y < rect2.y + rect2.height &&
-            rect1.y + rect1.height > rect2.y;
-    };
+    // ... (keep helper functions same)
 
-    // Spawn mushroom
-    const spawnMushroom = useCallback((canvas) => {
-        const game = gameRef.current;
-        const groundY = canvas.height * CONFIG.GROUND_Y;
-        const isGreen = Math.random() < CONFIG.GREEN_RATIO;
-
-        // Random Y position (some on ground, some on platforms)
-        const platformChance = Math.random();
-        let y;
-        if (platformChance < 0.3) {
-            y = groundY - CONFIG.MUSHROOM_HEIGHT - 80; // Floating
-        } else {
-            y = groundY - CONFIG.MUSHROOM_HEIGHT; // Ground level
-        }
-
-        game.mushrooms.push(new Mushroom(canvas.width + 50, y, isGreen));
-    }, []);
-
-    // Game loop
+    // Game loop and sizing
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
         const game = gameRef.current;
-        let animationId;
 
-        // Set canvas size
-        const resize = () => {
-            canvas.width = Math.min(window.innerWidth, 1200);
-            canvas.height = Math.min(window.innerHeight - 200, 600);
-            if (game.player) {
-                game.player.groundY = canvas.height * CONFIG.GROUND_Y;
+        // Set canvas size from props or fallback to window
+        // Note: In editor grid, width/height are passed. On standalone page, they might be undefined.
+        const targetWidth = width || Math.min(window.innerWidth, 1200);
+        const targetHeight = height || Math.min(window.innerHeight - 200, 600);
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        if (game.player) {
+            game.player.groundY = canvas.height * CONFIG.GROUND_Y;
+            // Ensure player stays on ground during resize
+            if (!game.player.isJumping) {
+                game.player.y = game.player.groundY - game.player.height;
             }
-        };
-        resize();
-        window.addEventListener('resize', resize);
-
-        // Initialize
-        initGame(canvas);
+        } else {
+            initGame(canvas);
+        }
 
         // Input handling
         const handleInput = (e) => {
-            if (e.code === 'Space' || e.type === 'touchstart') {
-                e.preventDefault();
+            // Prevent scrolling on space bar
+            if (e.code === 'Space') e.preventDefault();
 
+            // In editor, maybe click to focus first? For now allow interaction.
+            if (isEditor && game.state === 'START') {
+                // require explicit start
+            }
+
+            if (e.code === 'Space' || e.type === 'touchstart') {
                 if (game.state === 'START') {
                     game.state = 'PLAYING';
                     setGameState('PLAYING');
@@ -467,12 +444,15 @@ const MushroomRunnerGame = () => {
         };
 
         window.addEventListener('keydown', handleInput);
-        canvas.addEventListener('touchstart', handleInput);
+        canvas.addEventListener('touchstart', handleInput, { passive: false });
 
         // Main game loop
         const gameLoop = (timestamp) => {
+            if (!game.lastTime) game.lastTime = timestamp;
             const deltaTime = timestamp - game.lastTime;
             game.lastTime = timestamp;
+
+            // ... (keep drawing logic exactly as is)
 
             // Clear canvas with shake effect
             ctx.save();
@@ -495,7 +475,9 @@ const MushroomRunnerGame = () => {
             // Draw stars
             game.starField.forEach((star) => {
                 star.twinkle += 0.05;
-                star.x -= game.scrollSpeed * star.speed * 0.1;
+                if (game.state === 'PLAYING') {
+                    star.x -= game.scrollSpeed * star.speed * 0.1;
+                }
                 if (star.x < 0) star.x = canvas.width;
 
                 const alpha = 0.5 + Math.sin(star.twinkle) * 0.3;
@@ -610,7 +592,11 @@ const MushroomRunnerGame = () => {
                         30
                     ));
                 }
+            } else if (game.state === 'START' && game.player) {
+                // Idle animation in start screen
+                game.player.drawCharacter(ctx, game.player.x, game.player.y);
             }
+
 
             // Update and draw particles
             game.particles = game.particles.filter((p) => {
@@ -630,7 +616,9 @@ const MushroomRunnerGame = () => {
             game.mushrooms.forEach((mushroom) => mushroom.draw(ctx));
 
             // Draw player
-            game.player?.draw(ctx);
+            if (game.state !== 'START') { // Already drew in idle block if start
+                game.player?.draw(ctx);
+            }
 
             // Draw UI
             ctx.save();
@@ -668,49 +656,17 @@ const MushroomRunnerGame = () => {
 
             ctx.restore();
 
-            animationId = requestAnimationFrame(gameLoop);
+            game.animationId = requestAnimationFrame(gameLoop);
         };
 
-        // Draw overlay helper
-        const drawOverlay = (ctx, canvas, title, subtitle, color) => {
-            // Dim background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Title
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 48px "Inter", sans-serif';
-            ctx.fillStyle = color;
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = color;
-            ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 30);
-
-            // Subtitle with pulsing effect
-            const pulse = 0.7 + Math.sin(Date.now() / 300) * 0.3;
-            ctx.globalAlpha = pulse;
-            ctx.font = '20px "Inter", sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 0;
-            ctx.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 30);
-
-            // Instructions
-            ctx.globalAlpha = 0.6;
-            ctx.font = '14px "Inter", sans-serif';
-            ctx.fillStyle = '#888888';
-            ctx.fillText('🟢 = +10 points  |  🔴 = Game Over', canvas.width / 2, canvas.height / 2 + 70);
-            ctx.restore();
-        };
-
-        animationId = requestAnimationFrame(gameLoop);
+        game.animationId = requestAnimationFrame(gameLoop);
 
         return () => {
-            cancelAnimationFrame(animationId);
-            window.removeEventListener('resize', resize);
+            if (game.animationId) cancelAnimationFrame(game.animationId);
             window.removeEventListener('keydown', handleInput);
             canvas.removeEventListener('touchstart', handleInput);
         };
-    }, [initGame, createParticleBurst, spawnMushroom]);
+    }, [initGame, createParticleBurst, spawnMushroom, width, height, isEditor]); // Re-run if dims change
 
     return (
         <div className="mushroom-game-container">
