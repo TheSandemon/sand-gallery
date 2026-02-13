@@ -7,6 +7,7 @@ import Hero from '../components/Hero';
 import PricingGrid from '../components/cms/PricingGrid';
 import StudioEmbed from '../components/cms/StudioEmbed';
 import GalleryGrid from '../components/cms/GalleryGrid';
+import AppContainer from '../components/cms/AppContainer';
 
 /**
  * Registry of all CMS-editable components.
@@ -16,6 +17,16 @@ import GalleryGrid from '../components/cms/GalleryGrid';
  *   - defaultProps: Initial values for new instances
  */
 export const componentRegistry = {
+    AppPackage: {
+        component: AppContainer,
+        label: 'App Package',
+        schema: {
+            appId: { type: 'text', label: 'App ID' },
+        },
+        defaultProps: {
+            appId: '',
+        },
+    },
     Hero: {
         component: Hero,
         label: 'Hero Banner',

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { componentRegistry, getAvailableComponents } from '../../cms/registry';
 import { pageRegistry } from '../../cms/pageRegistry';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { seedApps } from '../../cms/seedApps';
 import useSiteSettings from '../../hooks/useSiteSettings';
 
 const EditorSidebar = ({
@@ -17,6 +20,34 @@ const EditorSidebar = ({
     const { settings, updateSettings } = useSiteSettings();
     const [localNavLinks, setLocalNavLinks] = useState([]);
     const [showHidden, setShowHidden] = useState(false);
+    const [availableApps, setAvailableApps] = useState([]);
+
+    // Fetch available apps
+    useEffect(() => {
+        const fetchApps = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'app_packages'));
+                const apps = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setAvailableApps(apps);
+            } catch (err) {
+                console.error("Error fetching apps:", err);
+                // Fallback for dev if DB is empty
+                setAvailableApps([
+                    {
+                        id: 'mushroom-runner',
+                        name: 'Mushroom Runner',
+                        description: 'A side-scrolling platformer game.',
+                        icon: '🍄',
+                        version: '1.0.0'
+                    }
+                ]);
+            }
+        };
+        fetchApps();
+    }, []);
 
     // Sync local state with settings
     useEffect(() => {
@@ -346,7 +377,9 @@ const EditorSidebar = ({
                 {activePanel === 'add' && (
                     <>
                         <h3 style={{ margin: '0 0 15px', color: 'var(--neon-green)' }}>Add Component</h3>
-                        {getAvailableComponents().map(comp => (
+
+                        {/* Standard Components */}
+                        {getAvailableComponents().filter(c => c.type !== 'AppPackage').map(comp => (
                             <div
                                 key={comp.type}
                                 style={styles.componentCard}
@@ -358,6 +391,62 @@ const EditorSidebar = ({
                                 <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>
                                     Type: {comp.type}
                                 </div>
+                            </div>
+                        ))}
+
+                        {/* App Store Section */}
+                        <h3 style={{ margin: '20px 0 15px', color: 'var(--neon-gold)' }}>App Store 📦</h3>
+                        {availableApps.length === 0 && (
+                            <p style={{ color: '#666', fontSize: '0.9rem' }}>No apps available.</p>
+                        )}
+                        {availableApps.map(app => (
+                            <div
+                                key={app.id}
+                                style={{
+                                    ...styles.componentCard,
+                                    background: 'linear-gradient(135deg, #1a1a1a 0%, #111 100%)',
+                                    border: '1px solid #333'
+                                }}
+                                onClick={() => {
+                                    // Manually add section with pre-filled props for this app
+                                    const newSection = {
+                                        id: `section-${Date.now()}`,
+                                        type: 'AppPackage',
+                                        props: { appId: app.id },
+                                        styles: {},
+                                        layout: { x: 0, y: Infinity, w: 12, h: 6 }, // Taller default for apps
+                                    };
+                                    // We need to pass this up or duplicate add logic. 
+                                    // Since addSection only takes type, we'll modify addSection in the next step or handles it here if we had access to setPageData. 
+                                    // Actually, looking at props, we only have addSection(type).
+                                    // Let's modify addSection prop in Editor.jsx to accept optional initialProps!
+                                    // For now, I'll assume I can pass a second arg or I will patch Editor.jsx as well.
+                                    // Wait, addSection in Editor.jsx (lines 74-91) only takes componentType.
+                                    // I should update Editor.jsx first to be safe, OR I can rely on a hack if I can't.
+                                    // Let's rely on the fact that I will update Editor.jsx in the next step.
+                                    addSection('AppPackage', { appId: app.id });
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.borderColor = 'var(--neon-gold)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.borderColor = '#333';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ fontSize: '1.5rem' }}>{app.icon || '📦'}</span>
+                                    <div>
+                                        <div style={{ fontWeight: 'bold', color: 'white' }}>{app.name}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#888' }}>v{app.version}</div>
+                                    </div>
+                                </div>
+                                {app.description && (
+                                    <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '8px', lineHeight: '1.3' }}>
+                                        {app.description}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </>
@@ -461,6 +550,29 @@ const EditorSidebar = ({
                         >
                             💾 Save Site Settings
                         </button>
+
+                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #333' }}>
+                            <h4 style={{ color: '#aaa', marginBottom: '10px' }}>🛠️ Admin Tools</h4>
+                            <button
+                                onClick={async () => {
+                                    if (window.confirm('Reset/Seed App Store data?')) {
+                                        const result = await seedApps();
+                                        if (result && result.success) alert('App Store seeded!');
+                                        else alert('Seeding failed check console');
+                                    }
+                                }}
+                                style={{
+                                    ...styles.btn,
+                                    background: '#222',
+                                    border: '1px solid #444',
+                                    color: '#888',
+                                    width: '100%',
+                                    fontSize: '0.8rem'
+                                }}
+                            >
+                                Re-seed App Store Data
+                            </button>
+                        </div>
                     </>
                 )}
             </div>

@@ -71,16 +71,21 @@ const Editor = () => {
     };
 
     // Add a new section
-    const addSection = (componentType) => {
+    const addSection = (componentType, initialProps = {}) => {
         const registryEntry = componentRegistry[componentType];
         if (!registryEntry) return;
 
         const newSection = {
             id: `section-${Date.now()}`,
             type: componentType,
-            props: { ...registryEntry.defaultProps },
+            props: { ...registryEntry.defaultProps, ...initialProps },
             styles: {},
-            layout: { x: 0, y: Infinity, w: 12, h: 2 }, // Full width, at bottom
+            layout: {
+                x: 0,
+                y: Infinity,
+                w: 12,
+                h: componentType === 'AppPackage' ? 6 : 2
+            },
         };
 
         setPageData(prev => ({
