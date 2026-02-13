@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CircuitEffect from './components/CircuitEffect';
+import KaitoChat from './components/KaitoChat';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
@@ -19,11 +20,13 @@ import './App.css';
 const AppLayout = ({ children }) => {
   const location = useLocation();
   const isEditorPage = location.pathname === '/admin/editor';
+  const isLandingPage = location.pathname === '/';
 
   return (
     <>
       {!isEditorPage && <Navbar />}
       {children}
+      {isLandingPage && <KaitoChat />}
       {!isEditorPage && <Footer />}
     </>
   );
@@ -53,4 +56,3 @@ function App() {
 }
 
 export default App;
-
