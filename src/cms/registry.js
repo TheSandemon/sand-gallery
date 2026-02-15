@@ -7,7 +7,7 @@ import Hero from '../components/Hero';
 import PricingGrid from '../components/cms/PricingGrid';
 import StudioEmbed from '../components/cms/StudioEmbed';
 import GalleryGrid from '../components/cms/GalleryGrid';
-import AppContainer from '../components/cms/AppContainer';
+
 import AgentIdentity from '../components/AgentIdentity';
 import GalleryExplorer from '../components/gallery/GalleryExplorer';
 
@@ -35,16 +35,7 @@ export const componentRegistry = {
             memoryLink: '/studio',
         },
     },
-    AppPackage: {
-        component: AppContainer,
-        label: 'App Package',
-        schema: {
-            appId: { type: 'text', label: 'App ID' },
-        },
-        defaultProps: {
-            appId: '',
-        },
-    },
+
     GalleryExplorer: {
         component: GalleryExplorer,
         label: 'Gallery Explorer (v2)',
