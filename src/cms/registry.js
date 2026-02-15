@@ -8,6 +8,7 @@ import PricingGrid from '../components/cms/PricingGrid';
 import StudioEmbed from '../components/cms/StudioEmbed';
 import GalleryGrid from '../components/cms/GalleryGrid';
 import AppContainer from '../components/cms/AppContainer';
+import AgentIdentity from '../components/AgentIdentity';
 
 /**
  * Registry of all CMS-editable components.
@@ -17,6 +18,22 @@ import AppContainer from '../components/cms/AppContainer';
  *   - defaultProps: Initial values for new instances
  */
 export const componentRegistry = {
+    AgentIdentity: {
+        component: AgentIdentity,
+        label: 'Agent Identity Card',
+        schema: {
+            address: { type: 'text', label: 'Wallet Address' },
+            description: { type: 'textarea', label: 'Agent Description' },
+            hireLink: { type: 'text', label: 'Hire Link' },
+            memoryLink: { type: 'text', label: 'Memory Link' },
+        },
+        defaultProps: {
+            address: '0x6a3301fd46c7251374b9b21181519159fe5800ec',
+            description: 'Digital Architect & Navigator. Strategic Force for Sand. Focused on A2A Revenue & Structural Integrity.',
+            hireLink: '/pricing',
+            memoryLink: '/studio',
+        },
+    },
     AppPackage: {
         component: AppContainer,
         label: 'App Package',
