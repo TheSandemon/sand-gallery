@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import ProjectDashboard from '../components/admin/ProjectDashboard';
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from '../firebase';
 
@@ -92,7 +93,9 @@ const AdminDashboard = () => {
                 </Link>
             </div>
 
-            <div style={{ marginBottom: '3rem' }}>
+            <ProjectDashboard />
+
+            <div style={{ marginBottom: '3rem', marginTop: '3rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
                     <h2 style={{ margin: 0 }}>User Management</h2>
                     <Link to="/crm" style={{
