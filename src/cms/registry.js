@@ -9,6 +9,7 @@ import StudioEmbed from '../components/cms/StudioEmbed';
 import GalleryGrid from '../components/cms/GalleryGrid';
 import AppContainer from '../components/cms/AppContainer';
 import AgentIdentity from '../components/AgentIdentity';
+import GalleryExplorer from '../components/gallery/GalleryExplorer';
 
 /**
  * Registry of all CMS-editable components.
@@ -43,6 +44,12 @@ export const componentRegistry = {
         defaultProps: {
             appId: '',
         },
+    },
+    GalleryExplorer: {
+        component: GalleryExplorer,
+        label: 'Gallery Explorer (v2)',
+        schema: {}, // Filters are internal for now
+        defaultProps: {},
     },
     Hero: {
         component: Hero,

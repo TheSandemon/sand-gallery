@@ -4,7 +4,7 @@ import { componentRegistry, getAvailableComponents } from '../../cms/registry';
 import { pageRegistry } from '../../cms/pageRegistry';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { seedApps } from '../../cms/seedApps';
+import { seedMediaLibrary } from '../../cms/seedMediaLibrary';
 import useSiteSettings from '../../hooks/useSiteSettings';
 
 const EditorSidebar = ({
@@ -20,34 +20,7 @@ const EditorSidebar = ({
     const { settings, updateSettings } = useSiteSettings();
     const [localNavLinks, setLocalNavLinks] = useState([]);
     const [showHidden, setShowHidden] = useState(false);
-    const [availableApps, setAvailableApps] = useState([]);
 
-    // Fetch available apps
-    useEffect(() => {
-        const fetchApps = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, 'app_packages'));
-                const apps = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setAvailableApps(apps);
-            } catch (err) {
-                console.error("Error fetching apps:", err);
-                // Fallback for dev if DB is empty
-                setAvailableApps([
-                    {
-                        id: 'mushroom-runner',
-                        name: 'Mushroom Runner',
-                        description: 'A side-scrolling platformer game.',
-                        icon: '🍄',
-                        version: '1.0.0'
-                    }
-                ]);
-            }
-        };
-        fetchApps();
-    }, []);
 
     // Sync local state with settings
     useEffect(() => {
@@ -394,183 +367,26 @@ const EditorSidebar = ({
                             </div>
                         ))}
 
-                        {/* App Store Section */}
-                        <h3 style={{ margin: '20px 0 15px', color: 'var(--neon-gold)' }}>App Store 📦</h3>
-                        {availableApps.length === 0 && (
-                            <p style={{ color: '#666', fontSize: '0.9rem' }}>No apps available.</p>
-                        )}
-                        {availableApps.map(app => (
-                            <div
-                                key={app.id}
-                                style={{
-                                    ...styles.componentCard,
-                                    background: 'linear-gradient(135deg, #1a1a1a 0%, #111 100%)',
-                                    border: '1px solid #333'
-                                }}
-                                onClick={() => {
-                                    // Manually add section with pre-filled props for this app
-                                    const newSection = {
-                                        id: `section-${Date.now()}`,
-                                        type: 'AppPackage',
-                                        props: { appId: app.id },
-                                        styles: {},
-                                        layout: { x: 0, y: Infinity, w: 12, h: 6 }, // Taller default for apps
-                                    };
-                                    // We need to pass this up or duplicate add logic. 
-                                    // Since addSection only takes type, we'll modify addSection in the next step or handles it here if we had access to setPageData. 
-                                    // Actually, looking at props, we only have addSection(type).
-                                    // Let's modify addSection prop in Editor.jsx to accept optional initialProps!
-                                    // For now, I'll assume I can pass a second arg or I will patch Editor.jsx as well.
-                                    // Wait, addSection in Editor.jsx (lines 74-91) only takes componentType.
-                                    // I should update Editor.jsx first to be safe, OR I can rely on a hack if I can't.
-                                    // Let's rely on the fact that I will update Editor.jsx in the next step.
-                                    addSection('AppPackage', { appId: app.id });
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = 'var(--neon-gold)';
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#333';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ fontSize: '1.5rem' }}>{app.icon || '📦'}</span>
-                                    <div>
-                                        <div style={{ fontWeight: 'bold', color: 'white' }}>{app.name}</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#888' }}>v{app.version}</div>
-                                    </div>
-                                </div>
-                                {app.description && (
-                                    <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '8px', lineHeight: '1.3' }}>
-                                        {app.description}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </>
-                )}
-
-                {/* Settings Panel */}
-                {activePanel === 'settings' && (
-                    <>
-                        <h3 style={{ margin: '0 0 15px', color: 'var(--neon-gold)' }}>🌐 Global Settings</h3>
-
-                        {/* Visibility Toggle */}
-                        <div style={styles.inputGroup}>
-                            <label style={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    checked={showHidden}
-                                    onChange={(e) => setShowHidden(e.target.checked)}
-                                />
-                                Show Hidden Pages (Studio, Pricing)
-                            </label>
-                        </div>
-
-                        <hr style={{ border: 'none', borderTop: '1px solid #333', margin: '20px 0' }} />
-
-                        {/* Navigation Links Editor */}
-                        <h4 style={{ color: '#aaa', marginBottom: '10px' }}>🔗 Navigation Links</h4>
-                        {localNavLinks.map((link, index) => (
-                            <div key={index} style={styles.navLinkRow}>
-                                <input
-                                    type="text"
-                                    style={{ ...styles.navInput, maxWidth: '80px' }}
-                                    value={link.label}
-                                    onChange={(e) => handleUpdateNavLink(index, 'label', e.target.value)}
-                                    placeholder="Label"
-                                />
-                                <input
-                                    type="text"
-                                    style={styles.navInput}
-                                    value={link.path}
-                                    onChange={(e) => handleUpdateNavLink(index, 'path', e.target.value)}
-                                    placeholder="/path"
-                                />
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#888', fontSize: '0.75rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={link.hidden || false}
-                                        onChange={(e) => handleUpdateNavLink(index, 'hidden', e.target.checked)}
-                                    />
-                                    Hide
-                                </label>
-                                <button
-                                    onClick={() => handleRemoveNavLink(index)}
-                                    style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '1.2rem' }}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                        <button
-                            onClick={handleAddNavLink}
-                            style={{ ...styles.btn, ...styles.btnSecondary, width: '100%', marginTop: '10px' }}
-                        >
-                            + Add Custom Link
-                        </button>
-
-                        {/* Quick Add from Page Registry */}
-                        {(() => {
-                            const existingPaths = localNavLinks.map(l => l.path);
-                            const missingPages = pageRegistry.filter(page => !existingPaths.includes(page.route));
-                            if (missingPages.length === 0) return null;
-                            return (
-                                <div style={{ marginTop: '15px' }}>
-                                    <label style={{ ...styles.label, color: '#888', marginBottom: '8px', display: 'block' }}>Quick Add Pages</label>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                        {missingPages.map(page => (
-                                            <button
-                                                key={page.id}
-                                                onClick={() => setLocalNavLinks(prev => [...prev, { label: page.label.toUpperCase(), path: page.route, hidden: false }])}
-                                                style={{
-                                                    ...styles.btn,
-                                                    background: '#222',
-                                                    border: '1px solid #444',
-                                                    color: '#aaa',
-                                                    fontSize: '0.75rem',
-                                                    padding: '6px 10px',
-                                                }}
-                                            >
-                                                {page.icon} {page.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-
-                        <hr style={{ border: 'none', borderTop: '1px solid #333', margin: '20px 0' }} />
-
-                        <button
-                            onClick={handleSaveSettings}
-                            style={{ ...styles.btn, ...styles.btnPrimary, width: '100%' }}
-                        >
-                            💾 Save Site Settings
-                        </button>
-
                         <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #333' }}>
                             <h4 style={{ color: '#aaa', marginBottom: '10px' }}>🛠️ Admin Tools</h4>
                             <button
                                 onClick={async () => {
-                                    if (window.confirm('Reset/Seed App Store data?')) {
-                                        const result = await seedApps();
-                                        if (result && result.success) alert('App Store seeded!');
-                                        else alert('Seeding failed check console');
+                                    if(window.confirm('Run Gallery 2.0 Migration? This will update the database.')) {
+                                        const result = await seedMediaLibrary();
+                                        if (result && result.success) alert(`Migration complete! ${result.count} items moved.`);
+                                        else alert('Migration failed check console');
                                     }
                                 }}
                                 style={{
                                     ...styles.btn,
                                     background: '#222',
-                                    border: '1px solid #444',
-                                    color: '#888',
+                                    border: '1px solid #444', 
+                                    color: '#var(--neon-gold)',
                                     width: '100%',
                                     fontSize: '0.8rem'
                                 }}
                             >
-                                Re-seed App Store Data
+                                🚀 Migrate to Gallery 2.0
                             </button>
                         </div>
                     </>
@@ -579,5 +395,4 @@ const EditorSidebar = ({
         </div>
     );
 };
-
 export default EditorSidebar;
