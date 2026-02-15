@@ -6,8 +6,7 @@
 import Hero from '../components/Hero';
 import PricingGrid from '../components/cms/PricingGrid';
 import StudioEmbed from '../components/cms/StudioEmbed';
-import GalleryGrid from '../components/cms/GalleryGrid';
-import AppContainer from '../components/cms/AppContainer';
+import GalleryExplorer from '../components/gallery/GalleryExplorer';
 
 /**
  * Registry of all CMS-editable components.
@@ -17,15 +16,11 @@ import AppContainer from '../components/cms/AppContainer';
  *   - defaultProps: Initial values for new instances
  */
 export const componentRegistry = {
-    AppPackage: {
-        component: AppContainer,
-        label: 'App Package',
-        schema: {
-            appId: { type: 'text', label: 'App ID' },
-        },
-        defaultProps: {
-            appId: '',
-        },
+    GalleryExplorer: {
+        component: GalleryExplorer,
+        label: 'Gallery Explorer (v2)',
+        schema: {}, // Filters are internal for now
+        defaultProps: {},
     },
     Hero: {
         component: Hero,
