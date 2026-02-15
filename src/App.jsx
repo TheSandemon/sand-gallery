@@ -11,7 +11,6 @@ import Pricing from './pages/Pricing';
 import CRM from './pages/CRM';
 import Editor from './pages/admin/Editor';
 import Gallery from './pages/Gallery';
-import MushroomRunner from './pages/MushroomRunner';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
