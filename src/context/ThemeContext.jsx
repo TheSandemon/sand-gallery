@@ -13,6 +13,36 @@ export const THEMES = [
   { id: 'tokyo-streets', label: 'TOKYO', icon: '⚡', accent: '#ff2d55', description: 'Cyberpunk red alert' },
 ];
 
+// Dynamic theme loader - loads CSS on demand via Vite's dynamic import
+const loadThemeCSS = async (themeId) => {
+  if (themeId === 'glass-horizon') return; // Default is always loaded
+  
+  const themeImportMap = {
+    'zinc-default': () => import('../themes/zinc-default.css?inline'),
+    'cyber-neon': () => import('../themes/cyber-neon.css?inline'),
+    'brutalist-paper': () => import('../themes/brutalist-paper.css?inline'),
+    'midnight-terminal': () => import('../themes/midnight-terminal.css?inline'),
+    'aurora-noir': () => import('../themes/aurora-noir.css?inline'),
+    'tokyo-streets': () => import('../themes/tokyo-streets.css?inline'),
+  };
+  
+  const loadTheme = themeImportMap[themeId];
+  if (!loadTheme) return;
+  
+  // Check if already loaded (stored in sessionStorage)
+  const loadedThemes = sessionStorage.getItem('loaded-themes') || '';
+  if (loadedThemes.includes(themeId)) return;
+  
+  try {
+    await loadTheme();
+    // Mark as loaded
+    sessionStorage.setItem('loaded-themes', loadedThemes + ',' + themeId);
+    console.log('[Theme] Loaded CSS for:', themeId);
+  } catch (err) {
+    console.error('[Theme] Failed to load theme CSS:', err);
+  }
+};
+
 // Get system preference for theme
 const getSystemThemePreference = () => {
   if (typeof window !== 'undefined' && window.matchMedia) {
@@ -38,6 +68,9 @@ export const ThemeProvider = ({ children }) => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('antigravity-theme', theme);
     console.log('[Theme] Applied theme:', theme);
+    
+    // Dynamically load theme CSS
+    loadThemeCSS(theme);
   }, [theme]);
 
   // Listen for system theme changes
