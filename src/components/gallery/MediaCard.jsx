@@ -2,9 +2,10 @@
  * MediaCard - Gallery media item card
  * Supports images, videos, audio, and 3D models
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Music, Box, Image as ImageIcon, Heart, Share2, Maximize2, Loader2 } from 'lucide-react';
+import { Play, Music, Box, Image as ImageIcon, Heart, Share2, Maximize2, Loader2, Eye } from 'lucide-react';
+import useViewCount from '../../hooks/useViewCount';
 
 /**
  * Skeleton loader for media card
@@ -71,8 +72,16 @@ const MediaCard = ({ item, onClick, isLoading = false }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
+    const { views, isLoading: viewsLoading, incrementViews } = useViewCount(item?.id);
 
     const TypeIcon = useMemo(() => getTypeIcon(item.type), [item.type]);
+
+    // Increment view count on click
+    useEffect(() => {
+        if (item?.id) {
+            incrementViews();
+        }
+    }, [item?.id]);
 
     // Show skeleton while loading
     if (isLoading) {
@@ -129,6 +138,14 @@ const MediaCard = ({ item, onClick, isLoading = false }) => {
                         <div className="absolute top-3 right-3 bg-[var(--bg-dark)]/50 backdrop-blur-md border border-[var(--text-primary)]/10 p-1.5 rounded-lg text-[var(--text-primary)]/80">
                             <TypeIcon size={14} />
                         </div>
+
+                        {/* View Count Badge */}
+                        {!viewsLoading && views > 0 && (
+                            <div className="absolute top-3 left-3 bg-[var(--bg-dark)]/50 backdrop-blur-md border border-[var(--text-primary)]/10 px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs text-[var(--text-primary)]/80">
+                                <Eye size={12} />
+                                <span>{views}</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Info Overlay (Visible on Hover) */}
