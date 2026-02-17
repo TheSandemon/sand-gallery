@@ -6,6 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Music, Box, Image as ImageIcon, Heart, Share2, Maximize2, Loader2, Eye } from 'lucide-react';
 import useViewCount from '../../hooks/useViewCount';
+import WishlistButton from './WishlistButton';
 
 /**
  * Skeleton loader for media card
@@ -67,8 +68,10 @@ const getTypeIcon = (type) => {
  * @param {Object} item - Media item data
  * @param {Function} onClick - Click handler
  * @param {boolean} isLoading - Show skeleton loader
+ * @param {boolean} showWishlistButton - Show wishlist heart button (default: false)
+ * @param {number} index - Index for animation stagger
  */
-const MediaCard = ({ item, onClick, isLoading = false }) => {
+const MediaCard = ({ item, onClick, isLoading = false, showWishlistButton = false, index = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -166,9 +169,15 @@ const MediaCard = ({ item, onClick, isLoading = false }) => {
                         {/* Action Bar */}
                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--text-primary)]/10">
                             <div className="flex gap-3">
-                                <button className="text-[var(--text-dim)] hover:text-red-500 transition-colors" aria-label="Like">
-                                    <Heart size={16} />
-                                </button>
+                                {showWishlistButton ? (
+                                    <WishlistButton item={item} size="sm" />
+                                ) : (
+                                    <>
+                                        <button className="text-[var(--text-dim)] hover:text-red-500 transition-colors" aria-label="Like">
+                                            <Heart size={16} />
+                                        </button>
+                                    </>
+                                )}
                                 <button className="text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors" aria-label="Share">
                                     <Share2 size={16} />
                                 </button>
