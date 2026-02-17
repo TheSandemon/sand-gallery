@@ -142,12 +142,17 @@ const GalleryCard = ({ item, onClick, showViews = false }) => {
 };
 
 // Bug B01 Fix: Add null check for usePageContent
+// Initial items to show before infinite scroll loads more
+const INITIAL_DISPLAY_COUNT = 12;
+const LOAD_MORE_COUNT = 6;
+
 const Gallery = () => {
     const [activeCategory, setActiveCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [galleryItems, setGalleryItems] = useState([]);
     const [isUsingMockData, setIsUsingMockData] = useState(false);
     const [lightboxItem, setLightboxItem] = useState(null);
+    const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY_COUNT);
     
     const { data, loading, error } = usePageContent('gallery', { realtime: false });
 
@@ -244,6 +249,11 @@ const Gallery = () => {
         
         return items;
     }, [galleryItems, activeCategory, searchQuery]);
+
+    // Reset display count when filters change
+    useEffect(() => {
+        setDisplayCount(INITIAL_DISPLAY_COUNT);
+    }, [activeCategory, searchQuery]);
 
     // Lightbox handlers with keyboard navigation support
     const handleCardClick = (item) => {
@@ -406,6 +416,10 @@ const Gallery = () => {
                     <DemoModeIndicator isActive={isUsingMockData}>
                         <MasonryGrid 
                             items={filteredItems}
+                            initialCount={displayCount}
+                            loadMoreCount={LOAD_MORE_COUNT}
+                            hasMore={displayCount < filteredItems.length}
+                            onLoadMore={() => setDisplayCount(prev => prev + LOAD_MORE_COUNT)}
                             renderItem={(item) => (
                                 <GalleryCard 
                                     item={item} 
