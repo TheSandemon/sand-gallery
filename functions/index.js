@@ -1,4 +1,4 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineString, defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
@@ -670,3 +670,79 @@ Return ONLY raw JSON. No markdown formatting.
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleanText);
 }
+
+// --- OPEN FRAMES COMPATIBILITY ---
+exports.handleFrameAction = onRequest({ cors: true }, async (request, response) => {
+    // 1. Basic Protocol Detection
+    const payload = request.body;
+    let protocol = 'farcaster'; // Default
+
+    if (payload.clientProtocol) {
+        // Open Frames Standard (e.g. XMTP, Lens)
+        // Payload looks like: { clientProtocol: "xmtp@vNext", untrustedData: {...}, trustedData: {...} }
+        if (typeof payload.clientProtocol === 'string') {
+             protocol = payload.clientProtocol.split('@')[0];
+        } else if (payload.clientProtocol.id) {
+             protocol = payload.clientProtocol.id;
+        }
+    }
+
+    console.log(`Frame Action Protocol: ${protocol}`);
+
+    try {
+        let isValid = false;
+        // let message = {}; 
+
+        // 2. Validation Logic (Stubbed for Compatibility)
+        if (protocol === 'farcaster') {
+            // Check for trustedData.messageBytes
+            if (payload.trustedData && payload.trustedData.messageBytes) {
+                isValid = true; // Assume valid for now (would call Hub here)
+            }
+        } else if (protocol === 'xmtp') {
+            // Check for XMTP signature
+             if (payload.trustedData && payload.trustedData.messageBytes) {
+                isValid = true; 
+            }
+        } else if (protocol === 'lens') {
+             // Lens validation
+             isValid = true; 
+        } else {
+            // Generic Open Frame
+            isValid = true;
+        }
+
+        if (!isValid) {
+            response.status(400).json({ error: "Invalid frame signature" });
+            return;
+        }
+
+        // 3. Return Success Frame (HTML or JSON depending on protocol)
+        // Open Frames typically expect a new Frame HTML response or a Redirect
+        // For this bounty, we return a simple success state.
+        
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta property="of:version" content="vNext" />
+            <meta property="of:accepts:xmtp" content="vNext" />
+            <meta property="of:accepts:lens" content="1.5" />
+            <meta property="of:image" content="https://sand.gallery/frame-success.png" />
+            <meta property="fc:frame" content="vNext" />
+            <meta property="fc:frame:image" content="https://sand.gallery/frame-success.png" />
+            <meta property="fc:frame:button:1" content="Success" />
+        </head>
+        <body>
+            <h1>Action Processed via ${protocol}</h1>
+        </body>
+        </html>
+        `;
+
+        response.status(200).send(html);
+
+    } catch (e) {
+        console.error(e);
+        response.status(500).json({ error: e.message });
+    }
+});

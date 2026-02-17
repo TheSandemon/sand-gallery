@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import usePageContent from '../hooks/usePageContent';
 import DynamicRenderer from '../components/cms/DynamicRenderer';
+import PageLoader from '../components/PageLoader';
 
 const Gallery = () => {
     const { data, loading, error } = usePageContent('gallery');
@@ -13,11 +14,7 @@ const Gallery = () => {
     }, [data]);
 
     if (loading) {
-        return (
-            <div className="min-h-screen pt-[120px] flex items-center justify-center">
-                <div className="text-neon-green animate-pulse">Loading Gallery...</div>
-            </div>
-        );
+        return <PageLoader variant="grid" />;
     }
 
     if (error) {
