@@ -1,0 +1,345 @@
+/**
+ * Gallery Styles
+ * GPU-accelerated glow effects and animations
+ * Extracted from GalleryGrid.jsx inline <style> tag
+ */
+
+/* Grid Pattern Background */
+.bg-grid-pattern {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+/* Radial Gradient Overlay */
+.bg-radial-gradient {
+    background: radial-gradient(circle at center, transparent 0%, #0a0a0a 100%);
+}
+
+/* Fade In Animation */
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.2s ease-out forwards;
+}
+
+/* Slide Up Animation */
+@keyframes slide-up {
+    from { 
+        transform: translateY(20px) translateZ(0); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(0) translateZ(0); 
+        opacity: 1; 
+    }
+}
+
+.animate-slide-up {
+    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* GPU-Accelerated Glow for Cards */
+.gallery-card {
+    position: relative;
+}
+
+.gallery-glow {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle at center, var(--glow-color, #00ff88) 0%, transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+    will-change: opacity;
+    transform: translateZ(0);
+    transition: opacity 0.3s ease;
+}
+
+.gallery-card:hover .gallery-glow {
+    opacity: 0.15;
+}
+
+/* GPU-Accelerated Glow for Panel */
+.gallery-panel {
+    position: relative;
+    overflow: visible;
+}
+
+.gallery-panel-glow {
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(ellipse at center, var(--glow-color, #00ff88) 0%, transparent 60%);
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 0;
+    will-change: opacity;
+    transform: translateZ(0);
+    filter: blur(40px);
+}
+
+/* Gallery Card Hover - GPU Accelerated */
+.gallery-card {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Smooth scroll for category panel */
+.gallery-panel {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for gallery panel */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================
+   HOVER ZOOM & MASONRY EFFECTS
+   ============================ */
+
+/* Gallery Item Container */
+.gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* Image container for zoom effect */
+.gallery-item-image {
+    position: relative;
+    width: 100%;
+    padding-bottom: 66.67%; /* 3:2 aspect ratio */
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.gallery-item-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+    will-change: transform;
+}
+
+/* Hover zoom effect */
+.gallery-item:hover .gallery-item-image img {
+    transform: scale(1.08);
+}
+
+/* Overlay on hover */
+.gallery-item-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.2) 50%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 16px;
+}
+
+.gallery-item:hover .gallery-item-overlay {
+    opacity: 1;
+}
+
+/* Gallery item info */
+.gallery-item-info {
+    transform: translateY(10px);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .gallery-item-info {
+    transform: translateY(0);
+}
+
+.gallery-item-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.gallery-item-desc {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ============================
+   CATEGORY FILTER TABS
+   ============================ */
+
+.gallery-filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+}
+
+.gallery-filter-tab {
+    padding: 8px 20px;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary, #a1a1aa);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gallery-filter-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary, #f4f4f5);
+}
+
+.gallery-filter-tab.active {
+    background: var(--accent-primary, #3b82f6);
+    border-color: var(--accent-primary, #3b82f6);
+    color: white;
+}
+
+/* ============================
+   MASONRY GRID LAYOUT
+   ============================ */
+
+.masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* Masonry with variable heights */
+.masonry-grid.variable .gallery-item {
+    min-height: 200px;
+}
+
+/* Alternating sizes for visual interest */
+.masonry-grid.variable .gallery-item:nth-child(4n+1) {
+    grid-row: span 2;
+}
+
+.masonry-grid.variable .gallery-item:nth-child(4n+1) .gallery-item-image {
+    padding-bottom: 150%;
+}
+
+/* Responsive masonry */
+@media (max-width: 768px) {
+    .masonry-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .gallery-filter-tabs {
+        gap: 6px;
+    }
+    
+    .gallery-filter-tab {
+        padding: 6px 14px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ============================
+   SKELETON LOADERS
+   ============================ */
+
+.gallery-skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 25%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 12px;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.gallery-skeleton-text {
+    height: 16px;
+    margin-top: 12px;
+    border-radius: 4px;
+}
+
+.gallery-skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+/* ============================
+   VIEW MODE TRANSITIONS
+   ============================ */
+
+.gallery-view-transition {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Grid view */
+.gallery-grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* List view */
+.gallery-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.gallery-list-view .gallery-item {
+    display: flex;
+    flex-direction: row;
+    min-height: 120px;
+}
+
+.gallery-list-view .gallery-item-image {
+    width: 200px;
+    padding-bottom: 0;
+    flex-shrink: 0;
+}
+
+.gallery-list-view .gallery-item-overlay {
+    position: relative;
+    opacity: 1;
+    background: transparent;
+    padding: 16px;
+}

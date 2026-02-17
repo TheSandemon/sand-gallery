@@ -1,0 +1,260 @@
+/* Theme: AURORA NOIR 🌌
+ * Vibe: Ethereal purple dream, gradient-heavy, magical Northern Lights
+ * Mood: Mystical, gradient backgrounds, cyan/violet dual accents
+ */
+
+/* CSS Custom Properties */
+:root[data-theme="aurora-noir"] {
+  /* Core backgrounds */
+  --bg-dark: #0a0a0f;
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #0f0f19;
+  --bg-main: #0a0a0f;
+  --bg-panel: rgba(15, 15, 25, 0.7);
+  --bg-card: rgba(20, 20, 35, 0.6);
+  
+  /* Accent — Violet/Cyan dual */
+  --accent-primary: #8b5cf6;
+  --accent-dim: #7c3aed;
+  --accent-secondary: #06b6d4;
+  --accent-glow: rgba(139, 92, 246, 0.2);
+  --accent-subtle: rgba(139, 92, 246, 0.1);
+  
+  /* Text */
+  --text-primary: #f0f0f5;
+  --text-secondary: #9090a8;
+  --text-dim: #5a5a70;
+  
+  /* Borders */
+  --border-subtle: rgba(139, 92, 246, 0.1);
+  --border-active: rgba(139, 92, 246, 0.4);
+  --border-default: rgba(255, 255, 255, 0.06);
+  
+  /* States */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #06b6d4;
+  
+  /* Effects */
+  --glow-intensity: 0 0 30px rgba(139, 92, 246, 0.3);
+  --glow-subtle: 0 0 15px rgba(139, 92, 246, 0.15);
+  --border-glow: 0 0 20px rgba(139, 92, 246, 0.25);
+  --shadow-panel: 0 8px 32px -8px rgba(0, 0, 0, 0.8);
+  
+  /* Typography */
+  --font-main: 'Outfit', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* Body styling */
+:root[data-theme="aurora-noir"] body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Typography */
+:root[data-theme="aurora-noir"] h1,
+:root[data-theme="aurora-noir"] h2,
+:root[data-theme="aurora-noir"] h3,
+:root[data-theme="aurora-noir"] h4,
+:root[data-theme="aurora-noir"] h5,
+:root[data-theme="aurora-noir"] h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* Monospace elements */
+:root[data-theme="aurora-noir"] code,
+:root[data-theme="aurora-noir"] pre,
+:root[data-theme="aurora-noir"] .mono {
+  font-family: var(--font-mono);
+}
+
+/* Links */
+:root[data-theme="aurora-noir"] a {
+  color: var(--accent-primary);
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="aurora-noir"] a:hover {
+  color: var(--accent-secondary);
+  text-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Buttons - medium rounded */
+:root[data-theme="aurora-noir"] button,
+:root[data-theme="aurora-noir"] .btn {
+  border-radius: var(--radius-md) !important;
+  transition: all 0.2s ease !important;
+}
+
+:root[data-theme="aurora-noir"] button:hover,
+:root[data-theme="aurora-noir"] .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-intensity);
+}
+
+:root[data-theme="aurora-noir"] button:active,
+:root[data-theme="aurora-noir"] .btn:active {
+  transform: translateY(0);
+}
+
+/* Cards/Panels with glassmorphism */
+:root[data-theme="aurora-noir"] .card,
+:root[data-theme="aurora-noir"] .panel {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease !important;
+}
+
+:root[data-theme="aurora-noir"] .card {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.08) 0%,
+    rgba(6, 182, 212, 0.04) 50%,
+    rgba(15, 15, 25, 0.7) 100%
+  );
+}
+
+:root[data-theme="aurora-noir"] .card:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--glow-intensity);
+  transform: translateY(-3px);
+}
+
+/* Aurora shimmer effect on panels */
+:root[data-theme="aurora-noir"] .panel {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.05) 0%,
+    rgba(6, 182, 212, 0.02) 100%
+  );
+}
+
+/* Active state glow */
+:root[data-theme="aurora-noir"] .glow-active {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.4);
+}
+
+/* Gradient mesh background with aurora effect */
+:root[data-theme="aurora-noir"] body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
+  z-index: -1;
+}
+
+/* Smooth transitions */
+:root[data-theme="aurora-noir"] *,
+:root[data-theme="aurora-noir"] *::before,
+:root[data-theme="aurora-noir"] *::after {
+  transition: all 0.2s ease !important;
+}
+
+/* Nav icons with aurora glow */
+:root[data-theme="aurora-noir"] .nav-icon {
+  opacity: 0.6;
+}
+
+:root[data-theme="aurora-noir"] .nav-icon.active {
+  opacity: 1;
+  fill: var(--accent-primary);
+  filter: drop-shadow(0 0 10px var(--accent-primary));
+}
+
+/* Floating animation */
+:root[data-theme="aurora-noir"] .floating {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+}
+
+/* Card entry animations */
+@keyframes auroraEntry {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+:root[data-theme="aurora-noir"] .card-enter {
+  animation: auroraEntry 0.4s ease forwards;
+}
+
+/* Staggered children animation */
+:root[data-theme="aurora-noir"] .stagger-children > * {
+  opacity: 0;
+  animation: auroraEntry 0.4s ease forwards;
+}
+
+:root[data-theme="aurora-noir"] .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+:root[data-theme="aurora-noir"] .stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+:root[data-theme="aurora-noir"] .stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+:root[data-theme="aurora-noir"] .stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+:root[data-theme="aurora-noir"] .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+:root[data-theme="aurora-noir"] .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+
+/* Aurora pulse animation */
+@keyframes auroraPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(139, 92, 246, 0.4);
+    border-color: rgba(139, 92, 246, 0.4);
+  }
+}
+
+:root[data-theme="aurora-noir"] .glow-pulse {
+  animation: auroraPulse 3s ease-in-out infinite;
+}
+
+/* Input focus states */
+:root[data-theme="aurora-noir"] input:focus,
+:root[data-theme="aurora-noir"] textarea:focus,
+:root[data-theme="aurora-noir"] select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* Scrollbar for aurora-noir */
+:root[data-theme="aurora-noir"] ::-webkit-scrollbar {
+  width: 6px;
+}
+
+:root[data-theme="aurora-noir"] ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="aurora-noir"] ::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+:root[data-theme="aurora-noir"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}

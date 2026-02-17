@@ -1,16 +1,13 @@
 import React from 'react';
 import usePageContent from '../hooks/usePageContent';
 import DynamicRenderer from '../components/cms/DynamicRenderer';
+import PageLoader from '../components/PageLoader';
 
 const Pricing = () => {
-    const { data, loading } = usePageContent('pricing');
+    const { data, loading } = usePageContent('pricing', { realtime: false });
 
     if (loading) {
-        return (
-            <div style={{ height: '100vh', background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* Fallback loading state */}
-            </div>
-        );
+        return <PageLoader variant="default" />;
     }
 
     return (

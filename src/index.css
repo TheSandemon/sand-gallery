@@ -1,14 +1,19 @@
+/* Theme Packs - glass-horizon is DEFAULT */
+@import './themes/glass-horizon.css';
+@import './themes/midnight-terminal.css';
+@import './themes/aurora-noir.css';
+@import './themes/tokyo-streets.css';
+@import './themes/zinc-default.css';
+@import './themes/cyber-neon.css';
+@import './themes/brutalist-paper.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --neon-green: #008f4e;
-  --neon-gold: #c79b37;
-  --bg-dark: #0a0a0a;
-  --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --font-main: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+/* Base resets - minimal to avoid conflicts with theme system */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -16,9 +21,6 @@ body {
   padding: 0;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-dark);
-  color: var(--text-primary);
-  font-family: var(--font-main);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -34,11 +36,6 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-a:hover {
-  color: var(--neon-green);
 }
 
 button {
@@ -48,13 +45,13 @@ button {
   font-family: inherit;
 }
 
-/* Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-dark);
+  background: var(--bg-dark, #0f0f12);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -63,10 +60,10 @@ button {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-green);
+  background: var(--accent-primary, #3b82f6);
 }
 
-/* Custom Utilities */
+/* Utility Classes */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -97,4 +94,49 @@ button {
 
 .ease-spring {
     transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Page Transitions - fade in/out */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease forwards;
+}
+
+/* Skeleton loader shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

@@ -1,12 +1,13 @@
 import React from 'react';
 import usePageContent from '../hooks/usePageContent';
 import DynamicRenderer from '../components/cms/DynamicRenderer';
+import PageLoader from '../components/PageLoader';
 
 const StudioPage = () => {
-    const { data, loading } = usePageContent('studio');
+    const { data, loading } = usePageContent('studio', { realtime: false });
 
     if (loading) {
-        return <div style={{ minHeight: '100vh', background: '#000' }} />;
+        return <PageLoader variant="default" />;
     }
 
     return (

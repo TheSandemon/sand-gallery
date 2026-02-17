@@ -1,0 +1,24 @@
+/* Theme: Cyber Neon - Cyberpunk neon aesthetic */
+:root, [data-theme="cyber-neon"] {
+    /* Backgrounds */
+    --bg-main: #0a0a0f;
+    --bg-elevated: #12121a;
+    --bg-subtle: #1a1a25;
+    
+    /* Text */
+    --text-primary: #e0feff;
+    --text-secondary: #00ff88;
+    --text-dim: #00cc6a;
+    
+    /* Accents - Neon Green */
+    --accent-primary: #00ff88;
+    --accent-secondary: #00cc6a;
+    
+    /* Borders */
+    --border-default: #00ff88;
+    --border-glow: rgba(0, 255, 136, 0.3);
+    
+    /* Fonts */
+    --font-display: 'Orbitron', sans-serif;
+    --font-body: 'Share Tech Mono', monospace;
+}

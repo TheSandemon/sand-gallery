@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers } from 'lucide-react';
+import { ChevronRight, X, Grid3X3, Layers, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ICON_MAP } from '../../config/icons';
+import '../gallery/Gallery.css';
 
-// Icon mapping for CMS string values
-const ICON_MAP = {
-    Gamepad2,
-    AppWindow,
-    Film,
-    Sparkles,
-};
+// Animation variants - memoized for performance
+const cardVariants = useMemo(() => ({
+    hidden: { opacity: 0, y: 20 },
+    visible: (i) => ({
+        opacity: 1,
+        y: 0,
+        transition: {
+            delay: i * 0.08,
+            duration: 0.3,
+            ease: 'easeOut'
+        }
+    }),
+    hover: {
+        y: -5,
+        transition: { duration: 0.2 }
+    }
+}), []);
 
 // Optimization: Simple CSS Grid Background
 const GridBackground = () => (
@@ -19,21 +31,33 @@ const GridBackground = () => (
     </div>
 );
 
-// HexNode with GPU-accelerated glow
+// HexNode with GPU-accelerated glow + keyboard navigation
 const HexNode = ({ category, isActive, onClick, index }) => {
-    const Icon = ICON_MAP[category.icon] || Sparkles;
-    const delay = index * 0.08;
+    const Icon = ICON_MAP[category.icon] || ICON_MAP.Sparkles;
+
+    const handleKeyDown = useCallback((e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+        }
+    }, [onClick]);
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay, duration: 0.3 }}
+            initial="hidden"
+            animate="visible"
+            whileHover="hover"
+            custom={index}
+            variants={cardVariants}
             onClick={onClick}
-            className="relative cursor-pointer group gallery-card"
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            role="button"
+            aria-label={`View ${category.title} category`}
+            className="relative cursor-pointer group gallery-card focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:ring-offset-2 focus:ring-offset-black"
             style={{ '--glow-color': category.color }}
         >
-            {/* GPU-accelerated glow layer (separate compositing layer) */}
+            {/* GPU-accelerated glow layer */}
             <div
                 className="gallery-glow"
                 style={{ '--glow-color': category.color }}
@@ -85,7 +109,7 @@ const HexNode = ({ category, isActive, onClick, index }) => {
 // Expanded category panel with optimized glow
 const CategoryPanel = ({ category, onClose }) => {
     const navigate = useNavigate();
-    const Icon = ICON_MAP[category.icon] || Sparkles;
+    const Icon = ICON_MAP[category.icon] || ICON_MAP.Sparkles;
 
     if (!category) return null;
 
@@ -93,6 +117,9 @@ const CategoryPanel = ({ category, onClose }) => {
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-fade-in"
             onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="category-title"
         >
             {/* Backdrop - NO blur for performance */}
             <div className="absolute inset-0 bg-black/95" />
@@ -100,6 +127,8 @@ const CategoryPanel = ({ category, onClose }) => {
             {/* Panel with GPU-accelerated glow */}
             <div
                 onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.key === 'Escape' && onClose()}
+                tabIndex={-1}
                 className="relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl bg-[#0a0a0a] border border-white/10 p-6 md:p-10 custom-scrollbar animate-slide-up gallery-panel"
                 style={{ '--glow-color': category.color }}
             >
@@ -109,6 +138,7 @@ const CategoryPanel = ({ category, onClose }) => {
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors"
+                    aria-label="Close category panel"
                 >
                     <X size={20} />
                 </button>
@@ -125,7 +155,7 @@ const CategoryPanel = ({ category, onClose }) => {
                         <Icon size={28} style={{ color: category.color }} />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-bold" style={{ color: category.color }}>
+                        <h2 id="category-title" className="text-3xl font-bold" style={{ color: category.color }}>
                             {category.title}
                         </h2>
                         <p className="text-gray-500">{category.subtitle}</p>
@@ -143,7 +173,17 @@ const CategoryPanel = ({ category, onClose }) => {
                                     else navigate(item.link);
                                 }
                             }}
-                            className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer transition-colors duration-150"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    if (item.link) {
+                                        if (item.link.startsWith('http')) window.open(item.link, '_blank');
+                                        else navigate(item.link);
+                                    }
+                                }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                            className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-white/20"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -161,11 +201,24 @@ const CategoryPanel = ({ category, onClose }) => {
                     ))}
                 </div>
 
-                {/* Empty state */}
+                {/* Professional Empty State */}
                 {(!category.items || category.items.length === 0) && (
-                    <div className="relative z-10 text-center py-12 text-gray-500">
-                        <p>No items in this category yet.</p>
-                        <p className="text-sm mt-2">Add items via the Admin Editor.</p>
+                    <div className="relative z-10 flex flex-col items-center justify-center py-16 text-center">
+                        <div className="w-24 h-24 mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                            <Icon size={40} style={{ color: category.color }} className="opacity-50" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                            No items yet
+                        </h3>
+                        <p className="text-gray-500 max-w-md mb-6">
+                            This category is waiting for content. Add items via the Admin Editor to get started.
+                        </p>
+                        <button
+                            onClick={() => navigate('/admin/editor')}
+                            className="px-6 py-3 rounded-lg bg-[var(--accent-primary)] text-black font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            Add Content
+                        </button>
                     </div>
                 )}
             </div>
@@ -173,21 +226,59 @@ const CategoryPanel = ({ category, onClose }) => {
     );
 };
 
+// Empty state for when no categories exist
+const EmptyGalleryState = () => (
+    <div className="relative min-h-[60vh] flex flex-col items-center justify-center py-20">
+        <GridBackground />
+        <div className="relative z-10 text-center px-4">
+            <div className="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center">
+                <Grid3X3 size={48} className="text-gray-600" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Welcome to the Gallery
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto mb-8">
+                Your gallery is waiting for content. Create categories and add media to showcase your work.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                    onClick={() => window.location.href = '/admin/editor'}
+                    className="px-8 py-4 rounded-lg bg-[var(--accent-primary)] text-black font-bold hover:opacity-90 transition-opacity"
+                >
+                    Start Creating
+                </button>
+                <button
+                    onClick={() => window.location.href = '/admin'}
+                    className="px-8 py-4 rounded-lg bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors"
+                >
+                    Go to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 const GalleryGrid = ({ categories = [], cmsStyles = {}, isEditor = false }) => {
     const [activeCategory, setActiveCategory] = useState(null);
     const [viewMode, setViewMode] = useState('grid');
 
     // Default categories if none provided
-    const displayCategories = categories.length > 0 ? categories : [
-        {
-            id: 'games',
-            title: 'GAMES',
-            subtitle: 'Interactive Experiences',
-            icon: 'Gamepad2',
-            color: '#00ff88',
-            items: []
-        }
-    ];
+    const displayCategories = useMemo(() => {
+        if (categories.length > 0) return categories;
+        return [
+            {
+                id: 'games',
+                title: 'GAMES',
+                subtitle: 'Interactive Experiences',
+                icon: 'Gamepad2',
+                color: '#00ff88',
+                items: []
+            }
+        ];
+    }, [categories]);
+
+    // Check if showing default/empty state
+    const isEmptyState = categories.length === 0;
 
     // In editor mode, show a compact preview
     if (isEditor) {
@@ -217,6 +308,11 @@ const GalleryGrid = ({ categories = [], cmsStyles = {}, isEditor = false }) => {
         );
     }
 
+    // Show empty state if no categories
+    if (isEmptyState) {
+        return <EmptyGalleryState />;
+    }
+
     return (
         <div className="relative min-h-[60vh] py-12 px-4" style={cmsStyles}>
             <GridBackground />
@@ -227,12 +323,14 @@ const GalleryGrid = ({ categories = [], cmsStyles = {}, isEditor = false }) => {
                     <button
                         onClick={() => setViewMode('grid')}
                         className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        aria-label="Grid view"
                     >
                         <Grid3X3 size={18} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
                         className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        aria-label="List view"
                     >
                         <Layers size={18} />
                     </button>
@@ -263,68 +361,6 @@ const GalleryGrid = ({ categories = [], cmsStyles = {}, isEditor = false }) => {
                     />
                 )}
             </AnimatePresence>
-
-            {/* Optimized Styles: GPU-accelerated glows using will-change and transform */}
-            <style>{`
-                .bg-grid-pattern {
-                    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-                    background-size: 40px 40px;
-                }
-                .bg-radial-gradient {
-                    background: radial-gradient(circle at center, transparent 0%, #0a0a0a 100%);
-                }
-                @keyframes fade-in {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                .animate-fade-in {
-                    animation: fade-in 0.2s ease-out forwards;
-                }
-                @keyframes slide-up {
-                    from { transform: translateY(20px) translateZ(0); opacity: 0; }
-                    to { transform: translateY(0) translateZ(0); opacity: 1; }
-                }
-                .animate-slide-up {
-                    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-
-                /* GPU-Accelerated Glow for Cards */
-                .gallery-card {
-                    position: relative;
-                }
-                .gallery-glow {
-                    position: absolute;
-                    inset: -20px;
-                    background: radial-gradient(circle at center, var(--glow-color, #00ff88) 0%, transparent 70%);
-                    opacity: 0;
-                    pointer-events: none;
-                    z-index: -1;
-                    will-change: opacity;
-                    transform: translateZ(0);
-                    transition: opacity 0.3s ease;
-                }
-                .gallery-card:hover .gallery-glow {
-                    opacity: 0.15;
-                }
-
-                /* GPU-Accelerated Glow for Panel */
-                .gallery-panel {
-                    position: relative;
-                    overflow: visible;
-                }
-                .gallery-panel-glow {
-                    position: absolute;
-                    inset: -40px;
-                    background: radial-gradient(ellipse at center, var(--glow-color, #00ff88) 0%, transparent 60%);
-                    opacity: 0.1;
-                    pointer-events: none;
-                    z-index: 0;
-                    will-change: opacity;
-                    transform: translateZ(0);
-                    filter: blur(40px);
-                }
-            `}</style>
         </div>
     );
 };

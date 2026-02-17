@@ -7,14 +7,19 @@ export default {
     theme: {
         extend: {
             colors: {
-                'neon-green': '#008f4e',
-                'neon-gold': '#c79b37',
-                'bg-dark': '#0a0a0a',
-                'text-primary': '#ffffff',
-                'text-secondary': '#a1a1aa',
+                'bg-main': 'var(--bg-main)',
+                'bg-card': 'var(--bg-card)',
+                'accent-primary': 'var(--accent-primary)',
+                'accent-secondary': 'var(--accent-secondary)',
+                'text-primary': 'var(--text-primary)',
+                'text-dim': 'var(--text-dim)',
             },
             fontFamily: {
+                display: 'var(--font-display)',
                 sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
+            boxShadow: {
+                'glow': 'var(--border-glow)',
             },
         },
     },
