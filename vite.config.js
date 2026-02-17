@@ -12,4 +12,22 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(versionString),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React ecosystem
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Animation
+          'vendor-motion': ['framer-motion'],
+          // Wallet/Web3 (large - lazy load via dynamic imports in code)
+          'vendor-wallet': [
+            '@coinbase/wallet-sdk',
+            'viem',
+            'wagmi',
+          ],
+        },
+      },
+    },
+  },
 })
