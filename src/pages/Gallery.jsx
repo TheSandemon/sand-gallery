@@ -10,10 +10,11 @@ import DemoModeIndicator from '../components/cms/DemoModeIndicator';
 import Lightbox from '../components/gallery/Lightbox';
 import { MOCK_GALLERY_ITEMS } from '../data/mockGalleryItems';
 import { CATEGORIES } from '../config/constants';
+import useViewCount from '../hooks/useViewCount';
 
 // Card component with 3D tilt effect
 // B02 Fix: Use CSS media query for hover detection instead of JS
-const GalleryCard = ({ item, onClick }) => {
+const GalleryCard = ({ item, onClick, showViews = false }) => {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     
@@ -39,6 +40,20 @@ const GalleryCard = ({ item, onClick }) => {
             onClick(item);
         }
     };
+
+    // Get view count from localStorage cache
+    const getViewCount = () => {
+        try {
+            const cached = localStorage.getItem('gallery_view_counts');
+            if (cached) {
+                const views = JSON.parse(cached);
+                return views[item.id] || 0;
+            }
+        } catch {}
+        return 0;
+    };
+
+    const viewCount = getViewCount();
 
     return (
         <motionDom.div
@@ -109,6 +124,19 @@ const GalleryCard = ({ item, onClick }) => {
                     {item.category}
                 </span>
             </div>
+            
+            {/* View count badge */}
+            {showViews && viewCount > 0 && (
+                <div className="absolute top-3 right-3">
+                    <span className="px-2 py-1 bg-black/50 backdrop-blur-md rounded-full text-xs text-white font-medium border border-white/10 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {viewCount}
+                    </span>
+                </div>
+            )}
         </motionDom.div>
     );
 };
@@ -370,6 +398,7 @@ const Gallery = () => {
                                 <GalleryCard 
                                     item={item} 
                                     onClick={handleCardClick}
+                                    showViews={true}
                                 />
                             )}
                         />
@@ -404,6 +433,7 @@ const Gallery = () => {
                 item={lightboxItem}
                 isOpen={!!lightboxItem}
                 onClose={closeLightbox}
+                enableViewTracking={true}
             />
         </div>
     );
