@@ -191,13 +191,31 @@ const Gallery = () => {
             </div>
 
             {/* Category Filter - Glassmorphism Pills */}
-            <div className="max-w-7xl mx-auto mb-10">
-                <div className="flex flex-wrap gap-3">
+            <div className="max-w-7xl mx-auto mb-10" role="group" aria-label="Filter gallery by category">
+                <div 
+                    className="flex flex-wrap gap-3"
+                    role="radiogroup" 
+                    aria-label="Category filter"
+                >
                     {CATEGORIES.map(category => (
                         <button
                             key={category}
+                            role="radio"
+                            aria-checked={activeCategory === category}
+                            aria-label={`Filter by ${category}`}
                             onClick={() => setActiveCategory(category)}
-                            className={`px-6 py-3 rounded-full font-medium transition-all duration-300 border ${
+                            onKeyDown={(e) => {
+                                // Keyboard navigation: Left/Right arrows to move between options
+                                const currentIndex = CATEGORIES.indexOf(category);
+                                if (e.key === 'ArrowRight') {
+                                    const nextIndex = (currentIndex + 1) % CATEGORIES.length;
+                                    setActiveCategory(CATEGORIES[nextIndex]);
+                                } else if (e.key === 'ArrowLeft') {
+                                    const prevIndex = (currentIndex - 1 + CATEGORIES.length) % CATEGORIES.length;
+                                    setActiveCategory(CATEGORIES[prevIndex]);
+                                }
+                            }}
+                            className={`px-6 py-3 rounded-full font-medium transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--bg-main)] ${
                                 activeCategory === category
                                     ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] shadow-lg shadow-[var(--accent-primary)]/30'
                                     : 'bg-[var(--bg-elevated)]/50 text-[var(--text-dim)] border-[var(--text-primary)]/10 hover:border-[var(--accent-primary)]/50 hover:text-[var(--text-primary)] backdrop-blur-sm'
