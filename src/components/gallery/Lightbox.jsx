@@ -1,17 +1,41 @@
 import React, { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import useViewCount from '../../hooks/useViewCount';
 
 /**
  * Lightbox - Modal detail view for gallery items
  * Displays full image, description, tags, and external links
+ * 
+ * @param {Object} props
+ * @param {Object} props.item - The gallery item to display
+ * @param {boolean} props.isOpen - Whether the lightbox is visible
+ * @param {Function} props.onClose - Callback to close the lightbox
+ * @param {boolean} props.enableViewTracking - Whether to track view counts (default: false)
  */
-const Lightbox = ({ item, isOpen, onClose }) => {
+const Lightbox = ({ item, isOpen, onClose, enableViewTracking = false }) => {
     // Handle escape key to close
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape') {
             onClose();
         }
     }, [onClose]);
+
+    // View count tracking
+    const { views, isLoading: viewsLoading, incrementViews } = useViewCount(item?.id);
+
+    // Track view when lightbox opens (only once per open)
+    useEffect(() => {
+        if (isOpen && item && enableViewTracking && item.id) {
+            // Increment view count on first open
+            const hasViewedKey = `viewed_${item.id}`;
+            const hasViewed = sessionStorage.getItem(hasViewedKey);
+            
+            if (!hasViewed) {
+                incrementViews();
+                sessionStorage.setItem(hasViewedKey, 'true');
+            }
+        }
+    }, [isOpen, item, enableViewTracking, incrementViews]);
 
     useEffect(() => {
         if (isOpen) {
@@ -156,13 +180,13 @@ const Lightbox = ({ item, isOpen, onClose }) => {
                                         {item.date}
                                     </div>
                                 )}
-                                {item.views !== undefined && (
+                                {(enableViewTracking && item.id) && (
                                     <div className="flex items-center text-sm text-[var(--text-dim)]">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
-                                        {item.views.toLocaleString()} views
+                                        {viewsLoading ? '...' : views.toLocaleString()} views
                                     </div>
                                 )}
                             </div>
