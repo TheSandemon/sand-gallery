@@ -1,0 +1,133 @@
+/**
+ * Hero Component Styles
+ * Kinetic animation utilities and shared patterns
+ * 
+ * Usage: Import in any component that uses hero components
+ * @import './components/hero/Hero.css';
+ */
+
+/* Kinetic typography base */
+.kinetic-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+/* Letter animation states */
+.kinetic-letter {
+    display: inline-block;
+    perspective: 1000px;
+}
+
+/* Mesh gradient container */
+.hero-mesh-gradient {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.hero-mesh-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom right,
+        var(--bg-main),
+        var(--bg-elevated),
+        var(--bg-main)
+    );
+}
+
+/* Animated orbs */
+.hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+}
+
+.hero-orb-primary {
+    background: var(--accent-primary);
+    opacity: 0.15;
+}
+
+.hero-orb-secondary {
+    background: var(--accent-secondary);
+    opacity: 0.1;
+}
+
+/* Grid overlay */
+.hero-grid-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.3;
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40L40 0M-10 10L10 -10M30 50L50 30' stroke='rgba(163,163,256,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+/* CTA button base */
+.hero-cta {
+    position: relative;
+    overflow: hidden;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+}
+
+.hero-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    transition: transform 0.7s ease;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+}
+
+.hero-cta:hover::before {
+    transform: translateX(100%);
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.scroll-indicator-dot {
+    width: 4px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--text-dim);
+    opacity: 0.5;
+    animation: scroll-bounce 2s infinite;
+}
+
+@keyframes scroll-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+}
+
+/* Responsive text scaling */
+@media (max-width: 640px) {
+    .hero-title {
+        font-size: clamp(2.5rem, 10vw, 4rem);
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .hero-title {
+        font-size: clamp(3rem, 8vw, 5rem);
+    }
+}
+
+@media (min-width: 1025px) {
+    .hero-title {
+        font-size: clamp(3rem, 6vw, 6rem);
+    }
+}

@@ -1,0 +1,276 @@
+/**
+ * Shared Component Patterns
+ * Reusable utilities for common UI patterns
+ * 
+ * Usage: Import via @import './styles/components.css' in your component
+ */
+
+/* ============================================
+   BUTTON VARIANTS
+   ============================================ */
+
+/* Primary button - accent color background */
+.btn-primary {
+    @apply relative px-6 py-3 font-semibold rounded-lg transition-all duration-200;
+    @apply bg-[var(--accent-primary)] text-white;
+    @apply hover:shadow-lg hover:shadow-[var(--accent-primary)]/30;
+    @apply active:scale-[0.98];
+}
+
+/* Secondary button - outline style */
+.btn-secondary {
+    @apply relative px-6 py-3 font-semibold rounded-lg transition-all duration-200;
+    @apply border-2 border-[var(--text-primary)]/20 text-[var(--text-primary)];
+    @apply hover:border-[var(--accent-primary)]/50 hover:bg-[var(--text-primary)]/5;
+}
+
+/* Ghost button - transparent with hover fill */
+.btn-ghost {
+    @apply px-4 py-2 font-medium rounded-lg transition-all duration-200;
+    @apply text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/5;
+}
+
+/* Icon button */
+.btn-icon {
+    @apply p-2 rounded-lg transition-all duration-200;
+    @apply text-[var(--text-dim)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/10;
+}
+
+/* ============================================
+   CARD STYLES
+   ============================================ */
+
+/* Base card */
+.card {
+    @apply rounded-xl overflow-hidden;
+    @apply bg-[var(--bg-card)] border border-[var(--text-primary)]/10;
+    @apply transition-colors duration-300;
+}
+
+.card-hover {
+    @apply hover:border-[var(--accent-primary)]/50 hover:shadow-lg hover:shadow-[var(--accent-primary)]/10;
+}
+
+/* Glass card */
+.card-glass {
+    @apply rounded-xl overflow-hidden;
+    @apply bg-[var(--bg-card)]/50 backdrop-blur-md;
+    @apply border border-[var(--text-primary)]/10;
+}
+
+/* ============================================
+   INPUT STYLES
+   ============================================ */
+
+/* Text input */
+.input {
+    @apply w-full px-4 py-3 rounded-lg;
+    @apply bg-[var(--bg-elevated)] border border-[var(--text-primary)]/10;
+    @apply text-[var(--text-primary)] placeholder-[var(--text-dim)];
+    @apply focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]/30;
+    @apply transition-all duration-200;
+}
+
+/* Search input with icon */
+.input-search {
+    @apply relative;
+}
+
+.input-search input {
+    @apply input pl-10;
+}
+
+.input-search-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)];
+}
+
+/* Textarea */
+.textarea {
+    @apply input resize-none;
+}
+
+/* ============================================
+   BADGE STYLES
+   ============================================ */
+
+/* Category badge */
+.badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-[var(--accent-primary)]/10 text-[var(--accent-primary)];
+    @apply border border-[var(--accent-primary)]/20;
+}
+
+.badge-primary {
+    @apply bg-[var(--accent-primary)] text-white border-transparent;
+}
+
+/* Status badge */
+.badge-success {
+    @apply bg-green-500/10 text-green-400 border-green-500/20;
+}
+
+.badge-warning {
+    @apply bg-yellow-500/10 text-yellow-400 border-yellow-500/20;
+}
+
+.badge-error {
+    @apply bg-red-500/10 text-red-400 border-red-500/20;
+}
+
+/* ============================================
+   SKELETON LOADERS
+   ============================================ */
+
+/* Base skeleton */
+.skeleton {
+    @apply animate-pulse;
+    @apply bg-gradient-to-br from-white/5 to-white/10;
+}
+
+/* Text skeleton */
+.skeleton-text {
+    @apply skeleton h-4 rounded;
+}
+
+.skeleton-text-sm {
+    @apply skeleton h-3 rounded;
+}
+
+.skeleton-title {
+    @apply skeleton h-8 rounded w-3/4;
+}
+
+.skeleton-avatar {
+    @apply skeleton rounded-full;
+}
+
+.skeleton-image {
+    @apply skeleton aspect-video rounded-lg;
+}
+
+/* ============================================
+   BACKDROP BLUR VARIANTS
+   ============================================ */
+
+.backdrop-sm {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.backdrop-md {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.backdrop-lg {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+/* ============================================
+   OVERLAY STYLES
+   ============================================ */
+
+/* Gradient overlay */
+.overlay-gradient {
+    @apply absolute inset-0;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        transparent 100%
+    );
+}
+
+.overlay-gradient-center {
+    @apply absolute inset-0;
+    background: radial-gradient(
+        circle at center,
+        transparent 0%,
+        rgba(0, 0, 0, 0.6) 100%
+    );
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+/* Title with accent color */
+.title-accent {
+    @apply text-[var(--text-primary)];
+}
+
+.title-accent span,
+.title-accent .accent {
+    @apply text-[var(--accent-primary)];
+}
+
+/* Description text */
+.description {
+    @apply text-[var(--text-dim)] text-lg leading-relaxed;
+}
+
+/* Label text */
+.label {
+    @apply text-xs uppercase tracking-wider text-[var(--text-dim)];
+}
+
+/* ============================================
+   LAYOUT UTILITIES
+   ============================================ */
+
+/* Centered container */
+.container-center {
+    @apply max-w-7xl mx-auto px-4;
+}
+
+/* Flex center */
+.flex-center {
+    @apply flex items-center justify-center;
+}
+
+/* Grid with gap */
+.grid-cards {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* ============================================
+   INTERACTIVE STATES
+   ============================================ */
+
+/* Focus ring */
+.focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/50 focus:ring-offset-2 focus:ring-offset-[var(--bg-dark)];
+}
+
+/* Hover lift effect */
+.hover-lift {
+    @apply transition-transform duration-200;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+}
+
+/* ============================================
+   RESPONSIVE VISIBILITY
+   ============================================ */
+
+@media (max-width: 640px) {
+    .hide-mobile {
+        display: none;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .hide-tablet {
+        display: none;
+    }
+}
+
+@media (min-width: 1025px) {
+    .hide-desktop {
+        display: none;
+    }
+}

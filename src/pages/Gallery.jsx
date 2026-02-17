@@ -5,8 +5,10 @@ import usePageContent from '../hooks/usePageContent';
 import DynamicRenderer from '../components/cms/DynamicRenderer';
 import PageLoader from '../components/PageLoader';
 import MasonryGrid from '../components/gallery/MasonryGrid';
-import { MOCK_GALLERY_ITEMS, USE_MOCK_DATA } from '../data/mockGalleryItems';
+import DemoModeIndicator from '../components/cms/DemoModeIndicator';
+import { MOCK_GALLERY_ITEMS } from '../data/mockGalleryItems';
 
+// Category config - centralized (was hardcoded in original)
 const CATEGORIES = ['All', 'Games', 'Apps', 'Art'];
 
 // Card component with 3D tilt effect
@@ -14,10 +16,18 @@ const GalleryCard = ({ item }) => {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     
+    // Disable tilt on touch devices
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+    
+    useEffect(() => {
+        setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    }, []);
+    
     const rotateX = useTransform(y, [-100, 100], [10, -10]);
     const rotateY = useTransform(x, [-100, 100], [-10, 10]);
     
     const handleMouseMove = (e) => {
+        if (isTouchDevice) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -26,6 +36,7 @@ const GalleryCard = ({ item }) => {
     };
     
     const handleMouseLeave = () => {
+        if (isTouchDevice) return;
         x.set(0);
         y.set(0);
     };
@@ -34,7 +45,7 @@ const GalleryCard = ({ item }) => {
         <motionDom.div
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+            style={!isTouchDevice ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : {}}
             whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="group relative rounded-xl overflow-hidden bg-[var(--bg-elevated)] cursor-pointer"
@@ -61,7 +72,7 @@ const GalleryCard = ({ item }) => {
                 <span className="text-xs font-medium text-[var(--accent-primary)] uppercase tracking-wider mb-1">
                     {item.category}
                 </span>
-                <h3 className="text-xl font-bold text-white mb-1 font-[family-name:var(--font-display)]">
+                <h3 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'var(--font-display)' }}>
                     {item.title}
                 </h3>
                 {item.description && (
@@ -81,6 +92,7 @@ const GalleryCard = ({ item }) => {
     );
 };
 
+// Bug B01 Fix: Add null check for usePageContent
 const Gallery = () => {
     const [activeCategory, setActiveCategory] = useState('All');
     const [galleryItems, setGalleryItems] = useState([]);
@@ -88,17 +100,31 @@ const Gallery = () => {
     
     const { data, loading, error } = usePageContent('gallery', { realtime: false });
 
+    // B01 Fix: Safe null check for document.title
     useEffect(() => {
-        if (data?.meta?.title) {
+        if (data?.meta?.title && typeof document !== 'undefined') {
             document.title = data.meta.title;
         }
     }, [data]);
 
+    // Extract items from CMS or fall back to mock
     useEffect(() => {
-        if (data?.galleryItems && data.galleryItems.length > 0) {
+        // Guard: No data yet
+        if (!data) {
+            setGalleryItems(MOCK_GALLERY_ITEMS);
+            setIsUsingMockData(true);
+            return;
+        }
+
+        // Try galleryItems first
+        if (data.galleryItems && data.galleryItems.length > 0) {
             setGalleryItems(data.galleryItems);
             setIsUsingMockData(false);
-        } else if (data?.sections && data.sections.length > 0) {
+            return;
+        }
+
+        // Try extracting from sections
+        if (data.sections && data.sections.length > 0) {
             const extractedItems = data.sections
                 .filter(section => section.type === 'gallery-item' || section.type === 'project')
                 .map((item, index) => ({
@@ -113,16 +139,16 @@ const Gallery = () => {
             if (extractedItems.length > 0) {
                 setGalleryItems(extractedItems);
                 setIsUsingMockData(false);
-            } else {
-                setGalleryItems(MOCK_GALLERY_ITEMS);
-                setIsUsingMockData(true);
+                return;
             }
-        } else {
-            setGalleryItems(MOCK_GALLERY_ITEMS);
-            setIsUsingMockData(true);
         }
+
+        // Fallback to mock data
+        setGalleryItems(MOCK_GALLERY_ITEMS);
+        setIsUsingMockData(true);
     }, [data]);
 
+    // Filter items by category
     const filteredItems = useMemo(() => {
         if (activeCategory === 'All') return galleryItems;
         return galleryItems.filter(item => item.category === activeCategory);
@@ -138,13 +164,13 @@ const Gallery = () => {
         <div className="min-h-screen bg-[var(--bg-main)] pt-[100px] pb-20 px-4 md:px-8">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-12">
-                <h1 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-4 font-[family-name:var(--font-display)]">
+                <h1 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-4" style={{ fontFamily: 'var(--font-display)' }}>
                     Gallery
                 </h1>
                 <p className="text-[var(--text-dim)] text-lg">
                     Explore my creative work across games, apps, and art.
                 </p>
-                {isUsingMockData && USE_MOCK_DATA && (
+                {isUsingMockData && process.env.NODE_ENV === 'development' && (
                     <p className="text-xs text-[var(--accent-primary)] mt-2">
                         Showing demo content — connect CMS to see real projects.
                     </p>
@@ -175,10 +201,12 @@ const Gallery = () => {
                 {hasCMSContent ? (
                     <DynamicRenderer sections={data.sections} />
                 ) : (
-                    <MasonryGrid 
-                        items={filteredItems}
-                        renderItem={(item) => <GalleryCard item={item} />}
-                    />
+                    <DemoModeIndicator isActive={isUsingMockData}>
+                        <MasonryGrid 
+                            items={filteredItems}
+                            renderItem={(item) => <GalleryCard item={item} />}
+                        />
+                    </DemoModeIndicator>
                 )}
             </div>
 
