@@ -245,13 +245,25 @@ const Gallery = () => {
         return items;
     }, [galleryItems, activeCategory, searchQuery]);
 
-    // Lightbox handlers
+    // Lightbox handlers with keyboard navigation support
     const handleCardClick = (item) => {
         setLightboxItem(item);
     };
 
     const closeLightbox = () => {
         setLightboxItem(null);
+    };
+
+    // Navigate to next/prev item in lightbox
+    const navigateLightbox = (direction) => {
+        const currentIndex = filteredItems.findIndex(item => item.id === lightboxItem?.id);
+        if (currentIndex === -1) return;
+        
+        const newIndex = direction === 'next' 
+            ? (currentIndex + 1) % filteredItems.length
+            : (currentIndex - 1 + filteredItems.length) % filteredItems.length;
+        
+        setLightboxItem(filteredItems[newIndex]);
     };
 
     // Get all unique tags from gallery items for suggestions
@@ -433,6 +445,7 @@ const Gallery = () => {
                 item={lightboxItem}
                 isOpen={!!lightboxItem}
                 onClose={closeLightbox}
+                onNavigate={navigateLightbox}
                 enableViewTracking={true}
             />
         </div>
