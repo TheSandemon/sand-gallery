@@ -5,20 +5,26 @@ import useViewCount from '../../hooks/useViewCount';
 /**
  * Lightbox - Modal detail view for gallery items
  * Displays full image, description, tags, and external links
+ * Supports keyboard navigation (arrow keys)
  * 
  * @param {Object} props
  * @param {Object} props.item - The gallery item to display
  * @param {boolean} props.isOpen - Whether the lightbox is visible
  * @param {Function} props.onClose - Callback to close the lightbox
+ * @param {Function} props.onNavigate - Callback to navigate (direction: 'next'|'prev')
  * @param {boolean} props.enableViewTracking - Whether to track view counts (default: false)
  */
-const Lightbox = ({ item, isOpen, onClose, enableViewTracking = false }) => {
-    // Handle escape key to close
+const Lightbox = ({ item, isOpen, onClose, onNavigate, enableViewTracking = false }) => {
+    // Handle escape key to close and arrow keys to navigate
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape') {
             onClose();
+        } else if (e.key === 'ArrowRight' && onNavigate) {
+            onNavigate('next');
+        } else if (e.key === 'ArrowLeft' && onNavigate) {
+            onNavigate('prev');
         }
-    }, [onClose]);
+    }, [onClose, onNavigate]);
 
     // View count tracking
     const { views, isLoading: viewsLoading, incrementViews } = useViewCount(item?.id);
@@ -104,6 +110,30 @@ const Lightbox = ({ item, isOpen, onClose, enableViewTracking = false }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+
+                {/* Navigation buttons */}
+                {onNavigate && (
+                    <>
+                        <button
+                            onClick={() => onNavigate('prev')}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+                            aria-label="Previous item"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={() => onNavigate('next')}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+                            aria-label="Next item"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </>
+                )}
 
                 {/* Content */}
                 <motion.div
