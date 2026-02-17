@@ -2,6 +2,9 @@ import { http, createConfig } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { coinbaseWallet, metaMask, walletConnect } from 'wagmi/connectors';
 
+// Get WalletConnect project ID from env, fallback to empty string if not set
+const wcProjectId = import.meta.env.VITE_WC_PROJECT_ID || "";
+
 export const wagmiConfig = createConfig({
     chains: [base],
     connectors: [
@@ -10,9 +13,12 @@ export const wagmiConfig = createConfig({
             preference: 'all',
         }),
         metaMask(),
-        walletConnect({
-            projectId: 'f410f0efd044c134d2af196d3951aea95' || import.meta.env.VITE_WC_PROJECT_ID, 
-        }),
+        // Only include WalletConnect if project ID is provided
+        ...(wcProjectId ? [
+            walletConnect({
+                projectId: wcProjectId,
+            })
+        ] : []),
     ],
     ssr: true,
     transports: {

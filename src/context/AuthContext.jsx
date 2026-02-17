@@ -13,11 +13,9 @@ import {
     increment,
     serverTimestamp,
     collection,
-    getDocs,
-    query,
-    where
+    getDocs
 } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db, isFirebaseConfigured } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -26,72 +24,18 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    const signInWithGoogle = async () => {
-        const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error("Error creating user", error);
-            alert("Sign-In Error: " + error.message);
-        }
-    };
-
-    const logout = () => signOut(auth);
-
-    const deductCredits = async (amount) => {
-        if (!user) return false;
-        if ((user.credits || 0) < amount) {
-            alert("Insufficient credits!");
-            return false;
-        }
-
-        try {
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
-                credits: increment(-amount)
-            });
-
-            // Optimistic update for immediate UI feedback
-            setUser(prev => ({
-                ...prev,
-                credits: (prev.credits || 0) - amount
-            }));
-            return true;
-        } catch (error) {
-            console.error("Error deducting credits:", error);
-            return false;
-        }
-    };
-
-    const grantCredits = async (targetUid, amount) => {
-        try {
-            const userRef = doc(db, 'users', targetUid);
-            await updateDoc(userRef, {
-                credits: increment(amount)
-            });
-            return true;
-        } catch (error) {
-            console.error("Error granting credits:", error);
-            alert("Failed to grant credits: " + error.message);
-            return false;
-        }
-    };
-
-    const getAllUsers = async () => {
-        try {
-            const usersRef = collection(db, 'users');
-            const snapshot = await getDocs(usersRef);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Error fetching users:", error);
-            return [];
-        }
-    };
-
-
+    const [firebaseReady, setFirebaseReady] = useState(false);
 
     useEffect(() => {
+        // Check if Firebase is configured
+        if (!isFirebaseConfigured()) {
+            console.warn("Firebase not configured - running in demo mode");
+            setLoading(false);
+            return;
+        }
+
+        setFirebaseReady(true);
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (!currentUser) {
                 setUser(null);
@@ -143,6 +87,84 @@ export const AuthProvider = ({ children }) => {
         return unsubscribe;
     }, []);
 
+    const signInWithGoogle = async () => {
+        if (!isFirebaseConfigured()) {
+            alert("Firebase not configured. Please set up environment variables.");
+            return;
+        }
+        const provider = new GoogleAuthProvider();
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Error creating user", error);
+            alert("Sign-In Error: " + error.message);
+        }
+    };
+
+    const logout = () => signOut(auth);
+
+    const deductCredits = async (amount) => {
+        if (!user) return false;
+        if (!isFirebaseConfigured()) {
+            console.warn("Firebase not configured - demo mode");
+            return true; // Allow in demo mode
+        }
+        if ((user.credits || 0) < amount) {
+            alert("Insufficient credits!");
+            return false;
+        }
+
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                credits: increment(-amount)
+            });
+
+            // Optimistic update for immediate UI feedback
+            setUser(prev => ({
+                ...prev,
+                credits: (prev.credits || 0) - amount
+            }));
+            return true;
+        } catch (error) {
+            console.error("Error deducting credits:", error);
+            return false;
+        }
+    };
+
+    const grantCredits = async (targetUid, amount) => {
+        if (!isFirebaseConfigured()) {
+            console.warn("Firebase not configured - demo mode");
+            return true;
+        }
+        try {
+            const userRef = doc(db, 'users', targetUid);
+            await updateDoc(userRef, {
+                credits: increment(amount)
+            });
+            return true;
+        } catch (error) {
+            console.error("Error granting credits:", error);
+            alert("Failed to grant credits: " + error.message);
+            return false;
+        }
+    };
+
+    const getAllUsers = async () => {
+        if (!isFirebaseConfigured()) {
+            console.warn("Firebase not configured - demo mode");
+            return [];
+        }
+        try {
+            const usersRef = collection(db, 'users');
+            const snapshot = await getDocs(usersRef);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            return [];
+        }
+    };
+
     const value = {
         user,
         signInWithGoogle,
@@ -150,7 +172,8 @@ export const AuthProvider = ({ children }) => {
         deductCredits,
         grantCredits,
         getAllUsers,
-        loading
+        loading,
+        firebaseReady
     };
 
     return (
