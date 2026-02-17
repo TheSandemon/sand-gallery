@@ -7,6 +7,7 @@ import PageLoader from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import AppProviders from './components/AppProviders';
+import DemoModeBanner from './components/DemoModeBanner';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
@@ -58,6 +59,7 @@ function AppContent() {
     <>
       <SkipLink />
       {showCircuitEffect && <CircuitEffect />}
+      <DemoModeBanner />
       <AppLayout>
         <main id="main-content">
           <Routes>

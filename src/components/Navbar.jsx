@@ -7,11 +7,14 @@ import { ThemeToggleDesktop, ThemeToggleMobile } from './ThemeToggle';
 import { WalletUIDesktop, WalletUIMobile } from './WalletUI';
 import useSiteSettings from '../hooks/useSiteSettings';
 import { SCROLL_THRESHOLD } from '../config/constants';
+import MobileMenu from './MobileMenu';
 
 /**
  * Navbar - Main navigation component
  * Desktop: horizontal menu with theme toggle and wallet
- * Mobile: hamburger menu with slide-in overlay
+ * Mobile: hamburger menu with slide-in overlay (extracted to MobileMenu.jsx)
+ * 
+ * @component
  */
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -39,7 +42,7 @@ const Navbar = () => {
         ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
     ];
 
-    // Animated nav link with underline
+    // Animated nav link with underline - extracted inline component
     const NavLink = ({ link }) => (
         <Link
             to={link.path}
@@ -92,44 +95,14 @@ const Navbar = () => {
                 </button>
             </nav>
 
-            {/* Mobile Menu Overlay */}
+            {/* Mobile Menu Overlay - Now uses extracted component */}
             <AnimatePresence>
                 {mobileMenuOpen && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed inset-0 z-[1002] bg-[var(--bg-main)]/95 backdrop-blur-[30px] flex flex-col items-center justify-center gap-8 md:hidden"
-                    >
-                        {navLinks.map((link, index) => (
-                            <motion.div
-                                key={link.path}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1, duration: 0.3 }}
-                            >
-                                <Link
-                                    to={link.path}
-                                    className={`text-3xl font-bold tracking-widest transition-colors duration-300
-                                        ${isActive(link.path) ? 'text-[var(--accent-secondary)]' : 'text-[var(--text-dim)] hover:text-[var(--text-primary)]'}
-                                    `}
-                                >
-                                    {link.label}
-                                </Link>
-                            </motion.div>
-                        ))}
-                        <motion.div 
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: navLinks.length * 0.1, duration: 0.3 }}
-                            className="mt-8 flex flex-col items-center gap-6 scale-125"
-                        >
-                            <ThemeToggleMobile />
-                            <WalletUIMobile />
-                            <UserButton />
-                        </motion.div>
-                    </motion.div>
+                    <MobileMenu 
+                        isOpen={mobileMenuOpen}
+                        navLinks={navLinks}
+                        user={user}
+                    />
                 )}
             </AnimatePresence>
         </>

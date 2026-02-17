@@ -5,11 +5,10 @@ import usePageContent from '../hooks/usePageContent';
 import DynamicRenderer from '../components/cms/DynamicRenderer';
 import PageLoader from '../components/PageLoader';
 import MasonryGrid from '../components/gallery/MasonryGrid';
+import GallerySkeleton from '../components/gallery/GallerySkeleton';
 import DemoModeIndicator from '../components/cms/DemoModeIndicator';
 import { MOCK_GALLERY_ITEMS } from '../data/mockGalleryItems';
-
-// Category config - centralized (was hardcoded in original)
-const CATEGORIES = ['All', 'Games', 'Apps', 'Art'];
+import { CATEGORIES } from '../config/constants';
 
 // Card component with 3D tilt effect
 // B02 Fix: Use CSS media query for hover detection instead of JS
@@ -159,7 +158,17 @@ const Gallery = () => {
         // Fallback to mock data
         setGalleryItems(MOCK_GALLERY_ITEMS);
         setIsUsingMockData(true);
+        
+        // B01 Fix: Set flag so DemoModeBanner can display warning
+        localStorage.setItem('gallery_demo_mode', 'true');
     }, [data]);
+
+    // Clear demo mode flag when leaving gallery
+    useEffect(() => {
+        return () => {
+            localStorage.removeItem('gallery_demo_mode');
+        };
+    }, []);
 
     // Filter items by category
     const filteredItems = useMemo(() => {
@@ -168,7 +177,17 @@ const Gallery = () => {
     }, [galleryItems, activeCategory]);
 
     if (loading) {
-        return <PageLoader variant="grid" />;
+        return (
+            <div className="min-h-screen bg-[var(--bg-main)] pt-[100px] pb-20 px-4 md:px-8">
+                <div className="max-w-7xl mx-auto mb-12">
+                    <div className="skeleton h-12 w-48 mb-4 rounded" />
+                    <div className="skeleton h-6 w-64 rounded" />
+                </div>
+                <div className="max-w-7xl mx-auto">
+                    <GallerySkeleton />
+                </div>
+            </div>
+        );
     }
 
     const hasCMSContent = data?.sections && data.sections.length > 0 && !isUsingMockData;
