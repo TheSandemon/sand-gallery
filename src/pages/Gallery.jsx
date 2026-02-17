@@ -12,22 +12,16 @@ import { MOCK_GALLERY_ITEMS } from '../data/mockGalleryItems';
 const CATEGORIES = ['All', 'Games', 'Apps', 'Art'];
 
 // Card component with 3D tilt effect
+// B02 Fix: Use CSS media query for hover detection instead of JS
 const GalleryCard = ({ item }) => {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     
-    // Disable tilt on touch devices
-    const [isTouchDevice, setIsTouchDevice] = useState(false);
-    
-    useEffect(() => {
-        setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
-    }, []);
-    
+    // CSS-based hover detection - no JS needed
     const rotateX = useTransform(y, [-100, 100], [10, -10]);
     const rotateY = useTransform(x, [-100, 100], [-10, 10]);
     
     const handleMouseMove = (e) => {
-        if (isTouchDevice) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -36,7 +30,6 @@ const GalleryCard = ({ item }) => {
     };
     
     const handleMouseLeave = () => {
-        if (isTouchDevice) return;
         x.set(0);
         y.set(0);
     };
@@ -45,11 +38,23 @@ const GalleryCard = ({ item }) => {
         <motionDom.div
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            style={!isTouchDevice ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : {}}
+            style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
             whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="group relative rounded-xl overflow-hidden bg-[var(--bg-elevated)] cursor-pointer"
+            data-tilt-enabled="true"
         >
+            {/* Touch devices: disable tilt via CSS */}
+            <style>{`
+                @media (hover: none) {
+                    [data-tilt-enabled="true"] {
+                        transform-style: flat !important;
+                    }
+                    [data-tilt-enabled="true"] > * {
+                        transform: none !important;
+                    }
+                }
+            `}</style>
             {/* Thumbnail */}
             {item.thumbnail ? (
                 <img 
@@ -111,6 +116,14 @@ const Gallery = () => {
     useEffect(() => {
         // Guard: No data yet
         if (!data) {
+            // B01 Fix: Fail loudly in production instead of silently using mock
+            if (process.env.NODE_ENV === 'production') {
+                console.error('[Gallery] CRITICAL: No CMS data available in production. Showing empty state.');
+                setGalleryItems([]);
+                setIsUsingMockData(false);
+                return;
+            }
+            // Dev mode: allow mock data with warning
             setGalleryItems(MOCK_GALLERY_ITEMS);
             setIsUsingMockData(true);
             return;

@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import CircuitEffect from './components/CircuitEffect';
 import PageLoader from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import AppProviders from './components/AppProviders';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -60,16 +61,16 @@ function AppContent() {
       <AppLayout>
         <main id="main-content">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/anthem" element={<Anthem />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/editor" element={<Editor />} />
-            <Route path="/studio" element={<Studio />} />
-            <Route path="/crm" element={<CRM />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<RouteErrorBoundary><Home /></RouteErrorBoundary>} />
+            <Route path="/gallery" element={<RouteErrorBoundary><Gallery /></RouteErrorBoundary>} />
+            <Route path="/anthem" element={<RouteErrorBoundary><Anthem /></RouteErrorBoundary>} />
+            <Route path="/profile" element={<RouteErrorBoundary><Profile /></RouteErrorBoundary>} />
+            <Route path="/admin" element={<RouteErrorBoundary><AdminDashboard /></RouteErrorBoundary>} />
+            <Route path="/admin/editor" element={<RouteErrorBoundary><Editor /></RouteErrorBoundary>} />
+            <Route path="/studio" element={<RouteErrorBoundary><Studio /></RouteErrorBoundary>} />
+            <Route path="/crm" element={<RouteErrorBoundary><CRM /></RouteErrorBoundary>} />
+            <Route path="/pricing" element={<RouteErrorBoundary><Pricing /></RouteErrorBoundary>} />
+            <Route path="*" element={<RouteErrorBoundary><NotFound /></RouteErrorBoundary>} />
           </Routes>
         </main>
       </AppLayout>
