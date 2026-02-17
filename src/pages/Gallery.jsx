@@ -7,12 +7,13 @@ import PageLoader from '../components/PageLoader';
 import MasonryGrid from '../components/gallery/MasonryGrid';
 import GallerySkeleton from '../components/gallery/GallerySkeleton';
 import DemoModeIndicator from '../components/cms/DemoModeIndicator';
+import Lightbox from '../components/gallery/Lightbox';
 import { MOCK_GALLERY_ITEMS } from '../data/mockGalleryItems';
 import { CATEGORIES } from '../config/constants';
 
 // Card component with 3D tilt effect
 // B02 Fix: Use CSS media query for hover detection instead of JS
-const GalleryCard = ({ item }) => {
+const GalleryCard = ({ item, onClick }) => {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     
@@ -33,12 +34,20 @@ const GalleryCard = ({ item }) => {
         y.set(0);
     };
 
+    const handleClick = () => {
+        if (onClick) {
+            onClick(item);
+        }
+    };
+
     return (
         <motionDom.div
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onClick={handleClick}
             style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
             whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="group relative rounded-xl overflow-hidden bg-[var(--bg-elevated)] cursor-pointer"
             data-tilt-enabled="true"
@@ -84,6 +93,14 @@ const GalleryCard = ({ item }) => {
                         {item.description}
                     </p>
                 )}
+                {/* Click indicator */}
+                <p className="text-xs text-gray-400 mt-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Click to view details
+                </p>
             </div>
             
             {/* Category badge */}
@@ -99,8 +116,10 @@ const GalleryCard = ({ item }) => {
 // Bug B01 Fix: Add null check for usePageContent
 const Gallery = () => {
     const [activeCategory, setActiveCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const [galleryItems, setGalleryItems] = useState([]);
     const [isUsingMockData, setIsUsingMockData] = useState(false);
+    const [lightboxItem, setLightboxItem] = useState(null);
     
     const { data, loading, error } = usePageContent('gallery', { realtime: false });
 
@@ -145,7 +164,9 @@ const Gallery = () => {
                     category: item.category || 'Art',
                     description: item.description || '',
                     thumbnail: item.thumbnail || item.image || item.coverImage || '',
-                    link: item.link || item.url || '#'
+                    link: item.link || item.url || '#',
+                    tags: item.tags || [],
+                    date: item.date || item.createdAt || null,
                 }));
             
             if (extractedItems.length > 0) {
@@ -170,11 +191,51 @@ const Gallery = () => {
         };
     }, []);
 
-    // Filter items by category
+    // Filter items by category AND search query
     const filteredItems = useMemo(() => {
-        if (activeCategory === 'All') return galleryItems;
-        return galleryItems.filter(item => item.category === activeCategory);
-    }, [galleryItems, activeCategory]);
+        let items = galleryItems;
+        
+        // Filter by category
+        if (activeCategory !== 'All') {
+            items = items.filter(item => item.category === activeCategory);
+        }
+        
+        // Filter by search query
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            items = items.filter(item => {
+                // Search in title, description, category, and tags
+                const titleMatch = item.title?.toLowerCase().includes(query);
+                const descMatch = item.description?.toLowerCase().includes(query);
+                const categoryMatch = item.category?.toLowerCase().includes(query);
+                const tagsMatch = item.tags?.some(tag => tag.toLowerCase().includes(query));
+                
+                return titleMatch || descMatch || categoryMatch || tagsMatch;
+            });
+        }
+        
+        return items;
+    }, [galleryItems, activeCategory, searchQuery]);
+
+    // Lightbox handlers
+    const handleCardClick = (item) => {
+        setLightboxItem(item);
+    };
+
+    const closeLightbox = () => {
+        setLightboxItem(null);
+    };
+
+    // Get all unique tags from gallery items for suggestions
+    const allTags = useMemo(() => {
+        const tagSet = new Set();
+        galleryItems.forEach(item => {
+            if (item.tags && Array.isArray(item.tags)) {
+                item.tags.forEach(tag => tagSet.add(tag));
+            }
+        });
+        return Array.from(tagSet).sort();
+    }, [galleryItems]);
 
     if (loading) {
         return (
@@ -205,6 +266,57 @@ const Gallery = () => {
                 {isUsingMockData && process.env.NODE_ENV === 'development' && (
                     <p className="text-xs text-[var(--accent-primary)] mt-2">
                         Showing demo content — connect CMS to see real projects.
+                    </p>
+                )}
+            </div>
+
+            {/* Search Bar */}
+            <div className="max-w-7xl mx-auto mb-8">
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by title, description, or tags..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-[var(--bg-elevated)] border border-[var(--text-primary)]/10 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-[var(--text-dim)] hover:text-[var(--text-primary)]"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+                
+                {/* Tag suggestions */}
+                {allTags.length > 0 && !searchQuery && (
+                    <div className="mt-3 flex flex-wrap gap-2 items-center">
+                        <span className="text-xs text-[var(--text-dim)]">Popular tags:</span>
+                        {allTags.slice(0, 8).map((tag, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setSearchQuery(tag)}
+                                className="text-xs px-2 py-1 bg-[var(--bg-main)] text-[var(--text-dim)] hover:text-[var(--accent-primary)] rounded-full border border-[var(--text-primary)]/10 hover:border-[var(--accent-primary)]/30 transition-colors"
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
+                )}
+                
+                {/* Search results count */}
+                {searchQuery && (
+                    <p className="mt-2 text-sm text-[var(--text-dim)]">
+                        Found {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'} for "{searchQuery}"
                     </p>
                 )}
             </div>
@@ -254,7 +366,12 @@ const Gallery = () => {
                     <DemoModeIndicator isActive={isUsingMockData}>
                         <MasonryGrid 
                             items={filteredItems}
-                            renderItem={(item) => <GalleryCard item={item} />}
+                            renderItem={(item) => (
+                                <GalleryCard 
+                                    item={item} 
+                                    onClick={handleCardClick}
+                                />
+                            )}
                         />
                     </DemoModeIndicator>
                 )}
@@ -262,11 +379,32 @@ const Gallery = () => {
 
             {filteredItems.length === 0 && (
                 <div className="text-center py-20">
-                    <p className="text-[var(--text-dim)] text-lg">
-                        No projects found in this category.
-                    </p>
+                    {searchQuery ? (
+                        <>
+                            <p className="text-[var(--text-dim)] text-lg mb-4">
+                                No projects found matching "{searchQuery}".
+                            </p>
+                            <button 
+                                onClick={() => setSearchQuery('')}
+                                className="text-[var(--accent-primary)] hover:underline"
+                            >
+                                Clear search
+                            </button>
+                        </>
+                    ) : (
+                        <p className="text-[var(--text-dim)] text-lg">
+                            No projects found in this category.
+                        </p>
+                    )}
                 </div>
             )}
+
+            {/* Lightbox Modal */}
+            <Lightbox 
+                item={lightboxItem}
+                isOpen={!!lightboxItem}
+                onClose={closeLightbox}
+            />
         </div>
     );
 };
