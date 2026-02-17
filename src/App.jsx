@@ -9,13 +9,13 @@ import RouteErrorBoundary from './components/RouteErrorBoundary';
 import AppProviders from './components/AppProviders';
 import DemoModeBanner from './components/DemoModeBanner';
 import NotFound from './pages/NotFound';
+import Studio from './pages/Studio';
 import './index.css';
 
 // Lazy load pages for code splitting (reduces initial bundle size)
 const Home = lazy(() => import('./pages/Home'));
 const Profile = lazy(() => import('./pages/Profile'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const Studio = lazy(() => import('./pages/Studio'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const CRM = lazy(() => import('./pages/CRM'));
 const Editor = lazy(() => import('./pages/admin/Editor'));
@@ -28,7 +28,7 @@ const PageSuspense = ({ children }) => (
 );
 
 // Pages that should show CircuitEffect (public landing pages)
-const PUBLIC_PAGES = ['/', '/gallery', '/pricing', '/anthem', '/profile'];
+const PUBLIC_PAGES = ['/', '/work', '/gallery', '/pricing', '/anthem', '/profile'];
 
 // Layout wrapper to conditionally show Navbar/Footer
 const AppLayout = ({ children }) => {
@@ -71,6 +71,8 @@ function AppContent() {
         <main id="main-content">
           <Routes>
             <Route path="/" element={<PageSuspense><RouteErrorBoundary><Home /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/work" element={<PageSuspense><RouteErrorBoundary><Studio /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/game" element={<PageSuspense><RouteErrorBoundary><Studio /></RouteErrorBoundary></PageSuspense>} />
             <Route path="/gallery" element={<PageSuspense><RouteErrorBoundary><Gallery /></RouteErrorBoundary></PageSuspense>} />
             <Route path="/anthem" element={<PageSuspense><RouteErrorBoundary><Anthem /></RouteErrorBoundary></PageSuspense>} />
             <Route path="/profile" element={<PageSuspense><RouteErrorBoundary><Profile /></RouteErrorBoundary></PageSuspense>} />

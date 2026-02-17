@@ -58,8 +58,11 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   const toggleTheme = (newTheme) => {
+    console.log('[Theme] Toggle requested:', newTheme);
     if (THEMES.find(t => t.id === newTheme)) {
       setTheme(newTheme);
+    } else {
+      console.warn('[Theme] Unknown theme:', newTheme);
     }
   };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, isFirebaseConfigured } from '../firebase';
 import { getDefaultPageData } from '../cms/initialData';
 
 /**
@@ -23,7 +23,24 @@ const usePageContent = (pageId, options = {}) => {
             return;
         }
 
+        // If Firebase is not configured, use default data immediately
+        if (!isFirebaseConfigured()) {
+            console.log(`[CMS] Firebase not configured, using default data for "${pageId}"`);
+            setData(getDefaultPageData(pageId));
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
+        
+        // Check if db is available
+        if (!db) {
+            console.warn(`[CMS] Firestore not initialized, using default data for "${pageId}"`);
+            setData(getDefaultPageData(pageId));
+            setLoading(false);
+            return;
+        }
+
         const docRef = doc(db, 'pages', pageId);
 
         // Use getDoc for static pages (better performance - single fetch)
