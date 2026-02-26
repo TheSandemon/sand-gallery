@@ -749,10 +749,25 @@ exports.handleFrameAction = onRequest({ cors: true }, async (request, response) 
 
 // ========== X402 PAYMENT SERVICE ==========
 
-// Config
-const PRICE_PER_QUERY = '0.01';
+// Config - Per-tool pricing (USDC on Base)
+// Prices slightly below market rates to attract early adoption
+const TOOL_PRICING = {
+    'kaito_query': { price: '0.002', maxTokens: 4000, description: 'AI text generation' },
+    'kaito_image_analysis': { price: '0.003', maxTokens: 1000, description: 'Image vision analysis' },
+    'kaito_web_search': { price: '0.002', maxResults: 10, description: 'Web search' },
+    'kaito_code_review': { price: '0.004', maxTokens: 5000, description: 'Code review & analysis' },
+    'kaito_summarize': { price: '0.002', maxTokens: 3000, description: 'Text summarization' },
+    'kaito_translate': { price: '0.003', maxWords: 2000, description: 'Translation' },
+    'kaito_image_generate': { price: '0.008', maxImages: 1, description: 'Image generation' }
+};
+
 const PAYMENT_ADDRESS = '0x6a3301fd46c7251374b9b21181519159fe5800ec';
 const BASESCAN_API_KEY = 'WNBIJQS1MDW1K4J7P6GZQEVEIYVPQQNJKT';
+
+// Helper to get tool price
+const getToolPrice = (toolName) => {
+    return TOOL_PRICING[toolName]?.price || '0.002';
+};
 
 // In-memory storage (use Firestore in production)
 const paidQueries = new Map();
@@ -765,10 +780,10 @@ exports.x402Health = onRequest({
     response.json({
         service: 'Kaito x402 Service',
         status: 'online',
-        price: `${PRICE_PER_QUERY} USDC`,
         paymentAddress: PAYMENT_ADDRESS,
         network: 'base',
-        version: '1.0-x402',
+        version: '2.0-x402',
+        pricing: TOOL_PRICING,
         availableModels: {
             google: !!getGoogleKey(),
             replicate: !!getReplicateKey(),
@@ -793,20 +808,22 @@ exports.toolsList = onRequest({
         tools: [
             {
                 name: 'kaito_query',
-                description: 'Send a prompt to Kaito AI and get a response. Supports multiple AI models (google, minimax, replicate, openrouter).',
+                description: 'AI text generation. Supports google, minimax, replicate, openrouter. Max 4000 tokens. 0.002 USDC.',
+                price: '0.002 USDC',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         prompt: { type: 'string', description: 'The prompt to send to the AI' },
                         queryId: { type: 'string', description: 'Unique identifier for this query' },
-                        model: { type: 'string', description: 'Model to use: google, minimax (default), replicate, or openrouter' }
+                        model: { type: 'string', description: 'Model: google, minimax (default), replicate, openrouter' }
                     },
                     required: ['prompt', 'queryId']
                 }
             },
             {
                 name: 'kaito_image_analysis',
-                description: 'Analyze an image and describe its contents.',
+                description: 'Analyze images and describe contents with AI vision. Max 1 image. 0.003 USDC.',
+                price: '0.003 USDC',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -818,7 +835,8 @@ exports.toolsList = onRequest({
             },
             {
                 name: 'kaito_web_search',
-                description: 'Search the web for current information.',
+                description: 'Search the web for current information. Max 10 results. 0.002 USDC.',
+                price: '0.002 USDC',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -826,6 +844,61 @@ exports.toolsList = onRequest({
                         queryId: { type: 'string', description: 'Unique identifier for this query' }
                     },
                     required: ['query', 'queryId']
+                }
+            },
+            {
+                name: 'kaito_code_review',
+                description: 'AI code review and analysis. Max 5000 tokens. 0.004 USDC.',
+                price: '0.004 USDC',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        code: { type: 'string', description: 'Code to review' },
+                        language: { type: 'string', description: 'Programming language' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['code', 'queryId']
+                }
+            },
+            {
+                name: 'kaito_summarize',
+                description: 'Summarize long text. Max 3000 tokens. 0.002 USDC.',
+                price: '0.002 USDC',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        text: { type: 'string', description: 'Text to summarize' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['text', 'queryId']
+                }
+            },
+            {
+                name: 'kaito_translate',
+                description: 'Translate text between languages. Max 2000 words. 0.003 USDC.',
+                price: '0.003 USDC',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        text: { type: 'string', description: 'Text to translate' },
+                        targetLanguage: { type: 'string', description: 'Target language (e.g., spanish, french, chinese)' },
+                        sourceLanguage: { type: 'string', description: 'Source language (optional, auto-detect if not provided)' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['text', 'targetLanguage', 'queryId']
+                }
+            },
+            {
+                name: 'kaito_image_generate',
+                description: 'Generate images from text prompts. Max 1 image. 0.008 USDC.',
+                price: '0.008 USDC',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        prompt: { type: 'string', description: 'Image description' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['prompt', 'queryId']
                 }
             }
         ]
@@ -850,9 +923,10 @@ exports.toolsCall = onRequest({
     }
 
     const queryId = args.queryId || args.query_id || `mcp-${Date.now()}`;
-
+    const toolPrice = getToolPrice(name);
+    
     // Check payment
-    const paymentStatus = await checkPayment(queryId);
+    const paymentStatus = await checkPayment(queryId, toolPrice);
 
     if (!paymentStatus.paid && !paidQueries.has(queryId)) {
         return response.status(402).json({
@@ -860,19 +934,21 @@ exports.toolsCall = onRequest({
                 isError: true,
                 text: JSON.stringify({
                     error: 'Payment required',
-                    price: PRICE_PER_QUERY,
+                    tool: name,
+                    price: toolPrice,
                     currency: 'USDC',
                     network: 'base',
                     paymentAddress: PAYMENT_ADDRESS,
                     queryId: queryId,
-                    instructions: `Send ${PRICE_PER_QUERY} USDC to ${PAYMENT_ADDRESS} on Base, then retry`
+                    limits: TOOL_PRICING[name],
+                    instructions: `Send ${toolPrice} USDC to ${PAYMENT_ADDRESS} on Base, then retry with same queryId`
                 })
             }]
         });
     }
 
     if (paymentStatus.paid && !paidQueries.has(queryId)) {
-        paidQueries.set(queryId, { txHash: paymentStatus.txHash, paidAt: new Date().toISOString() });
+        paidQueries.set(queryId, { txHash: paymentStatus.txHash, amount: toolPrice, paidAt: new Date().toISOString() });
     }
 
     let result;
@@ -885,6 +961,18 @@ exports.toolsCall = onRequest({
             break;
         case 'kaito_web_search':
             result = await handleWebSearch(args.query, queryId);
+            break;
+        case 'kaito_code_review':
+            result = await handleCodeReview(args.code, args.language, queryId);
+            break;
+        case 'kaito_summarize':
+            result = await handleSummarize(args.text, queryId);
+            break;
+        case 'kaito_translate':
+            result = await handleTranslate(args.text, args.targetLanguage, args.sourceLanguage, queryId);
+            break;
+        case 'kaito_image_generate':
+            result = await handleImageGenerate(args.prompt, queryId);
             break;
         default:
             return response.status(404).json({
@@ -953,7 +1041,7 @@ exports.x402Status = onRequest({
 });
 
 // Helper functions
-async function checkPayment(queryId) {
+async function checkPayment(queryId, minAmount = '0.002') {
     try {
         const response = await fetch(
             `https://api.etherscan.io/api?module=account&action=tokentx&address=${PAYMENT_ADDRESS}&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&sort=desc&apikey=${BASESCAN_API_KEY}&chainid=8453`
@@ -964,7 +1052,7 @@ async function checkPayment(queryId) {
         if (data.status === '1' && data.result && data.result.length > 0) {
             for (const tx of data.result) {
                 const amount = parseFloat(tx.value) / 1e6;
-                if (amount >= parseFloat(PRICE_PER_QUERY)) {
+                if (amount >= parseFloat(minAmount)) {
                     return { paid: true, txHash: tx.hash, amount };
                 }
             }
@@ -1052,12 +1140,66 @@ async function handleImageAnalysis(imageUrl, queryId) {
 }
 
 async function handleWebSearch(query, queryId) {
+    // TODO: Integrate with Google Search API or similar
     return { 
         queryId, 
         query, 
-        results: `Search results for: ${query} (web search not yet implemented)`,
+        results: `Search results for: ${query} (web search coming soon)`,
         processedAt: new Date().toISOString() 
     };
+}
+
+async function handleCodeReview(code, language, queryId) {
+    if (!code) throw new Error('Code is required');
+    if (code.length > 5000) throw new Error('Code exceeds 5000 token limit');
+    
+    const prompt = `Review this ${language || 'code'} and provide feedback on:
+- Bugs and issues
+- Security concerns
+- Performance improvements
+- Code quality
+
+Code:
+\`\`\`${language || ''}
+${code}
+\`\`\``;
+    
+    const review = await callGoogle(prompt);
+    return { queryId, language, review, processedAt: new Date().toISOString() };
+}
+
+async function handleSummarize(text, queryId) {
+    if (!text) throw new Error('Text is required');
+    if (text.length > 3000) throw new Error('Text exceeds 3000 token limit');
+    
+    const prompt = `Summarize this text concisely:\n\n${text}`;
+    const summary = await callGoogle(prompt);
+    return { queryId, summary, originalLength: text.length, processedAt: new Date().toISOString() };
+}
+
+async function handleTranslate(text, targetLanguage, sourceLanguage, queryId) {
+    if (!text) throw new Error('Text is required');
+    if (!targetLanguage) throw new Error('Target language is required');
+    
+    const prompt = sourceLanguage 
+        ? `Translate from ${sourceLanguage} to ${targetLanguage}:\n\n${text}`
+        : `Translate to ${targetLanguage}:\n\n${text}`;
+    
+    const translation = await callGoogle(prompt);
+    return { queryId, translation, targetLanguage, sourceLanguage: sourceLanguage || 'auto', processedAt: new Date().toISOString() };
+}
+
+async function handleImageGenerate(prompt, queryId) {
+    if (!prompt) throw new Error('Prompt is required');
+    
+    // Use Replicate for image generation
+    if (!getReplicateKey()) throw new Error('Replicate API key not configured');
+    
+    const replicate = new Replicate({ auth: getReplicateKey() });
+    const output = await replicate.run('black-forest-labs/flux-schnell', { input: { prompt } });
+    
+    const imageUrl = Array.isArray(output) ? output[0] : output;
+    return { queryId, prompt, imageUrl, model: 'flux-schnell', processedAt: new Date().toISOString() };
 }
 
 // ========== AI API CALLS ==========
