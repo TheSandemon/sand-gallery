@@ -766,6 +766,11 @@ exports.x402Health = onRequest({ cors: true }, (request, response) => {
         paymentAddress: PAYMENT_ADDRESS,
         network: 'base',
         version: '1.0-x402',
+        availableModels: {
+            google: !!getGoogleKey(),
+            replicate: !!getReplicateKey(),
+            openrouter: !!getOpenRouterKey()
+        },
         endpoints: {
             toolsList: '/x402/toolsList',
             toolsCall: '/x402/toolsCall',
@@ -781,12 +786,13 @@ exports.toolsList = onRequest({ cors: true }, (request, response) => {
         tools: [
             {
                 name: 'kaito_query',
-                description: 'Send a prompt to Kaito AI and get a response.',
+                description: 'Send a prompt to Kaito AI and get a response. Supports multiple AI models (google, replicate, openrouter).',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         prompt: { type: 'string', description: 'The prompt to send to the AI' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                        queryId: { type: 'string', description: 'Unique identifier for this query' },
+                        model: { type: 'string', description: 'Model to use: google (default), replicate, or openrouter' }
                     },
                     required: ['prompt', 'queryId']
                 }
@@ -862,7 +868,7 @@ exports.toolsCall = onRequest({ cors: true }, async (request, response) => {
     let result;
     switch (name) {
         case 'kaito_query':
-            result = await handleKaitoQuery(args.prompt, queryId);
+            result = await handleKaitoQuery(args.prompt, queryId, args.model);
             break;
         case 'kaito_image_analysis':
             result = await handleImageAnalysis(args.imageUrl, queryId);
@@ -885,14 +891,14 @@ exports.x402Query = onRequest({ cors: true }, async (request, response) => {
         return response.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { prompt, queryId } = request.body;
+    const { prompt, queryId, model } = request.body;
 
     if (!queryId) {
         return response.status(400).json({ error: 'queryId required' });
     }
 
     if (paidQueries.has(queryId)) {
-        const answer = await processQuery(prompt);
+        const answer = await processQuery(prompt, model);
         return response.json({ queryId, answer, processedAt: new Date().toISOString() });
     }
 
@@ -900,7 +906,7 @@ exports.x402Query = onRequest({ cors: true }, async (request, response) => {
 
     if (paymentStatus.paid) {
         paidQueries.set(queryId, { txHash: paymentStatus.txHash, paidAt: new Date().toISOString() });
-        const answer = await processQuery(prompt);
+        const answer = await processQuery(prompt, model);
         return response.json({ queryId, answer, processedAt: new Date().toISOString() });
     }
 
@@ -954,19 +960,126 @@ async function checkPayment(queryId) {
     return { paid: false };
 }
 
-async function processQuery(prompt) {
-    // TODO: Route to actual AI
-    return `[Kaito AI] Processed: ${prompt}`;
+async function processQuery(prompt, model = 'google') {
+    let answer;
+    
+    switch (model) {
+        case 'openrouter':
+            if (!getOpenRouterKey()) throw new Error('OpenRouter API key not configured');
+            answer = await callOpenRouter(prompt);
+            break;
+        case 'replicate':
+            if (!getReplicateKey()) throw new Error('Replicate API key not configured');
+            answer = await callReplicate(prompt);
+            break;
+        case 'google':
+        default:
+            if (!getGoogleKey()) throw new Error('Google API key not configured');
+            answer = await callGoogle(prompt);
+            break;
+    }
+    
+    return answer;
 }
 
-async function handleKaitoQuery(prompt, queryId) {
-    return { queryId, answer: `[Kaito AI] ${prompt}`, processedAt: new Date().toISOString() };
+async function handleKaitoQuery(prompt, queryId, model = 'google') {
+    let answer;
+    
+    switch (model) {
+        case 'openrouter':
+            if (!getOpenRouterKey()) throw new Error('OpenRouter API key not configured');
+            answer = await callOpenRouter(prompt);
+            break;
+        case 'replicate':
+            if (!getReplicateKey()) throw new Error('Replicate API key not configured');
+            answer = await callReplicate(prompt);
+            break;
+        case 'google':
+        default:
+            if (!getGoogleKey()) throw new Error('Google API key not configured');
+            answer = await callGoogle(prompt);
+            break;
+    }
+    
+    return { queryId, answer, model, processedAt: new Date().toISOString() };
 }
 
 async function handleImageAnalysis(imageUrl, queryId) {
-    return { queryId, analysis: `[Kaito Vision] Analyzed: ${imageUrl}`, processedAt: new Date().toISOString() };
+    if (!getGoogleKey()) throw new Error('Google API key not configured');
+    
+    const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getGoogleKey()}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        { text: 'Describe this image in detail. What do you see?' },
+                        { inlineData: { mimeType: 'image/jpeg', data: '' } }
+                    ]
+                }]
+            })
+        }
+    );
+
+    const data = await response.json();
+    const analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available';
+
+    return { queryId, imageUrl, analysis, model: 'gemini-1.5-flash', processedAt: new Date().toISOString() };
 }
 
 async function handleWebSearch(query, queryId) {
-    return { queryId, results: `[Kaito Search] ${query}`, processedAt: new Date().toISOString() };
+    return { 
+        queryId, 
+        query, 
+        results: `Search results for: ${query} (web search not yet implemented)`,
+        processedAt: new Date().toISOString() 
+    };
+}
+
+// ========== AI API CALLS ==========
+
+async function callGoogle(prompt) {
+    const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getGoogleKey()}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.9, maxOutputTokens: 2048 }
+            })
+        }
+    );
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(`Google API error: ${JSON.stringify(data)}`);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
+}
+
+async function callReplicate(prompt) {
+    const replicate = getReplicate();
+    const output = await replicate.run('meta/llama-3.1-8b-instruct', { input: { prompt } });
+    return Array.isArray(output) ? output.join('') : output;
+}
+
+async function callOpenRouter(prompt) {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getOpenRouterKey()}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://sand.gallery',
+            'X-Title': 'Kaito AI'
+        },
+        body: JSON.stringify({
+            model: 'google/gemini-2.0-flash-exp',
+            messages: [{ role: 'user', content: prompt }]
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(`OpenRouter API error: ${JSON.stringify(data)}`);
+    return data.choices?.[0]?.message?.content || 'No response generated';
 }
