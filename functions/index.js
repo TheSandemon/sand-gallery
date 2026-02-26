@@ -758,7 +758,10 @@ const BASESCAN_API_KEY = 'WNBIJQS1MDW1K4J7P6GZQEVEIYVPQQNJKT';
 const paidQueries = new Map();
 
 // X402 Health check
-exports.x402Health = onRequest({ cors: true }, (request, response) => {
+exports.x402Health = onRequest({
+    cors: true,
+    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
+}, (request, response) => {
     response.json({
         service: 'Kaito x402 Service',
         status: 'online',
@@ -781,7 +784,10 @@ exports.x402Health = onRequest({ cors: true }, (request, response) => {
 });
 
 // MCP tools/list
-exports.toolsList = onRequest({ cors: true }, (request, response) => {
+exports.toolsList = onRequest({
+    cors: true,
+    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
+}, (request, response) => {
     response.json({
         tools: [
             {
@@ -826,7 +832,10 @@ exports.toolsList = onRequest({ cors: true }, (request, response) => {
 });
 
 // MCP tools/call
-exports.toolsCall = onRequest({ cors: true }, async (request, response) => {
+exports.toolsCall = onRequest({
+    cors: true,
+    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
+}, async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
     }
@@ -886,7 +895,10 @@ exports.toolsCall = onRequest({ cors: true }, async (request, response) => {
 });
 
 // X402 Query endpoint
-exports.x402Query = onRequest({ cors: true }, async (request, response) => {
+exports.x402Query = onRequest({
+    cors: true,
+    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
+}, async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
     }
@@ -922,7 +934,10 @@ exports.x402Query = onRequest({ cors: true }, async (request, response) => {
 });
 
 // X402 Status endpoint
-exports.x402Status = onRequest({ cors: true }, (request, response) => {
+exports.x402Status = onRequest({
+    cors: true,
+    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
+}, (request, response) => {
     const queryId = request.query.queryId || request.params.queryId;
 
     if (!queryId) {
