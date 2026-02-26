@@ -746,3 +746,227 @@ exports.handleFrameAction = onRequest({ cors: true }, async (request, response) 
         response.status(500).json({ error: e.message });
     }
 });
+
+// ========== X402 PAYMENT SERVICE ==========
+
+// Config
+const PRICE_PER_QUERY = '0.01';
+const PAYMENT_ADDRESS = '0x6a3301fd46c7251374b9b21181519159fe5800ec';
+const BASESCAN_API_KEY = 'WNBIJQS1MDW1K4J7P6GZQEVEIYVPQQNJKT';
+
+// In-memory storage (use Firestore in production)
+const paidQueries = new Map();
+
+// X402 Health check
+exports.x402Health = onRequest({ cors: true }, (request, response) => {
+    response.json({
+        service: 'Kaito x402 Service',
+        status: 'online',
+        price: `${PRICE_PER_QUERY} USDC`,
+        paymentAddress: PAYMENT_ADDRESS,
+        network: 'base',
+        version: '1.0-x402',
+        endpoints: {
+            toolsList: '/x402/toolsList',
+            toolsCall: '/x402/toolsCall',
+            query: '/x402/query',
+            status: '/x402/status'
+        }
+    });
+});
+
+// MCP tools/list
+exports.toolsList = onRequest({ cors: true }, (request, response) => {
+    response.json({
+        tools: [
+            {
+                name: 'kaito_query',
+                description: 'Send a prompt to Kaito AI and get a response.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        prompt: { type: 'string', description: 'The prompt to send to the AI' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['prompt', 'queryId']
+                }
+            },
+            {
+                name: 'kaito_image_analysis',
+                description: 'Analyze an image and describe its contents.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        imageUrl: { type: 'string', description: 'URL of the image to analyze' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['imageUrl', 'queryId']
+                }
+            },
+            {
+                name: 'kaito_web_search',
+                description: 'Search the web for current information.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        query: { type: 'string', description: 'The search query' },
+                        queryId: { type: 'string', description: 'Unique identifier for this query' }
+                    },
+                    required: ['query', 'queryId']
+                }
+            }
+        ]
+    });
+});
+
+// MCP tools/call
+exports.toolsCall = onRequest({ cors: true }, async (request, response) => {
+    if (request.method !== 'POST') {
+        return response.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const { name, arguments: args } = request.body;
+
+    if (!name) {
+        return response.status(400).json({
+            content: [{ isError: true, text: JSON.stringify({ error: 'Tool name required' }) }]
+        });
+    }
+
+    const queryId = args.queryId || args.query_id || `mcp-${Date.now()}`;
+
+    // Check payment
+    const paymentStatus = await checkPayment(queryId);
+
+    if (!paymentStatus.paid && !paidQueries.has(queryId)) {
+        return response.status(402).json({
+            content: [{
+                isError: true,
+                text: JSON.stringify({
+                    error: 'Payment required',
+                    price: PRICE_PER_QUERY,
+                    currency: 'USDC',
+                    network: 'base',
+                    paymentAddress: PAYMENT_ADDRESS,
+                    queryId: queryId,
+                    instructions: `Send ${PRICE_PER_QUERY} USDC to ${PAYMENT_ADDRESS} on Base, then retry`
+                })
+            }]
+        });
+    }
+
+    if (paymentStatus.paid && !paidQueries.has(queryId)) {
+        paidQueries.set(queryId, { txHash: paymentStatus.txHash, paidAt: new Date().toISOString() });
+    }
+
+    let result;
+    switch (name) {
+        case 'kaito_query':
+            result = await handleKaitoQuery(args.prompt, queryId);
+            break;
+        case 'kaito_image_analysis':
+            result = await handleImageAnalysis(args.imageUrl, queryId);
+            break;
+        case 'kaito_web_search':
+            result = await handleWebSearch(args.query, queryId);
+            break;
+        default:
+            return response.status(404).json({
+                content: [{ isError: true, text: JSON.stringify({ error: `Unknown tool: ${name}` }) }]
+            });
+    }
+
+    response.json({ content: [{ type: 'text', text: JSON.stringify(result) }] });
+});
+
+// X402 Query endpoint
+exports.x402Query = onRequest({ cors: true }, async (request, response) => {
+    if (request.method !== 'POST') {
+        return response.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const { prompt, queryId } = request.body;
+
+    if (!queryId) {
+        return response.status(400).json({ error: 'queryId required' });
+    }
+
+    if (paidQueries.has(queryId)) {
+        const answer = await processQuery(prompt);
+        return response.json({ queryId, answer, processedAt: new Date().toISOString() });
+    }
+
+    const paymentStatus = await checkPayment(queryId);
+
+    if (paymentStatus.paid) {
+        paidQueries.set(queryId, { txHash: paymentStatus.txHash, paidAt: new Date().toISOString() });
+        const answer = await processQuery(prompt);
+        return response.json({ queryId, answer, processedAt: new Date().toISOString() });
+    }
+
+    response.status(402).json({
+        error: 'Payment required',
+        price: PRICE_PER_QUERY,
+        currency: 'USDC',
+        network: 'base',
+        paymentAddress: PAYMENT_ADDRESS,
+        queryId,
+        instructions: `Send ${PRICE_PER_QUERY} USDC to ${PAYMENT_ADDRESS} on Base, then retry`
+    });
+});
+
+// X402 Status endpoint
+exports.x402Status = onRequest({ cors: true }, (request, response) => {
+    const queryId = request.query.queryId || request.params.queryId;
+
+    if (!queryId) {
+        return response.status(400).json({ error: 'queryId required' });
+    }
+
+    if (paidQueries.has(queryId)) {
+        return response.json({ status: 'paid', details: paidQueries.get(queryId) });
+    }
+
+    response.json({ status: 'pending', message: 'Payment not yet received' });
+});
+
+// Helper functions
+async function checkPayment(queryId) {
+    try {
+        const response = await fetch(
+            `https://api.etherscan.io/api?module=account&action=tokentx&address=${PAYMENT_ADDRESS}&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&sort=desc&apikey=${BASESCAN_API_KEY}&chainid=8453`
+        );
+
+        const data = await response.json();
+
+        if (data.status === '1' && data.result && data.result.length > 0) {
+            for (const tx of data.result) {
+                const amount = parseFloat(tx.value) / 1e6;
+                if (amount >= parseFloat(PRICE_PER_QUERY)) {
+                    return { paid: true, txHash: tx.hash, amount };
+                }
+            }
+        }
+    } catch (e) {
+        console.log('Payment check error:', e.message);
+    }
+
+    return { paid: false };
+}
+
+async function processQuery(prompt) {
+    // TODO: Route to actual AI
+    return `[Kaito AI] Processed: ${prompt}`;
+}
+
+async function handleKaitoQuery(prompt, queryId) {
+    return { queryId, answer: `[Kaito AI] ${prompt}`, processedAt: new Date().toISOString() };
+}
+
+async function handleImageAnalysis(imageUrl, queryId) {
+    return { queryId, analysis: `[Kaito Vision] Analyzed: ${imageUrl}`, processedAt: new Date().toISOString() };
+}
+
+async function handleWebSearch(query, queryId) {
+    return { queryId, results: `[Kaito Search] ${query}`, processedAt: new Date().toISOString() };
+}

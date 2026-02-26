@@ -8,6 +8,30 @@
     ],
     "rewrites": [
       {
+        "source": "/x402",
+        "function": "x402Health"
+      },
+      {
+        "source": "/x402/**",
+        "function": "x402Health"
+      },
+      {
+        "source": "/tools/list",
+        "function": "toolsList"
+      },
+      {
+        "source": "/tools/call",
+        "function": "toolsCall"
+      },
+      {
+        "source": "/query",
+        "function": "x402Query"
+      },
+      {
+        "source": "/status/**",
+        "function": "x402Status"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
