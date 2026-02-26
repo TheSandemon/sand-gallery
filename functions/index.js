@@ -772,7 +772,8 @@ exports.x402Health = onRequest({
         availableModels: {
             google: !!getGoogleKey(),
             replicate: !!getReplicateKey(),
-            openrouter: !!getOpenRouterKey()
+            openrouter: !!getOpenRouterKey(),
+            minimax: true
         },
         endpoints: {
             toolsList: '/x402/toolsList',
@@ -792,13 +793,13 @@ exports.toolsList = onRequest({
         tools: [
             {
                 name: 'kaito_query',
-                description: 'Send a prompt to Kaito AI and get a response. Supports multiple AI models (google, replicate, openrouter).',
+                description: 'Send a prompt to Kaito AI and get a response. Supports multiple AI models (google, minimax, replicate, openrouter).',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         prompt: { type: 'string', description: 'The prompt to send to the AI' },
                         queryId: { type: 'string', description: 'Unique identifier for this query' },
-                        model: { type: 'string', description: 'Model to use: google (default), replicate, or openrouter' }
+                        model: { type: 'string', description: 'Model to use: google, minimax (default), replicate, or openrouter' }
                     },
                     required: ['prompt', 'queryId']
                 }
@@ -979,6 +980,9 @@ async function processQuery(prompt, model = 'google') {
     let answer;
     
     switch (model) {
+        case 'minimax':
+            answer = await callMiniMax(prompt);
+            break;
         case 'openrouter':
             if (!getOpenRouterKey()) throw new Error('OpenRouter API key not configured');
             answer = await callOpenRouter(prompt);
@@ -1001,6 +1005,9 @@ async function handleKaitoQuery(prompt, queryId, model = 'google') {
     let answer;
     
     switch (model) {
+        case 'minimax':
+            answer = await callMiniMax(prompt);
+            break;
         case 'openrouter':
             if (!getOpenRouterKey()) throw new Error('OpenRouter API key not configured');
             answer = await callOpenRouter(prompt);
@@ -1096,5 +1103,26 @@ async function callOpenRouter(prompt) {
 
     const data = await response.json();
     if (!response.ok) throw new Error(`OpenRouter API error: ${JSON.stringify(data)}`);
+    return data.choices?.[0]?.message?.content || 'No response generated';
+}
+
+const MINIMAX_API_KEY = 'sk-cp-0j-9SlOUPBnSodqUUBt7biKNWmPHh0yPvwYFezVLf0DR_8be5p6-VET1PWFUKpK3KNscOdwIAGfZTQ-xoSpouTO1ddv6qkYVD7z0O7kg6cbzi6G8Mevm8Wg';
+const MINIMAX_BASE_URL = 'https://api.minimax.chat/v1';
+
+async function callMiniMax(prompt) {
+    const response = await fetch(`${MINIMAX_BASE_URL}/text/chatcompletion_v2`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${MINIMAX_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'MiniMax-M2.5',
+            messages: [{ role: 'user', content: prompt }]
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(`MiniMax API error: ${JSON.stringify(data)}`);
     return data.choices?.[0]?.message?.content || 'No response generated';
 }
