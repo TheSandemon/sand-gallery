@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -9,11 +9,11 @@
     "rewrites": [
       {
         "source": "/x402",
-        "function": "x402Health"
+        "function": "health"
       },
       {
         "source": "/x402/**",
-        "function": "x402Health"
+        "function": "health"
       },
       {
         "source": "/tools/list",
@@ -25,11 +25,11 @@
       },
       {
         "source": "/query",
-        "function": "x402Query"
+        "function": "query"
       },
       {
         "source": "/status/**",
-        "function": "x402Status"
+        "function": "status"
       },
       {
         "source": "**",
@@ -39,8 +39,7 @@
   },
   "functions": {
     "source": "functions",
-    "runtime": "nodejs20",
-    "gen": 2
+    "runtime": "nodejs20"
   },
   "firestore": {
     "rules": "firestore.rules",
