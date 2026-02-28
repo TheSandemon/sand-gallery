@@ -9,12 +9,6 @@ const versionString = `${commitDate} (${commitHash})`
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      react: 'react',
-      'react-dom': 'react-dom',
-    },
-  },
   define: {
     __APP_VERSION__: JSON.stringify(versionString),
   },
@@ -22,11 +16,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // React ecosystem
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // Animation
+          // Keep React with app bundle to prevent dual initialization
           'vendor-motion': ['framer-motion'],
-          // Wallet/Web3 (large - lazy load via dynamic imports in code)
           'vendor-wallet': [
             '@coinbase/wallet-sdk',
             'viem',
