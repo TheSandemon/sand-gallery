@@ -12,6 +12,10 @@
   "remotes": [
     {
       "type": "streamable-http",
+      "url": "https://us-central1-sand-gallery-lab.cloudfunctions.net/mcp"
+    },
+    {
+      "type": "streamable-http", 
       "url": "https://us-central1-sand-gallery-lab.cloudfunctions.net/toolsCall"
     }
   ]
