@@ -12,4 +12,8 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(versionString),
   },
+  build: {
+    // Let Vite handle all chunking - don't force any manual chunks
+    // This prevents dual React initialization issues
+  },
 })
