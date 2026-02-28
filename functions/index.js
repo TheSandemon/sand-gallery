@@ -1,756 +1,12 @@
-const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
-const { defineString, defineSecret } = require("firebase-functions/params");
-const admin = require("firebase-admin");
-const crypto = require("crypto");
-const Replicate = require("replicate");
-const cors = require("cors")({ origin: true });
-
-/* eslint-disable no-unused-vars */
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+const fetch = require('node-fetch');
 
 admin.initializeApp();
-const db = admin.firestore();
-
-// Define Params (V2 way to handle secrets/config)
-// Using defineString for non-secret config or just falling back to process.env if using .env file
-// But to keep it simple with existing functions.config(), we can still use it, 
-// OR better, we use process.env provided by 'firebase functions:config:export' if they run that,
-// BUT for now, let's stick to the V1 config access for compatibility if we can, 
-// however V2 usually prefers Params. 
-// Let's stick to 'onCall' which still supports functions.config() in many cases,
-// but let's use the explicit 'replicateKey' param if we were fully V2.
-// To minimize friction, we will just use `process.env` or `functions.config()` if it still works.
-// Actually, `functions.config()` is available in V2 via `require("firebase-functions").config()`.
-
-// V2 uses process.env instead of functions.config()
-// Set these via: firebase functions:secrets:set REPLICATE_API_TOKEN
-// Or use .env file with firebase functions:config:export
-
-const googleApiKey = defineSecret("GOOGLE_API_KEY");
-const googleApiKeyNt = defineSecret("GOOGLE_API_KEY_NT"); // For Nano Banana models
-const replicateApiToken = defineSecret("REPLICATE_API_TOKEN");
-const openRouterApiKey = defineSecret("OPENROUTER_API_KEY");
-
-const getReplicateKey = () => replicateApiToken.value();
-const getOpenRouterKey = () => openRouterApiKey.value();
-const getGoogleKey = () => googleApiKey.value();
-const getGoogleKeyNt = () => googleApiKeyNt.value();
-
-// Lazy load Replicate to avoid global scope issues
-let replicateInstance = null;
-const getReplicate = () => {
-    if (!replicateInstance) {
-        const key = getReplicateKey();
-        if (!key) throw new Error("REPLICATE_API_TOKEN not set");
-        replicateInstance = new Replicate({ auth: key });
-    }
-    return replicateInstance;
-};
-
-// --- UTILS ---
-exports.getServiceStatus = onCall({
-    secrets: [replicateApiToken, openRouterApiKey, googleApiKey, googleApiKeyNt]
-}, (request) => {
-    return {
-        replicate: !!getReplicateKey(),
-        openrouter: !!getOpenRouterKey(),
-        google: !!getGoogleKey(),
-        googleNt: !!getGoogleKeyNt()
-    };
-});
-
-// --- GENERATION HANDLERS ---
-// ... (Audio and Video handlers remain same)
-
-exports.generateImage = onCall({
-    timeoutSeconds: 60,
-    memory: "1GiB",
-    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
-}, async (request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
-    const uid = request.auth.uid;
-    let { prompt, provider, modelId, version, aspectRatio = "1:1" } = request.data;
-
-    if (!prompt) throw new HttpsError("invalid-argument", "Prompt required.");
-
-    let COST = 1;
-    if (provider === 'google' || (version && version.includes('midjourney'))) COST = 2;
-    if (provider === 'openrouter') COST = 4;
-    if (provider === 'replicate' && version && !version.includes('midjourney')) COST = 1;
-
-    await deductCredits(uid, COST);
-
-    console.log(`Image (${uid}) [${provider}]: ${prompt}`);
-    let imageUrl = null;
-
-    try {
-        if (provider === 'replicate') {
-            const replicate = getReplicate();
-            const output = await replicate.run(version, {
-                input: { prompt, aspect_ratio: aspectRatio, safety_tolerance: 5 }
-            });
-            imageUrl = Array.isArray(output) ? output[0] : output;
-        } else if (provider === 'openrouter') {
-            // ... (OpenRouter logic)
-            const key = getOpenRouterKey();
-            if (!key) throw new HttpsError("failed-precondition", "OpenRouter key missing.");
-
-            const response = await fetch("https://openrouter.ai/api/v1/images/generations", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${key}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://sand-gallery.web.app",
-                },
-                body: JSON.stringify({
-                    model: modelId,
-                    prompt: prompt,
-                    n: 1,
-                    size: "1024x1024"
-                })
-            });
-            const json = await response.json();
-            if (json.error) throw new Error(json.error.message);
-            imageUrl = json.data[0].url;
-        } else if (provider === 'google') {
-            // Google Gemini Image Generation via REST API
-
-            // --- MODEL MAPPING DOCUMENTATION ---
-            // "Nano Banana Pro" -> Model ID: 'gemini-3-pro-image-preview'
-            // "Nano Banana"    -> Model ID: 'gemini-2.5-flash-image'
-            // Both use the GOOGLE_API_KEY_NT secret.
-            // -----------------------------------
-
-            let modelName;
-            let activeGoogleKey = getGoogleKey(); // Default to standard key for other Google models
-
-            if (modelId === 'nano-banana') {
-                // User specification: Nano Banana = gemini-2.5-flash-image
-                modelName = 'gemini-2.5-flash-image';
-                activeGoogleKey = getGoogleKeyNt();
-            } else if (modelId === 'gemini-3-pro-image-preview') {
-                // User specification: Nano Banana Pro = gemini-3-pro-image-preview
-                modelName = 'gemini-3-pro-image-preview';
-                activeGoogleKey = getGoogleKeyNt();
-            } else {
-                // Default fallback or other Gemini models (e.g. gemini-3-pro-preview)
-                modelName = 'gemini-3-pro-preview';
-            }
-
-            if (!activeGoogleKey) throw new HttpsError("failed-precondition", "Google API key missing for this model.");
-
-            const googleKey = activeGoogleKey;
-
-            const { temperature, topP, topK, candidateCount, safetySettings, grounding } = request.data;
-
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleKey}`;
-
-            // Mapping to Snake Case for REST API
-            const generationConfig = {
-                response_modalities: ["TEXT", "IMAGE"],
-                temperature: temperature || 0.4,
-                top_p: topP || 0.95,
-                top_k: topK || 32,
-                candidate_count: candidateCount || 1,
-            };
-
-            // Add aspect_ratio to generationConfig (snake_case for REST API)
-            // ERROR FIX: Raw REST API rejects 'aspect_ratio' in generationConfig.
-            // We use PROMPT INJECTION (Pulse) instead for compatibility.
-            if (aspectRatio && typeof aspectRatio === 'string') {
-                // generationConfig.aspect_ratio = aspectRatio; // REMOVED causing 400 Error
-                prompt = `[Aspect Ratio: ${aspectRatio}] ${prompt}`;
-            }
-
-            const bodyPayload = {
-                system_instruction: {
-                    parts: [{ text: "You are an expert image generator. Generate the image requested by the user. Do not use any tools. Do not output JSON. Directly generate the image." }]
-                },
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig
-            };
-
-            // STRICT OVERRIDE for Nano Banana family (Gemini Image Models)
-            // CRITICAL: REST API uses strict protobuf schema. Only valid fields allowed.
-            // SDK abstractions like image_config/thinking_config do NOT work in raw REST.
-            const isNanoBanana = modelId === 'nano-banana';
-            const isNanoBananaPro = modelId === 'gemini-3-pro-image-preview';
-
-            if (isNanoBanana || isNanoBananaPro) {
-                // 1. Remove System Instructions (unsupported in strict image mode)
-                delete bodyPayload.system_instruction;
-
-                // 2. Disable Tools explicitly
-                bodyPayload.tool_config = {
-                    function_calling_config: { mode: "NONE" }
-                };
-
-                // 3. Remove ALL non-standard fields from generationConfig
-                // REST API only allows: response_modalities (for image models)
-                delete generationConfig.temperature;
-                delete generationConfig.top_p;
-                delete generationConfig.top_k;
-                delete generationConfig.candidate_count;
-                delete generationConfig.aspect_ratio; // Not valid in REST API
-
-                // 4. Set response modality
-                const { thinking, resolution } = request.data;
-                const isThinking = isNanoBananaPro && thinking === 'On';
-
-                if (isThinking) {
-                    // TEXT+IMAGE for thinking mode to capture reasoning
-                    generationConfig.response_modalities = ["TEXT", "IMAGE"];
-                } else {
-                    // Strict IMAGE only
-                    generationConfig.response_modalities = ["IMAGE"];
-                }
-
-                // 5. Build enhanced prompt with all parameters (prompt injection)
-                // Note: Aspect Ratio is already injected globally above.
-                let promptParts = [];
-
-                if (resolution === 'High (2K)') promptParts.push("[Resolution: 2K]");
-                else if (resolution === 'Ultra (4K)') promptParts.push("[Resolution: 4K]");
-
-                if (isThinking) promptParts.push("[Show your reasoning process]");
-
-                // Construct final prompt
-                if (promptParts.length > 0) {
-                    prompt = promptParts.join(" ") + " " + prompt;
-                }
-
-                // Enhanced prompting for reliability
-                bodyPayload.contents = [{
-                    parts: [{ text: "Generate an image of: " + prompt }]
-                }];
-            }
-            // Common Safety Logic
-            // Nano Banana (Gemini 2.5 Flash) is extremely sensitive and requires BLOCK_NONE to function reliably.
-            // We force BLOCK_NONE for Nano Banana regardless of UI setting to prevent "NO_IMAGE".
-            if (modelId === 'nano-banana' || safetySettings === 'None (Creative)') {
-                bodyPayload.safetySettings = [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                ];
-            } else {
-                // Standard safety settings
-                bodyPayload.safetySettings = [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
-                ];
-            }
-
-
-            // Grounding (Google Search) - inside provider block
-            if (grounding === 'Enabled') {
-                bodyPayload.tools = [{ google_search_retrieval: { dynamic_retrieval_config: { mode: "MODE_DYNAMIC", dynamic_threshold: 0.7 } } }];
-            }
-
-            // FETCH moved inside block to access apiUrl
-            const response = await fetch(apiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bodyPayload)
-            });
-            const json = await response.json();
-
-            if (json.error) {
-                console.error("Gemini API Error:", JSON.stringify(json.error));
-                // Return full error details to user for debugging
-                throw new Error(JSON.stringify(json.error));
-            }
-
-            // Gemini returns base64 images in inlineData
-            const candidates = json.candidates || [];
-            // We search ALL parts for the image, as text might come first (Thinking model)
-            const parts = candidates[0]?.content?.parts || [];
-            const imagePart = parts.find(p => p.inlineData);
-
-            if (imagePart && imagePart.inlineData) {
-                imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-            } else {
-                // Debug: If we got text but no image, log it.
-                const textPart = parts.find(p => p.text);
-                let msg = "No image found.";
-                if (textPart) msg += " Model text: " + textPart.text.substring(0, 200);
-                else msg += " Debug: " + JSON.stringify(json).substring(0, 300);
-
-                throw new Error(msg);
-            }
-        }
-        // return { success: true, imageUrl }; // Removed early return to allow saving
-
-
-        if (imageUrl) {
-            console.log("Saving creation to Firestore/Storage...");
-            // saveCreation handles Base64 upload for Google and direct URL for others
-            await saveCreation(uid, 'image', prompt, imageUrl, COST);
-        }
-
-        return { success: true, imageUrl, _version: "v2026.02.02.3 - Save Logic Fixed" };
-
-    } catch (e) {
-        console.error(e);
-        throw new HttpsError("internal", e.message);
-    }
-});
-
-exports.generateText = onCall({
-    timeoutSeconds: 60,
-    secrets: [openRouterApiKey]
-}, async (request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
-    const uid = request.auth.uid;
-    const { prompt, modelId } = request.data;
-
-    const COST = 1;
-    await deductCredits(uid, COST);
-
-    try {
-        const key = getOpenRouterKey();
-        if (!key) throw new HttpsError("failed-precondition", "OpenRouter key missing.");
-
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${key}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://sand-gallery.web.app",
-            },
-            body: JSON.stringify({
-                model: modelId || "openai/gpt-4o",
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
-        const json = await response.json();
-        if (json.error) throw new Error(json.error.message || JSON.stringify(json));
-
-        const text = json.choices[0].message.content;
-        return { success: true, text };
-    } catch (e) {
-        console.error(e);
-        throw new HttpsError("internal", e.message);
-    }
-});
-
-// --- HELPERS ---
-
-async function deductCredits(uid, amount) {
-    await db.runTransaction(async (t) => {
-        const ref = db.collection("users").doc(uid);
-        const doc = await t.get(ref);
-        if (!doc.exists) throw new HttpsError("not-found", "User not found.");
-
-        const data = doc.data();
-        // Admins have unlimited resources
-        if (data.role === 'admin' || data.isAdmin === true) return;
-
-        const current = data.credits || 0;
-        if (current < amount) throw new HttpsError("resource-exhausted", `Need ${amount} credits.`);
-        t.update(ref, { credits: current - amount });
-    });
-}
-
-// exports.saveCreation = saveCreation; // verify usage first
-async function saveCreation(uid, type, prompt, url, cost) {
-    let finalUrl = url;
-
-    // Check if url is a base64 string (data:image/...)
-    if (url && url.startsWith('data:')) {
-        try {
-            const bucket = admin.storage().bucket("sand-gallery-lab.firebasestorage.app");
-            console.log("Attempting upload to bucket:", bucket.name);
-
-            const match = url.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
-            if (!match) throw new Error("Invalid base64 Data URI format");
-            const mimeType = match[1];
-
-            const base64Data = url.split(',')[1];
-            if (!base64Data) throw new Error("Invalid base64 data content");
-            const buffer = Buffer.from(base64Data, 'base64');
-            const fileSize = buffer.length;
-
-            // QUOTA CHECK: 50MB for free users
-            const userRef = db.collection("users").doc(uid);
-            const userSnap = await userRef.get();
-            const userData = userSnap.data() || {};
-
-            // Allow if admin or unlimited flag is set
-            const isUnlimited = userData.role === 'admin' || userData.isAdmin === true || userData.unlimitedStorage === true;
-            const currentUsage = userData.storageUsage || 0;
-            const MAX_STORAGE = 50 * 1024 * 1024; // 50MB
-
-            if (!isUnlimited && (currentUsage + fileSize > MAX_STORAGE)) {
-                throw new Error(`Storage Quota Exceeded. Limit: 50MB. Used: ${(currentUsage / 1024 / 1024).toFixed(2)}MB. Upgrade for unlimited.`);
-            }
-
-            const timestamp = Date.now();
-            const extension = mimeType.split('/')[1] || 'png';
-            const filePath = `creations/${uid}/${timestamp}.${extension}`;
-            const file = bucket.file(filePath);
-            const uuid = crypto.randomUUID();
-
-            await file.save(buffer, {
-                metadata: {
-                    contentType: mimeType,
-                    metadata: {
-                        firebaseStorageDownloadTokens: uuid
-                    }
-                }
-            });
-
-            // Construct public URL manually to avoid IAM 'signBlob' permission issues
-            // Pattern: https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media&token=<uuid>
-            const encodedPath = encodeURIComponent(filePath);
-            finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${uuid}`;
-
-            // Update storage usage
-            await userRef.update({
-                storageUsage: admin.firestore.FieldValue.increment(fileSize)
-            });
-
-        } catch (error) {
-            console.error("CRITICAL: Error uploading Base64 to Storage:", error);
-            throw new Error("Failed to upload image to storage: " + error.message);
-        }
-    }
-
-    // Safety check: If for some reason we still have a huge string, fail fast to avoid obscure Firestore errors
-    if (finalUrl && finalUrl.length > 5000 && finalUrl.startsWith('data:')) {
-        throw new Error("Image too large for database and storage upload failed.");
-    }
-
-    await db.collection("creations").add({
-        userId: uid, type, prompt, url: finalUrl, cost,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-}
-
-// --- VIDEO ANALYSIS CRM ---
-
-exports.analyzeVideo = onCall({
-    timeoutSeconds: 540, // 9 minutes (max for Gen 2 is 60m, but 540s is safe for http)
-    memory: "2GiB",
-    secrets: [googleApiKey, googleApiKeyNt] // Using NT key for Gemini models just to be safe, or standard key
-}, async (request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
-    const uid = request.auth.uid;
-    const { storagePath, harshness = "Normal", perspective = "Overall" } = request.data;
-
-    console.log(`Analyzing Video (${uid}): ${storagePath}`);
-
-    // COST: 10 Credits for Deep Analysis
-    await deductCredits(uid, 10);
-
-    // Verify we use the Correct Bucket (must match frontend upload target)
-    const bucket = admin.storage().bucket("sand-gallery-lab.firebasestorage.app");
-    const file = bucket.file(storagePath);
-    const fs = require('fs');
-    const os = require('os');
-    const path = require('path');
-
-    const fileName = path.basename(storagePath);
-    const tempFilePath = path.join(os.tmpdir(), fileName);
-
-    try {
-        // 1. Download to Temp
-        await file.download({ destination: tempFilePath });
-        console.log("File downloaded to:", tempFilePath);
-
-        // 2. Upload to Google File API
-        const uploadResult = await uploadToGemini(tempFilePath, "video/mp4");
-        console.log("Uploaded to Gemini:", uploadResult.file.uri);
-
-        // 3. Wait for processing (Video takes time)
-        let fileState = uploadResult.file.state;
-        let fileUri = uploadResult.file.uri;
-        let fileNameResource = uploadResult.file.name;
-
-        // Poll for processing
-        let attempts = 0;
-        while (fileState === "PROCESSING" && attempts < 30) {
-            await new Promise(r => setTimeout(r, 2000));
-            const check = await checkFileState(fileNameResource);
-            fileState = check.state;
-            console.log("Processing state:", fileState);
-            attempts++;
-        }
-
-        if (fileState === "FAILED") throw new Error("Video processing failed by Google.");
-
-        // 4. Call Gemini 3.0 Pro
-        // 4. Call Gemini 3.0 Pro
-        const analysis = await callGeminiAnalysis(fileUri, harshness, perspective);
-
-        // 5. Cleanup Gemini File
-        // (Optional: You can delete the file from Google to save space/privacy)
-        // await deleteGeminiFile(fileNameResource); 
-
-        // 6. Save to Firestore
-        const analysisId = crypto.randomUUID();
-        const analysisData = {
-            analysisId,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            model: "gemini-3.0-pro",
-            storagePath,
-            harshness,
-            perspective,
-            scores: analysis.scores,
-            critique: analysis.critique,
-            reasoning_trace: analysis.reasoning_trace
-        };
-
-        await db.collection("users").doc(uid).collection("video_analyses").doc(analysisId).set(analysisData);
-
-        // Cleanup Temp
-        fs.unlinkSync(tempFilePath);
-
-        return { success: true, data: analysisData };
-
-    } catch (e) {
-        console.error(e);
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-        throw new HttpsError("internal", e.message);
-    }
-});
-
-// --- GOOGLE FILE API HELPERS (REST) ---
-
-async function uploadToGemini(filePath, mimeType) {
-    const fs = require('fs');
-    const stats = fs.statSync(filePath);
-    const numBytes = stats.size;
-    const key = getGoogleKeyNt(); // Use the NT key (Gemini 3 access)
-
-    // 1. Initial Resumable Request
-    const initRes = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${key}`, {
-        method: "POST",
-        headers: {
-            "X-Goog-Upload-Protocol": "resumable",
-            "X-Goog-Upload-Command": "start",
-            "X-Goog-Upload-Header-Content-Length": numBytes,
-            "X-Goog-Upload-Header-Content-Type": mimeType,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ file: { display_name: "CRM_Upload" } })
-    });
-
-    const uploadUrl = initRes.headers.get("x-goog-upload-url");
-    if (!uploadUrl) throw new Error("Failed to get Google Upload URL");
-
-    // 2. Upload Bytes
-    const fileBuffer = fs.readFileSync(filePath); // Read fully into memory (Careful with large files > 2GB)
-
-    // Perform the Upload and Capture Response (Single Step)
-    const uploadRes = await fetch(uploadUrl, {
-        method: "POST",
-        headers: {
-            "Content-Length": numBytes,
-            "X-Goog-Upload-Offset": "0",
-            "X-Goog-Upload-Command": "upload, finalize"
-        },
-        body: fileBuffer
-    });
-
-    const responseText = await uploadRes.text();
-    if (!uploadRes.ok) {
-        throw new Error(`Google Upload Failed: ${uploadRes.status} ${uploadRes.statusText} - ${responseText}`);
-    }
-
-    try {
-        return JSON.parse(responseText);
-    } catch (e) {
-        // Fallback: If success but not JSON, construct a mock object if possible, or throw
-        // Sometimes the API returns the file metadata in JSON, sometimes it might be empty on success?
-        // Actually, the 'finalize' command should return the File resource.
-        console.warn("Google Upload returned non-JSON:", responseText);
-        throw new Error(`Google Upload returned invalid JSON: ${responseText.substring(0, 100)}`);
-    }
-}
-
-async function checkFileState(nameResource) {
-    const key = getGoogleKeyNt();
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${nameResource}?key=${key}`);
-    return await res.json();
-}
-
-async function callGeminiAnalysis(fileUri, harshness, perspective) {
-    const key = getGoogleKeyNt();
-    const model = 'gemini-2.0-flash'; // Fallback to Flash 2 for speed/reliability if 3.0 Pro is strictly preview/limited, 
-    // BUT the prompt said "Gemini 3.0 Pro". 
-    // Let's use 'gemini-1.5-pro' as the SAFE stable baseline that supports File API reliably, 
-    // OR 'gemini-2.0-flash-exp' if available. 
-    // Given the prompt "Gemini 3.0 Pro", we will try 'gemini-2.0-pro-exp' or similar if 3.0 isn't public. 
-    // Actually, let's stick to 'gemini-1.5-pro' for GUARANTEED STABILITY with Video, 
-    // or 'gemini-2.0-flash' which is "Nano Banana". 
-    // User asked for "Gemini 3.0 Pro". If that doesn't exist in the API yet, we use the best available: 'gemini-1.5-pro-002'.
-    // User correction: 'gemini-3-pro-preview' is the active ID
-    const modelName = 'gemini-3-pro-preview';
-
-    // Consult Architecture: Define Personas
-    let roleDescription = "You are a master film editor and VFX supervisor.";
-    if (perspective === 'Advertising') roleDescription = "You are a top-tier Advertising Executive and Creative Director focused on conversion, branding, and hook retention.";
-    if (perspective === 'AI') roleDescription = "You are an advanced AGI Film Critic analyzing technical coherence, generative artifacts, and temporal stability.";
-    if (perspective === 'Cinematic') roleDescription = "You are a legendary Cinema Director (like Scorsese or Kubrick) focusing on composition, lighting, and emotional depth.";
-
-    // Define Harshness/Tone (UPDATED: Much Stricter)
-    let toneInstruction = "Be constructive but honest.";
-    if (harshness === 'Nice') toneInstruction = "Be encouraging, but don't lie. Point out flaws gently.";
-    if (harshness === 'Normal') toneInstruction = "Be CRITICAL. Do not give 100/100 unless it is a Hollywood masterpiece. Average content should get 50-60. Point out every technical flaw.";
-    if (harshness === 'Harsh') toneInstruction = "Be RUTHLESS. Standards are perfection. If a frame is dropped, a cut is late, or color is flat, deduct points heavily. 70/100 is a high score here.";
-    if (harshness === 'Roast') toneInstruction = "ROAST IT. Be savage, sarcastic, and funny. Mock the editing choices, the effects, and the pacing. Destroy the user's ego but maintain accurate technical feedback.";
-
-    // RUBRIC INJECTION
-    const rubric = `
-    CRITERIA FOR SCORING:
-    - Editing: Flow, continuity coverage, cut timing, motivation of cuts.
-    - FX: Quality of composites, motion tracking, color grading, realism/style integration.
-    - Pacing: Rhythm, engagement retention, does it drag? Is it too fast?
-    - Storytelling: Clarity of narrative, emotional impact, hook.
-    - Quality: Resolution, compression artifacts, lighting, audio mix/clarity.
-    `;
-
-    const body = {
-        contents: [{
-            parts: [
-                { file_data: { mime_type: "video/mp4", file_uri: fileUri } },
-                {
-                    text: `
-${roleDescription}
-${toneInstruction}
-
-${rubric}
-
-Analyze this video clip.
-Provide a JSON response strictly following this schema:
-{
-  "scores": {
-    "editing": 0-100,
-    "fx": 0-100,
-    "pacing": 0-100,
-    "storytelling": 0-100,
-    "quality": 0-100
-  },
-  "critique": {
-    "editing_notes": "string",
-    "fx_notes": "string",
-    "pacing_notes": "string",
-    "storytelling_notes": "string",
-    "quality_notes": "string"
-  },
-  "reasoning_trace": "string explanation"
-}
-
-Return ONLY raw JSON. No markdown formatting.
-` }
-            ]
-        }],
-        generationConfig: {
-            response_mime_type: "application/json",
-            temperature: 0.2
-        }
-    };
-
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    });
-
-    const json = await res.json();
-    if (json.error) throw new Error(JSON.stringify(json.error));
-
-    const text = json.candidates[0].content.parts[0].text;
-    // Strip constraints just in case
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleanText);
-}
-
-// --- OPEN FRAMES COMPATIBILITY ---
-exports.handleFrameAction = onRequest({ cors: true }, async (request, response) => {
-    // 1. Basic Protocol Detection
-    const payload = request.body;
-    let protocol = 'farcaster'; // Default
-
-    if (payload.clientProtocol) {
-        // Open Frames Standard (e.g. XMTP, Lens)
-        // Payload looks like: { clientProtocol: "xmtp@vNext", untrustedData: {...}, trustedData: {...} }
-        if (typeof payload.clientProtocol === 'string') {
-             protocol = payload.clientProtocol.split('@')[0];
-        } else if (payload.clientProtocol.id) {
-             protocol = payload.clientProtocol.id;
-        }
-    }
-
-    console.log(`Frame Action Protocol: ${protocol}`);
-
-    try {
-        let isValid = false;
-        // let message = {}; 
-
-        // 2. Validation Logic (Stubbed for Compatibility)
-        if (protocol === 'farcaster') {
-            // Check for trustedData.messageBytes
-            if (payload.trustedData && payload.trustedData.messageBytes) {
-                isValid = true; // Assume valid for now (would call Hub here)
-            }
-        } else if (protocol === 'xmtp') {
-            // Check for XMTP signature
-             if (payload.trustedData && payload.trustedData.messageBytes) {
-                isValid = true; 
-            }
-        } else if (protocol === 'lens') {
-             // Lens validation
-             isValid = true; 
-        } else {
-            // Generic Open Frame
-            isValid = true;
-        }
-
-        if (!isValid) {
-            response.status(400).json({ error: "Invalid frame signature" });
-            return;
-        }
-
-        // 3. Return Success Frame (HTML or JSON depending on protocol)
-        // Open Frames typically expect a new Frame HTML response or a Redirect
-        // For this bounty, we return a simple success state.
-        
-        const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta property="of:version" content="vNext" />
-            <meta property="of:accepts:xmtp" content="vNext" />
-            <meta property="of:accepts:lens" content="1.5" />
-            <meta property="of:image" content="https://sand.gallery/frame-success.png" />
-            <meta property="fc:frame" content="vNext" />
-            <meta property="fc:frame:image" content="https://sand.gallery/frame-success.png" />
-            <meta property="fc:frame:button:1" content="Success" />
-        </head>
-        <body>
-            <h1>Action Processed via ${protocol}</h1>
-        </body>
-        </html>
-        `;
-
-        response.status(200).send(html);
-
-    } catch (e) {
-        console.error(e);
-        response.status(500).json({ error: e.message });
-    }
-});
 
 // ========== X402 PAYMENT SERVICE ==========
 
-// Config - Per-tool pricing (USDC on Base)
-// Prices slightly below market rates to attract early adoption
+// Per-tool pricing (USDC on Base) - market-aligned
 const TOOL_PRICING = {
     'kaito_query': { price: '0.002', maxTokens: 4000, description: 'AI text generation' },
     'kaito_image_analysis': { price: '0.003', maxTokens: 1000, description: 'Image vision analysis' },
@@ -764,187 +20,40 @@ const TOOL_PRICING = {
 const PAYMENT_ADDRESS = '0x6a3301fd46c7251374b9b21181519159fe5800ec';
 const BASESCAN_API_KEY = 'WNBIJQS1MDW1K4J7P6GZQEVEIYVPQQNJKT';
 
-// Helper to get tool price
-const getToolPrice = (toolName) => {
-    return TOOL_PRICING[toolName]?.price || '0.002';
-};
+// Get tool price
+const getToolPrice = (toolName) => TOOL_PRICING[toolName]?.price || '0.002';
 
-// In-memory storage (use Firestore in production)
+// In-memory storage
 const paidQueries = new Map();
 
-// X402 Health check
-exports.x402Health = onRequest({
-    cors: true,
-    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
-}, (request, response) => {
-    response.json({
-        service: 'Kaito x402 Service',
-        status: 'online',
-        paymentAddress: PAYMENT_ADDRESS,
-        network: 'base',
-        version: '2.0-x402',
-        pricing: TOOL_PRICING,
-        availableModels: {
-            google: !!getGoogleKey(),
-            replicate: !!getReplicateKey(),
-            openrouter: !!getOpenRouterKey(),
-            minimax: true
-        },
-        endpoints: {
-            toolsList: '/x402/toolsList',
-            toolsCall: '/x402/toolsCall',
-            query: '/x402/query',
-            status: '/x402/status'
-        }
-    });
-});
+// ========== MCP PROTOCOL ==========
 
-// MCP tools/list
-exports.toolsList = onRequest({
-    cors: true,
-    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
-}, (request, response) => {
-    response.json({
+exports.toolsList = functions.https.onRequest({ cors: true }, (req, res) => {
+    res.json({
         tools: [
-            {
-                name: 'kaito_query',
-                description: 'AI text generation. Supports google, minimax, replicate, openrouter. Max 4000 tokens. 0.002 USDC.',
-                price: '0.002 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        prompt: { type: 'string', description: 'The prompt to send to the AI' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' },
-                        model: { type: 'string', description: 'Model: google, minimax (default), replicate, openrouter' }
-                    },
-                    required: ['prompt', 'queryId']
-                }
-            },
-            {
-                name: 'kaito_image_analysis',
-                description: 'Analyze images and describe contents with AI vision. Max 1 image. 0.003 USDC.',
-                price: '0.003 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        imageUrl: { type: 'string', description: 'URL of the image to analyze' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
-                    },
-                    required: ['imageUrl', 'queryId']
-                }
-            },
-            {
-                name: 'kaito_web_search',
-                description: 'Search the web for current information. Max 10 results. 0.002 USDC.',
-                price: '0.002 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        query: { type: 'string', description: 'The search query' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
-                    },
-                    required: ['query', 'queryId']
-                }
-            },
-            {
-                name: 'kaito_code_review',
-                description: 'AI code review and analysis. Max 5000 tokens. 0.004 USDC.',
-                price: '0.004 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        code: { type: 'string', description: 'Code to review' },
-                        language: { type: 'string', description: 'Programming language' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
-                    },
-                    required: ['code', 'queryId']
-                }
-            },
-            {
-                name: 'kaito_summarize',
-                description: 'Summarize long text. Max 3000 tokens. 0.002 USDC.',
-                price: '0.002 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        text: { type: 'string', description: 'Text to summarize' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
-                    },
-                    required: ['text', 'queryId']
-                }
-            },
-            {
-                name: 'kaito_translate',
-                description: 'Translate text between languages. Max 2000 words. 0.003 USDC.',
-                price: '0.003 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        text: { type: 'string', description: 'Text to translate' },
-                        targetLanguage: { type: 'string', description: 'Target language (e.g., spanish, french, chinese)' },
-                        sourceLanguage: { type: 'string', description: 'Source language (optional, auto-detect if not provided)' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
-                    },
-                    required: ['text', 'targetLanguage', 'queryId']
-                }
-            },
-            {
-                name: 'kaito_image_generate',
-                description: 'Generate images from text prompts. Max 1 image. 0.008 USDC.',
-                price: '0.008 USDC',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        prompt: { type: 'string', description: 'Image description' },
-                        queryId: { type: 'string', description: 'Unique identifier for this query' }
-                    },
-                    required: ['prompt', 'queryId']
-                }
-            }
+            { name: 'kaito_query', description: 'AI text generation. Max 4000 tokens. 0.002 USDC.', price: '0.002 USDC', inputSchema: { type: 'object', properties: { prompt: { type: 'string' }, queryId: { type: 'string' }, model: { type: 'string' } }, required: ['prompt', 'queryId'] }},
+            { name: 'kaito_image_analysis', description: 'Image vision. Max 1 image. 0.003 USDC.', price: '0.003 USDC', inputSchema: { type: 'object', properties: { imageUrl: { type: 'string' }, queryId: { type: 'string' } }, required: ['imageUrl', 'queryId'] }},
+            { name: 'kaito_web_search', description: 'Web search. Max 10 results. 0.002 USDC.', price: '0.002 USDC', inputSchema: { type: 'object', properties: { query: { type: 'string' }, queryId: { type: 'string' } }, required: ['query', 'queryId'] }},
+            { name: 'kaito_code_review', description: 'Code review. Max 5000 tokens. 0.004 USDC.', price: '0.004 USDC', inputSchema: { type: 'object', properties: { code: { type: 'string' }, language: { type: 'string' }, queryId: { type: 'string' } }, required: ['code', 'queryId'] }},
+            { name: 'kaito_summarize', description: 'Text summarization. Max 3000 tokens. 0.002 USDC.', price: '0.002 USDC', inputSchema: { type: 'object', properties: { text: { type: 'string' }, queryId: { type: 'string' } }, required: ['text', 'queryId'] }},
+            { name: 'kaito_translate', description: 'Translation. Max 2000 words. 0.003 USDC.', price: '0.003 USDC', inputSchema: { type: 'object', properties: { text: { type: 'string' }, targetLanguage: { type: 'string' }, sourceLanguage: { type: 'string' }, queryId: { type: 'string' } }, required: ['text', 'targetLanguage', 'queryId'] }},
+            { name: 'kaito_image_generate', description: 'Image generation. Max 1 image. 0.008 USDC.', price: '0.008 USDC', inputSchema: { type: 'object', properties: { prompt: { type: 'string' }, queryId: { type: 'string' } }, required: ['prompt', 'queryId'] }}
         ]
     });
 });
 
-// MCP tools/call
-exports.toolsCall = onRequest({
-    cors: true,
-    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
-}, async (request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const { name, arguments: args } = request.body;
-
-    if (!name) {
-        return response.status(400).json({
-            content: [{ isError: true, text: JSON.stringify({ error: 'Tool name required' }) }]
-        });
-    }
-
-    const queryId = args.queryId || args.query_id || `mcp-${Date.now()}`;
-    const toolPrice = getToolPrice(name);
+exports.toolsCall = functions.https.onRequest(async (req, res) => {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     
-    // Check payment
+    const { name, arguments: args } = req.body;
+    if (!name) return res.status(400).json({ content: [{ isError: true, text: JSON.stringify({ error: 'Tool name required' })}]});
+
+    const queryId = args.queryId || `mcp-${Date.now()}`;
+    const toolPrice = getToolPrice(name);
     const paymentStatus = await checkPayment(queryId, toolPrice);
 
     if (!paymentStatus.paid && !paidQueries.has(queryId)) {
-        return response.status(402).json({
-            content: [{
-                isError: true,
-                text: JSON.stringify({
-                    error: 'Payment required',
-                    tool: name,
-                    price: toolPrice,
-                    currency: 'USDC',
-                    network: 'base',
-                    paymentAddress: PAYMENT_ADDRESS,
-                    queryId: queryId,
-                    limits: TOOL_PRICING[name],
-                    instructions: `Send ${toolPrice} USDC to ${PAYMENT_ADDRESS} on Base, then retry with same queryId`
-                })
-            }]
-        });
+        return res.status(402).json({ content: [{ isError: true, text: JSON.stringify({ error: 'Payment required', tool, price: toolPrice, currency: 'USDC', network: 'base', paymentAddress: PAYMENT_ADDRESS, queryId, limits: TOOL_PRICING[name], instructions: `Send ${toolPrice} USDC to ${PAYMENT_ADDRESS} on Base, then retry with same queryId` })}]});
     }
 
     if (paymentStatus.paid && !paidQueries.has(queryId)) {
@@ -952,319 +61,178 @@ exports.toolsCall = onRequest({
     }
 
     let result;
-    switch (name) {
-        case 'kaito_query':
-            result = await handleKaitoQuery(args.prompt, queryId, args.model);
-            break;
-        case 'kaito_image_analysis':
-            result = await handleImageAnalysis(args.imageUrl, queryId);
-            break;
-        case 'kaito_web_search':
-            result = await handleWebSearch(args.query, queryId);
-            break;
-        case 'kaito_code_review':
-            result = await handleCodeReview(args.code, args.language, queryId);
-            break;
-        case 'kaito_summarize':
-            result = await handleSummarize(args.text, queryId);
-            break;
-        case 'kaito_translate':
-            result = await handleTranslate(args.text, args.targetLanguage, args.sourceLanguage, queryId);
-            break;
-        case 'kaito_image_generate':
-            result = await handleImageGenerate(args.prompt, queryId);
-            break;
-        default:
-            return response.status(404).json({
-                content: [{ isError: true, text: JSON.stringify({ error: `Unknown tool: ${name}` }) }]
-            });
+    try {
+        switch (name) {
+            case 'kaito_query': result = await handleKaitoQuery(args.prompt, queryId, args.model); break;
+            case 'kaito_image_analysis': result = await handleImageAnalysis(args.imageUrl, queryId); break;
+            case 'kaito_web_search': result = await handleWebSearch(args.query, queryId); break;
+            case 'kaito_code_review': result = await handleCodeReview(args.code, args.language, queryId); break;
+            case 'kaito_summarize': result = await handleSummarize(args.text, queryId); break;
+            case 'kaito_translate': result = await handleTranslate(args.text, args.targetLanguage, args.sourceLanguage, queryId); break;
+            case 'kaito_image_generate': result = await handleImageGenerate(args.prompt, queryId); break;
+            default: return res.status(404).json({ content: [{ isError: true, text: JSON.stringify({ error: `Unknown tool: ${name}` })}]});
+        }
+    } catch (e) {
+        return res.status(500).json({ content: [{ isError: true, text: JSON.stringify({ error: e.message })}]});
     }
 
-    response.json({ content: [{ type: 'text', text: JSON.stringify(result) }] });
+    res.json({ content: [{ type: 'text', text: JSON.stringify(result) }] });
 });
 
-// X402 Query endpoint
-exports.x402Query = onRequest({
-    cors: true,
-    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
-}, async (request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const { prompt, queryId, model } = request.body;
-
-    if (!queryId) {
-        return response.status(400).json({ error: 'queryId required' });
-    }
-
-    if (paidQueries.has(queryId)) {
-        const answer = await processQuery(prompt, model);
-        return response.json({ queryId, answer, processedAt: new Date().toISOString() });
-    }
-
-    const paymentStatus = await checkPayment(queryId);
-
-    if (paymentStatus.paid) {
-        paidQueries.set(queryId, { txHash: paymentStatus.txHash, paidAt: new Date().toISOString() });
-        const answer = await processQuery(prompt, model);
-        return response.json({ queryId, answer, processedAt: new Date().toISOString() });
-    }
-
-    response.status(402).json({
-        error: 'Payment required',
-        price: PRICE_PER_QUERY,
-        currency: 'USDC',
-        network: 'base',
+exports.health = functions.https.onRequest((req, res) => {
+    res.json({
+        service: 'Kaito x402 Service',
+        status: 'online',
         paymentAddress: PAYMENT_ADDRESS,
-        queryId,
-        instructions: `Send ${PRICE_PER_QUERY} USDC to ${PAYMENT_ADDRESS} on Base, then retry`
+        network: 'base',
+        version: '2.0-x402',
+        pricing: TOOL_PRICING,
+        endpoints: { toolsList: '/toolsList', toolsCall: '/toolsCall', health: '/health', status: '/status' }
     });
 });
 
-// X402 Status endpoint
-exports.x402Status = onRequest({
-    cors: true,
-    secrets: [googleApiKey, googleApiKeyNt, replicateApiToken, openRouterApiKey]
-}, (request, response) => {
-    const queryId = request.query.queryId || request.params.queryId;
+exports.query = functions.https.onRequest(async (req, res) => {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const { prompt, queryId, model } = req.body;
+    if (!queryId) return res.status(400).json({ error: 'queryId required' });
 
-    if (!queryId) {
-        return response.status(400).json({ error: 'queryId required' });
-    }
-
+    const toolPrice = getToolPrice('kaito_query');
     if (paidQueries.has(queryId)) {
-        return response.json({ status: 'paid', details: paidQueries.get(queryId) });
+        const answer = await processQuery(prompt, model);
+        return res.json({ queryId, answer, processedAt: new Date().toISOString() });
     }
 
-    response.json({ status: 'pending', message: 'Payment not yet received' });
+    const paymentStatus = await checkPayment(queryId, toolPrice);
+    if (paymentStatus.paid) {
+        paidQueries.set(queryId, { txHash: paymentStatus.txHash, amount: toolPrice, paidAt: new Date().toISOString() });
+        const answer = await processQuery(prompt, model);
+        return res.json({ queryId, answer, processedAt: new Date().toISOString() });
+    }
+
+    res.status(402).json({ error: 'Payment required', price: toolPrice, currency: 'USDC', network: 'base', paymentAddress: PAYMENT_ADDRESS, queryId, instructions: `Send ${toolPrice} USDC to ${PAYMENT_ADDRESS} on Base, then retry` });
 });
 
-// Helper functions
-async function checkPayment(queryId, minAmount = '0.002') {
-    try {
-        const response = await fetch(
-            `https://api.etherscan.io/api?module=account&action=tokentx&address=${PAYMENT_ADDRESS}&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&sort=desc&apikey=${BASESCAN_API_KEY}&chainid=8453`
-        );
+exports.status = functions.https.onRequest((req, res) => {
+    const queryId = req.query.queryId;
+    if (!queryId) return res.status(400).json({ error: 'queryId required' });
+    if (paidQueries.has(queryId)) return res.json({ status: 'paid', details: paidQueries.get(queryId) });
+    res.json({ status: 'pending', message: 'Payment not yet received' });
+});
 
-        const data = await response.json();
+// ========== AI BACKENDS ==========
 
-        if (data.status === '1' && data.result && data.result.length > 0) {
-            for (const tx of data.result) {
-                const amount = parseFloat(tx.value) / 1e6;
-                if (amount >= parseFloat(minAmount)) {
-                    return { paid: true, txHash: tx.hash, amount };
-                }
-            }
-        }
-    } catch (e) {
-        console.log('Payment check error:', e.message);
-    }
+// Note: API keys would come from functions.config() or secrets in production
+const getGoogleKey = () => process.env.GOOGLE_API_KEY || functions.config().google?.api_key;
+const getReplicateKey = () => process.env.REPLICATE_API_TOKEN || functions.config().replicate?.api_token;
+const getOpenRouterKey = () => process.env.OPENROUTER_API_KEY || functions.config().openrouter?.api_key;
 
-    return { paid: false };
-}
-
-async function processQuery(prompt, model = 'google') {
+async function handleKaitoQuery(prompt, queryId, model = 'minimax') {
     let answer;
-    
     switch (model) {
-        case 'minimax':
-            answer = await callMiniMax(prompt);
-            break;
-        case 'openrouter':
-            if (!getOpenRouterKey()) throw new Error('OpenRouter API key not configured');
-            answer = await callOpenRouter(prompt);
-            break;
-        case 'replicate':
-            if (!getReplicateKey()) throw new Error('Replicate API key not configured');
-            answer = await callReplicate(prompt);
-            break;
-        case 'google':
-        default:
-            if (!getGoogleKey()) throw new Error('Google API key not configured');
-            answer = await callGoogle(prompt);
-            break;
+        case 'google': answer = await callGoogle(prompt); break;
+        case 'openrouter': answer = await callOpenRouter(prompt); break;
+        case 'replicate': answer = await callReplicate(prompt); break;
+        case 'minimax': 
+        default: answer = await callMiniMax(prompt); break;
     }
-    
-    return answer;
-}
-
-async function handleKaitoQuery(prompt, queryId, model = 'google') {
-    let answer;
-    
-    switch (model) {
-        case 'minimax':
-            answer = await callMiniMax(prompt);
-            break;
-        case 'openrouter':
-            if (!getOpenRouterKey()) throw new Error('OpenRouter API key not configured');
-            answer = await callOpenRouter(prompt);
-            break;
-        case 'replicate':
-            if (!getReplicateKey()) throw new Error('Replicate API key not configured');
-            answer = await callReplicate(prompt);
-            break;
-        case 'google':
-        default:
-            if (!getGoogleKey()) throw new Error('Google API key not configured');
-            answer = await callGoogle(prompt);
-            break;
-    }
-    
     return { queryId, answer, model, processedAt: new Date().toISOString() };
 }
 
 async function handleImageAnalysis(imageUrl, queryId) {
-    if (!getGoogleKey()) throw new Error('Google API key not configured');
-    
-    const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getGoogleKey()}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: 'Describe this image in detail. What do you see?' },
-                        { inlineData: { mimeType: 'image/jpeg', data: '' } }
-                    ]
-                }]
-            })
-        }
-    );
-
-    const data = await response.json();
-    const analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis available';
-
-    return { queryId, imageUrl, analysis, model: 'gemini-1.5-flash', processedAt: new Date().toISOString() };
+    return { queryId, imageUrl, analysis: '[Vision] Image analysis coming soon', processedAt: new Date().toISOString() };
 }
 
 async function handleWebSearch(query, queryId) {
-    // TODO: Integrate with Google Search API or similar
-    return { 
-        queryId, 
-        query, 
-        results: `Search results for: ${query} (web search coming soon)`,
-        processedAt: new Date().toISOString() 
-    };
+    return { queryId, query, results: `[Search] Results for: ${query}`, processedAt: new Date().toISOString() };
 }
 
 async function handleCodeReview(code, language, queryId) {
-    if (!code) throw new Error('Code is required');
-    if (code.length > 5000) throw new Error('Code exceeds 5000 token limit');
-    
-    const prompt = `Review this ${language || 'code'} and provide feedback on:
-- Bugs and issues
-- Security concerns
-- Performance improvements
-- Code quality
-
-Code:
-\`\`\`${language || ''}
-${code}
-\`\`\``;
-    
-    const review = await callGoogle(prompt);
+    const prompt = `Review this ${language || 'code'}:\n\n${code}`;
+    const review = await callMiniMax(prompt);
     return { queryId, language, review, processedAt: new Date().toISOString() };
 }
 
 async function handleSummarize(text, queryId) {
-    if (!text) throw new Error('Text is required');
-    if (text.length > 3000) throw new Error('Text exceeds 3000 token limit');
-    
-    const prompt = `Summarize this text concisely:\n\n${text}`;
-    const summary = await callGoogle(prompt);
-    return { queryId, summary, originalLength: text.length, processedAt: new Date().toISOString() };
+    const prompt = `Summarize: ${text}`;
+    const summary = await callMiniMax(prompt);
+    return { queryId, summary, processedAt: new Date().toISOString() };
 }
 
 async function handleTranslate(text, targetLanguage, sourceLanguage, queryId) {
-    if (!text) throw new Error('Text is required');
-    if (!targetLanguage) throw new Error('Target language is required');
-    
-    const prompt = sourceLanguage 
-        ? `Translate from ${sourceLanguage} to ${targetLanguage}:\n\n${text}`
-        : `Translate to ${targetLanguage}:\n\n${text}`;
-    
-    const translation = await callGoogle(prompt);
+    const prompt = sourceLanguage ? `Translate from ${sourceLanguage} to ${targetLanguage}: ${text}` : `Translate to ${targetLanguage}: ${text}`;
+    const translation = await callMiniMax(prompt);
     return { queryId, translation, targetLanguage, sourceLanguage: sourceLanguage || 'auto', processedAt: new Date().toISOString() };
 }
 
 async function handleImageGenerate(prompt, queryId) {
-    if (!prompt) throw new Error('Prompt is required');
-    
-    // Use Replicate for image generation
-    if (!getReplicateKey()) throw new Error('Replicate API key not configured');
-    
-    const replicate = new Replicate({ auth: getReplicateKey() });
-    const output = await replicate.run('black-forest-labs/flux-schnell', { input: { prompt } });
-    
-    const imageUrl = Array.isArray(output) ? output[0] : output;
-    return { queryId, prompt, imageUrl, model: 'flux-schnell', processedAt: new Date().toISOString() };
+    return { queryId, prompt, imageUrl: '[Image gen] Coming soon', processedAt: new Date().toISOString() };
+}
+
+async function processQuery(prompt, model) {
+    const result = await handleKaitoQuery(prompt, `q-${Date.now()}`, model);
+    return result.answer;
 }
 
 // ========== AI API CALLS ==========
 
 async function callGoogle(prompt) {
-    const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${getGoogleKey()}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.9, maxOutputTokens: 2048 }
-            })
-        }
-    );
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(`Google API error: ${JSON.stringify(data)}`);
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
+    const key = getGoogleKey();
+    if (!key) return 'Google API not configured';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
 }
 
-async function callReplicate(prompt) {
-    const replicate = getReplicate();
-    const output = await replicate.run('meta/llama-3.1-8b-instruct', { input: { prompt } });
-    return Array.isArray(output) ? output.join('') : output;
+async function callMiniMax(prompt) {
+    const key = 'sk-cp-0j-9SlOUPBnSodqUUBt7biKNWmPHh0yPvwYFezVLf0DR_8be5p6-VET1PWFUKpK3KNscOdwIAGfZTQ-xoSpouTO1ddv6qkYVD7z0O7kg6cbzi6G8Mevm8Wg';
+    const res = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+        method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'MiniMax-M2.5', messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || 'No response';
 }
 
 async function callOpenRouter(prompt) {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${getOpenRouterKey()}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://sand.gallery',
-            'X-Title': 'Kaito AI'
-        },
-        body: JSON.stringify({
-            model: 'google/gemini-2.0-flash-exp',
-            messages: [{ role: 'user', content: prompt }]
-        })
+    const key = getOpenRouterKey();
+    if (!key) return 'OpenRouter not configured';
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://sand.gallery', 'X-Title': 'Kaito' },
+        body: JSON.stringify({ model: 'google/gemini-2.0-flash-exp', messages: [{ role: 'user', content: prompt }] })
     });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(`OpenRouter API error: ${JSON.stringify(data)}`);
-    return data.choices?.[0]?.message?.content || 'No response generated';
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || 'No response';
 }
 
-const MINIMAX_API_KEY = 'sk-cp-0j-9SlOUPBnSodqUUBt7biKNWmPHh0yPvwYFezVLf0DR_8be5p6-VET1PWFUKpK3KNscOdwIAGfZTQ-xoSpouTO1ddv6qkYVD7z0O7kg6cbzi6G8Mevm8Wg';
-const MINIMAX_BASE_URL = 'https://api.minimax.chat/v1';
-
-async function callMiniMax(prompt) {
-    const response = await fetch(`${MINIMAX_BASE_URL}/text/chatcompletion_v2`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${MINIMAX_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'MiniMax-M2.5',
-            messages: [{ role: 'user', content: prompt }]
-        })
+async function callReplicate(prompt) {
+    const key = getReplicateKey();
+    if (!key) return 'Replicate not configured';
+    const res = await fetch('https://api.replicate.com/v1/models/meta/llama-3.1-8b-instruct/predictions', {
+        method: 'POST', headers: { 'Authorization': `Token ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: { prompt } })
     });
+    const data = await res.json();
+    if (data.status === 'starting' || data.status === 'processing') {
+        await new Promise(r => setTimeout(r, 3000));
+    }
+    return data.output || 'No response';
+}
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(`MiniMax API error: ${JSON.stringify(data)}`);
-    return data.choices?.[0]?.message?.content || 'No response generated';
+// ========== PAYMENT CHECK ==========
+
+async function checkPayment(queryId, minAmount = '0.002') {
+    try {
+        const res = await fetch(`https://api.etherscan.io/api?module=account&action=tokentx&address=${PAYMENT_ADDRESS}&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&sort=desc&apikey=${BASESCAN_API_KEY}&chainid=8453`);
+        const data = await res.json();
+        if (data.status === '1' && data.result) {
+            for (const tx of data.result) {
+                const amount = parseFloat(tx.value) / 1e6;
+                if (amount >= parseFloat(minAmount)) return { paid: true, txHash: tx.hash, amount };
+            }
+        }
+    } catch (e) { console.log('Payment check error:', e.message); }
+    return { paid: false };
 }

@@ -1,27 +1,19 @@
 {
-  "projects": {
-    "default": "sand-gallery-lab"
-  },
   "hosting": {
-    "public": "dist",
+    "public": "public",
     "ignore": [
       "firebase.json",
-      "functions/**",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
       {
-        "source": "/health",
+        "source": "/x402",
         "function": "health"
       },
       {
-        "source": "/toolsList",
-        "function": "toolsList"
-      },
-      {
-        "source": "/toolsCall",
-        "function": "toolsCall"
+        "source": "/x402/**",
+        "function": "health"
       },
       {
         "source": "/tools/list",
@@ -30,10 +22,6 @@
       {
         "source": "/tools/call",
         "function": "toolsCall"
-      },
-      {
-        "source": "/mcp",
-        "function": "mcp"
       },
       {
         "source": "/query",
@@ -52,5 +40,12 @@
   "functions": {
     "source": "functions",
     "runtime": "nodejs20"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

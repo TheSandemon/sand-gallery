@@ -9,6 +9,12 @@ const versionString = `${commitDate} (${commitHash})`
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      react: 'react',
+      'react-dom': 'react-dom',
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(versionString),
   },
