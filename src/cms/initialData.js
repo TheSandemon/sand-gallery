@@ -128,15 +128,6 @@ export const getDefaultPageData = (pageId) => {
             return defaultPricingPageData;
         case 'studio':
             return defaultStudioPageData;
-        case 'profile':
-            return {
-                id: 'profile',
-                meta: {
-                    title: 'Profile | Sand Gallery',
-                    description: 'User profile and creations.',
-                },
-                sections: [],
-            };
         case 'gallery':
             return {
                 id: 'gallery',

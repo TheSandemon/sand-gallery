@@ -1,15 +1,8 @@
 // Constants for Sand Gallery
 // Extracted from hardcoded values across components
 
-/**
- * SCROLL_THRESHOLD - Pixel distance before navbar becomes "scrolled" state
- * At 20px scroll, navbar transforms from transparent to backdrop-blur
- * @type {number}
- */
+// Navigation
 export const SCROLL_THRESHOLD = 20;
-
-// Gallery Categories - centralized from hardcoded values
-export const CATEGORIES = ['All', 'Video', 'Image', 'Audio', '3D', 'Cyberpunk', 'Nature', 'Abstract', 'Character'];
 
 // Animation
 export const ANIMATION_DELAYS = {

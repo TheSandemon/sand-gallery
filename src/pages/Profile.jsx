@@ -3,64 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import VideoAnalysis from '../components/VideoAnalysis';
 
 const Profile = () => {
-    const { user, logout, loading } = useAuth();
+    const { user, logout } = useAuth();
 
-    // Handle loading state
-    if (loading) {
-        return (
-            <div style={{
-                paddingTop: '150px',
-                textAlign: 'center',
-                minHeight: '100vh',
-                background: 'var(--bg-main)'
-            }}>
-                <div style={{ 
-                    color: 'var(--text-dim)', 
-                    fontSize: '1.2rem',
-                    animation: 'pulse 2s infinite'
-                }}>
-                    Loading profile...
-                </div>
-                <style>{`
-                    @keyframes pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.5; }
-                    }
-                `}</style>
-            </div>
-        );
-    }
-
-    if (!user) return (
-        <div style={{ 
-            paddingTop: '150px', 
-            textAlign: 'center',
-            minHeight: '100vh',
-            background: 'var(--bg-main)'
-        }}>
-            <div style={{ 
-                color: 'var(--text-dim)', 
-                fontSize: '1.2rem',
-                marginBottom: '2rem'
-            }}>
-                Please log in to view your profile.
-            </div>
-            <button
-                onClick={() => window.location.href = '/'}
-                style={{
-                    padding: '0.75rem 2rem',
-                    background: 'var(--accent-primary)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    cursor: 'pointer'
-                }}
-            >
-                Go Home
-            </button>
-        </div>
-    );
+    if (!user) return <div style={{ paddingTop: '100px', textAlign: 'center' }}>Please log in to view profile.</div>;
 
     return (
         <div style={{
@@ -155,20 +100,10 @@ const Profile = () => {
 const CreationsGallery = ({ userId }) => {
     const [creations, setCreations] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState(null);
 
     React.useEffect(() => {
         const fetchCreations = async () => {
             try {
-                // Check if firebase is configured
-                const { isFirebaseConfigured } = await import('../firebase');
-                if (!isFirebaseConfigured()) {
-                    console.log('[Profile] Firebase not configured, using demo mode');
-                    setCreations([]);
-                    setLoading(false);
-                    return;
-                }
-
                 // Import dynamically to avoid errors during build if firebase isn't fully set up logic logic
                 const { collection, query, where, getDocs, orderBy } = await import('firebase/firestore');
                 const { db } = await import('../firebase');
@@ -188,37 +123,18 @@ const CreationsGallery = ({ userId }) => {
                 data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 setCreations(data);
-            } catch (err) {
-                console.error("[Profile] Error fetching creations:", err);
-                setError(err.message || 'Failed to load creations');
-                setCreations([]);
+            } catch (error) {
+                console.error("Error fetching creations:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (userId) {
-            fetchCreations();
-        }
+        fetchCreations();
     }, [userId]);
 
     if (loading) return <div style={{ color: '#888' }}>Loading gallery...</div>;
-    if (error) return (
-        <div style={{ 
-            color: '#ff6b6b', 
-            padding: '1rem', 
-            background: 'rgba(255,107,107,0.1)', 
-            borderRadius: '8px',
-            marginTop: '1rem'
-        }}>
-            {error}
-        </div>
-    );
-    if (creations.length === 0) return (
-        <div style={{ color: '#888', marginTop: '1rem' }}>
-            No creations yet. Visit the Studio to create something!
-        </div>
-    );
+    if (creations.length === 0) return <div style={{ color: '#888' }}>No creations yet. Visit the Studio!</div>;
 
     return (
         <div style={{ marginTop: '2rem' }}>

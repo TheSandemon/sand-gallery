@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { ICON_MAP } from '../../config/icons';
 import '../gallery/Gallery.css';
 
-// Animation variants - static constant (not memoized, no dependencies needed)
-const cardVariants = {
+// Animation variants - memoized for performance
+const cardVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20 },
     visible: (i) => ({
         opacity: 1,
@@ -21,7 +21,7 @@ const cardVariants = {
         y: -5,
         transition: { duration: 0.2 }
     }
-};
+}), []);
 
 // Optimization: Simple CSS Grid Background
 const GridBackground = () => (

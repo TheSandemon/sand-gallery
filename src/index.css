@@ -1,14 +1,11 @@
-/* Theme Packs - glass-horizon is DEFAULT 
-   B03 Fix: Only load essential themes eagerly; lazy load others via JS */
+/* Theme Packs - glass-horizon is DEFAULT */
 @import './themes/glass-horizon.css';
-
-/* Lazy-loaded themes - uncomment as needed or load dynamically via theme switcher */
-/* @import './themes/midnight-terminal.css'; */
-/* @import './themes/aurora-noir.css'; */
-/* @import './themes/tokyo-streets.css'; */
-/* @import './themes/zinc-default.css'; */
-/* @import './themes/cyber-neon.css'; */
-/* @import './themes/brutalist-paper.css'; */
+@import './themes/midnight-terminal.css';
+@import './themes/aurora-noir.css';
+@import './themes/tokyo-streets.css';
+@import './themes/zinc-default.css';
+@import './themes/cyber-neon.css';
+@import './themes/brutalist-paper.css';
 
 @tailwind base;
 @tailwind components;

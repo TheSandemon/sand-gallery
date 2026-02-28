@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from '../firebase';
+import { db } from '../firebase';
 
 /**
  * Default site settings used when no Firestore data exists.
@@ -26,35 +26,20 @@ const useSiteSettings = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // If Firebase is not configured, use default settings immediately
-        if (!isFirebaseConfigured() || !db) {
-            console.log('[useSiteSettings] Firebase not configured, using defaults');
-            setSettings(DEFAULT_SETTINGS);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const docRef = doc(db, 'config', 'site_settings');
-            const unsubscribe = onSnapshot(docRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    setSettings({ ...DEFAULT_SETTINGS, ...snapshot.data() });
-                } else {
-                    setSettings(DEFAULT_SETTINGS);
-                }
-                setLoading(false);
-            }, (error) => {
-                console.error('useSiteSettings: Firestore error', error);
+        const docRef = doc(db, 'config', 'site_settings');
+        const unsubscribe = onSnapshot(docRef, (snapshot) => {
+            if (snapshot.exists()) {
+                setSettings({ ...DEFAULT_SETTINGS, ...snapshot.data() });
+            } else {
                 setSettings(DEFAULT_SETTINGS);
-                setLoading(false);
-            });
-
-            return () => unsubscribe();
-        } catch (error) {
-            console.error('useSiteSettings: Setup error', error);
-            setSettings(DEFAULT_SETTINGS);
+            }
             setLoading(false);
-        }
+        }, (error) => {
+            console.error('useSiteSettings: Firestore error', error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
     /**
