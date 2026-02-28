@@ -2,13 +2,13 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.TheSandemon/kaito-query",
   "title": "Kaito Query Service",
-  "description": "AI query service with USDC payments on Base. Gemini, MiniMax, Replicate, OpenRouter.",
+  "description": "AI LLM service with Gemini, MiniMax, Replicate & OpenRouter. Vision, search, code review, translation. USDC payments on Base. Fast, cheap, multi-model.",
   "repository": {
     "url": "https://github.com/TheSandemon/sand-gallery",
     "source": "github"
   },
-  "version": "1.0.0",
-  "keywords": ["ai", "llm", "gemini", "minimax", "replicate", "payments", "usdc", "base"],
+  "version": "1.1.0",
+  "keywords": ["ai", "llm", "gemini", "minimax", "replicate", "openrouter", "payments", "usdc", "base", "vision", "image", "search", "code", "translation", "mcp", "gpt", "claude", "chatgpt"],
   "remotes": [
     {
       "type": "streamable-http",
