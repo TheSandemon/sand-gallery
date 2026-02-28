@@ -9,6 +9,10 @@ const versionString = `${commitDate} (${commitHash})`
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Force consistent React version across all dependencies
+    dedupe: ['react', 'react-dom'],
+  },
   define: {
     __APP_VERSION__: JSON.stringify(versionString),
   },
@@ -16,8 +20,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Keep React with app bundle to prevent dual initialization
-          'vendor-motion': ['framer-motion'],
+          // Only split wallet - keep everything else together
           'vendor-wallet': [
             '@coinbase/wallet-sdk',
             'viem',
