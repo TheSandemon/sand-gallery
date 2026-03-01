@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer } from 'lucide-react'
 
 // Game configurations
 const GAMES = {
@@ -39,6 +39,13 @@ const GAMES = {
     icon: Hash,
     color: 'from-blue-400 to-cyan-600',
     type: 'word'
+  },
+  'crystal-cavern': {
+    name: 'Crystal Cavern',
+    description: 'Collect crystals in the dark cave! Move your mouse to guide the orb. Combo for consecutive collects!',
+    icon: Gem,
+    color: 'from-cyan-400 to-blue-600',
+    type: 'cavern'
   }
 }
 
@@ -91,6 +98,17 @@ export default function GamePlay() {
   })
   const [selectedCells, setSelectedCells] = useState([])
   const [foundWords, setFoundWords] = useState([])
+  
+  // Crystal Cavern state
+  const [cavernPlayer, setCavernPlayer] = useState({ x: 50, y: 80 })
+  const [crystals, setCrystals] = useState([])
+  const [particles, setParticles] = useState([])
+  const [combo, setCombo] = useState(0)
+  const [cavernTimeLeft, setCavernTimeLeft] = useState(60)
+  const [collected, setCollected] = useState(0)
+  
+  // Audio context for SFX
+  const [audioContext, setAudioContext] = useState(null)
 
   // Load high score
   useEffect(() => {
@@ -196,6 +214,18 @@ export default function GamePlay() {
     setWinner(null)
     setPlayerTurn('X')
     setSelectedCells([])
+    // Crystal Cavern init
+    setCavernPlayer({ x: 50, y: 80 })
+    setCrystals([])
+    setParticles([])
+    setCombo(0)
+    setCavernTimeLeft(60)
+    setCollected(0)
+    // Init audio context on user interaction
+    if (!audioContext) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      setAudioContext(ctx)
+    }
   }
 
   // Reset
@@ -210,6 +240,12 @@ export default function GamePlay() {
     setBoard(Array(9).fill(null))
     setWinner(null)
     setSelectedCells([])
+    setCavernPlayer({ x: 50, y: 80 })
+    setCrystals([])
+    setParticles([])
+    setCombo(0)
+    setCavernTimeLeft(60)
+    setCollected(0)
   }
 
   // Neural Maze handlers
@@ -324,6 +360,120 @@ export default function GamePlay() {
       }
     }
   }
+
+  // Crystal Cavern game loop
+  useEffect(() => {
+    let interval
+    if (gameState === 'playing' && config.type === 'cavern') {
+      // Timer
+      interval = setInterval(() => {
+        setCavernTimeLeft(t => {
+          if (t <= 1) {
+            setGameState('finished')
+            return 0
+          }
+          return t - 1
+        })
+        // Spawn crystals
+        if (Math.random() < 0.25) {
+          const newCrystal = {
+            id: Date.now(),
+            x: Math.random() * 70 + 15,
+            y: Math.random() * 50 + 10,
+            color: ['#00ffff', '#ff00ff', '#00ff00', '#ffff00', '#ff6600'][Math.floor(Math.random() * 5)],
+            pulse: 0
+          }
+          setCrystals(prev => [...prev.slice(-8), newCrystal])
+        }
+        // Spawn particles occasionally
+        if (Math.random() < 0.1) {
+          setParticles(prev => [...prev.slice(-20), {
+            id: Date.now(),
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            size: Math.random() * 3 + 1,
+            speed: Math.random() * 0.5 + 0.2,
+            opacity: Math.random() * 0.5 + 0.3
+          }])
+        }
+        // Move particles
+        setParticles(prev => prev.map(p => ({
+          ...p,
+          y: p.y + p.speed,
+          opacity: p.opacity - 0.002
+        })).filter(p => p.opacity > 0))
+        // Animate crystal pulse
+        setCrystals(prev => prev.map(c => ({ ...c, pulse: (c.pulse + 0.1) % (Math.PI * 2) })))
+        // Check crystal collection
+        setCrystals(prev => {
+          const playerRadius = 5
+          const crystalRadius = 3
+          const collected = prev.filter(c => {
+            const dx = c.x - cavernPlayer.x
+            const dy = c.y - cavernPlayer.y
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            return distance < playerRadius + crystalRadius
+          })
+          if (collected.length > 0) {
+            const newCombo = combo + collected.length
+            setCombo(newCombo)
+            const points = collected.length * 10 * Math.min(newCombo, 5)
+            setScore(s => s + points)
+            setCollected(c => c + collected.length)
+            // Play collection sound
+            if (audioContext) {
+              const osc = audioContext.createOscillator()
+              const gain = audioContext.createGain()
+              osc.connect(gain)
+              gain.connect(audioContext.destination)
+              osc.frequency.setValueAtTime(880 + newCombo * 100, audioContext.currentTime)
+              osc.type = 'sine'
+              gain.gain.setValueAtTime(0.1, audioContext.currentTime)
+              gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+              osc.start()
+              osc.stop(audioContext.currentTime + 0.1)
+            }
+          }
+          return prev.filter(c => {
+            const dx = c.x - cavernPlayer.x
+            const dy = c.y - cavernPlayer.y
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            return distance >= playerRadius + crystalRadius
+          })
+        })
+        // Reset combo if no collection in 2 seconds (handled by not collecting)
+      }, 50)
+    }
+    return () => clearInterval(interval)
+  }, [gameState, config.type, cavernPlayer, combo, audioContext])
+
+  // Mouse movement handler for Crystal Cavern
+  useEffect(() => {
+    if (config.type !== 'cavern') return
+    const handleMouseMove = (e) => {
+      if (gameState !== 'playing') return
+      const gameArea = e.currentTarget
+      if (!gameArea) return
+      const rect = gameArea.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * 100
+      setCavernPlayer({ x: Math.max(5, Math.min(95, x)), y: Math.max(10, Math.min(95, y)) })
+    }
+    const gameArea = document.querySelector('[data-game-area]')
+    if (gameArea) {
+      gameArea.addEventListener('mousemove', handleMouseMove)
+      return () => gameArea.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [gameState, config.type])
+
+  // Combo decay
+  useEffect(() => {
+    if (config.type !== 'cavern') return
+    const interval = setInterval(() => {
+      setCombo(c => Math.max(0, c - 1))
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [config.type])
 
   const accuracy = clicks > 0 ? Math.round((clicks / (clicks + misses)) * 100) : 0
 
@@ -538,6 +688,139 @@ export default function GamePlay() {
           </>
         )
         
+      case 'cavern':
+        return (
+          <>
+            {/* Cave background with particles */}
+            <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 overflow-hidden">
+              {/* Animated particles */}
+              {particles.map(p => (
+                <div
+                  key={p.id}
+                  className="absolute rounded-full bg-cyan-300"
+                  style={{
+                    left: `${p.x}%`,
+                    top: `${p.y}%`,
+                    width: p.size,
+                    height: p.size,
+                    opacity: p.opacity,
+                    boxShadow: `0 0 ${p.size * 2}px rgba(0, 255, 255, ${p.opacity})`
+                  }}
+                />
+              ))}
+              {/* Cave walls effect */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
+            </div>
+            
+            {gameState === 'idle' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Gem size={64} className="text-cyan-400 mb-4" />
+                </motion.div>
+                <p className="text-zinc-400 mb-2 text-center px-4">{config.description}</p>
+                <p className="text-zinc-500 text-sm mb-6">Move mouse to collect crystals!</p>
+                <button 
+                  onClick={startGame}
+                  className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-full font-medium transition-colors"
+                >
+                  <Play size={20} />
+                  Enter Cavern
+                </button>
+              </div>
+            )}
+            {gameState === 'playing' && (
+              <>
+                {/* Crystals */}
+                {crystals.map(c => (
+                  <motion.div
+                    key={c.id}
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ 
+                      scale: 1 + Math.sin(c.pulse) * 0.2,
+                      rotate: [0, 15, -15, 0]
+                    }}
+                    transition={{ duration: 0.5 }}
+                    style={{
+                      position: 'absolute',
+                      left: `${c.x}%`,
+                      top: `${c.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    className="w-8 h-8"
+                  >
+                    <div 
+                      className="w-full h-full rounded-full"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, white, ${c.color})`,
+                        boxShadow: `0 0 20px ${c.color}, 0 0 40px ${c.color}`
+                      }}
+                    />
+                  </motion.div>
+                ))}
+                
+                {/* Player orb */}
+                <motion.div
+                  animate={{ 
+                    x: cavernPlayer.x * 4,
+                    y: cavernPlayer.y * 4,
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ duration: 0.1 }}
+                  style={{
+                    position: 'absolute',
+                    left: `${cavernPlayer.x}%`,
+                    top: `${cavernPlayer.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  className="w-12 h-12"
+                >
+                  <div 
+                    className="w-full h-full rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, white, #00ffff, #0066ff)',
+                      boxShadow: '0 0 30px #00ffff, 0 0 60px #0066ff, inset 0 0 20px rgba(255,255,255,0.5)'
+                    }}
+                  />
+                  {/* Orbiting particles */}
+                  {[0, 1, 2, 3].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                      className="absolute w-2 h-2 rounded-full bg-cyan-300"
+                      style={{
+                        top: '50%',
+                        left: '50%',
+                        marginTop: -4,
+                        marginLeft: -4,
+                        transformOrigin: `${Math.cos(i * Math.PI / 2) * 20}px ${Math.sin(i * Math.PI / 2) * 20}px`
+                      }}
+                    />
+                  ))}
+                </motion.div>
+                
+                {/* Combo indicator */}
+                {combo > 1 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
+                  >
+                    <Sparkles size={14} className="text-white" />
+                    <span className="text-white font-bold text-sm">x{combo}</span>
+                  </motion.div>
+                )}
+              </>
+            )}
+          </>
+        )
+        
       default:
         return (
           <div className="absolute inset-0 flex items-center justify-center text-zinc-500">
@@ -566,6 +849,18 @@ export default function GamePlay() {
       {config.type === 'word' && foundWords.length > 0 && (
         <div className="text-blue-400 mb-4">
           {foundWords.length} words found!
+        </div>
+      )}
+      {config.type === 'cavern' && (
+        <div className="flex items-center justify-center gap-6 mb-4">
+          <div className="text-center">
+            <div className="text-cyan-400 font-bold text-lg">{collected}</div>
+            <div className="text-xs text-zinc-500">Crystals</div>
+          </div>
+          <div className="text-center">
+            <div className="text-purple-400 font-bold text-lg">x{combo}</div>
+            <div className="text-xs text-zinc-500">Max Combo</div>
+          </div>
         </div>
       )}
       <div className="flex gap-4">
@@ -646,12 +941,31 @@ export default function GamePlay() {
               <div className="text-xs text-zinc-500">WORDS</div>
             </div>
           )}
+          {config.type === 'cavern' && (
+            <>
+              <div className="text-center">
+                <div className={`text-2xl font-bold ${cavernTimeLeft <= 10 ? 'text-red-500' : 'text-cyan-400'}`}>
+                  {cavernTimeLeft}s
+                </div>
+                <div className="text-xs text-zinc-500">TIME</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">{collected}</div>
+                <div className="text-xs text-zinc-500">CRYSTALS</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-400">x{combo}</div>
+                <div className="text-xs text-zinc-500">COMBO</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Game Area */}
         <motion.div 
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
+          data-game-area
           className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden aspect-video cursor-crosshair"
           onClick={config.type === 'reaction' ? handleReactionMiss : undefined}
         >

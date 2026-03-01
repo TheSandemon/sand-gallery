@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Gamepad2, Sparkles, Play, Star, Clock, Zap, Brain, Puzzle, Music, Palette, Loader2, RefreshCw } from 'lucide-react'
+import { Gamepad2, Sparkles, Play, Star, Clock, Zap, Brain, Puzzle, Music, Palette, Loader2, RefreshCw, Gem } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 
@@ -47,6 +47,14 @@ const FALLBACK_GAMES = [
     description: 'Create beats with AI. Mix, match, and discover new sounds powered by neural synthesis.',
     category: 'music',
     thumbnail: 'https://picsum.photos/seed/beatsynth/400/300',
+    status: 'ready',
+  },
+  {
+    id: 'crystal-cavern',
+    title: 'Crystal Cavern',
+    description: 'Navigate the dark cave and collect glowing crystals! Chain collections for combo multipliers.',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/crystalcavern/400/300',
     status: 'ready',
   },
   {

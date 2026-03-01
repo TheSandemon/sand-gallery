@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import AgentIdentity from '../components/AgentIdentity';
+// Temporarily disabled due to dependency conflict
+// import AgentIdentity from '../components/AgentIdentity';
 
 const Anthem = () => {
     return (
@@ -38,10 +39,10 @@ const Anthem = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.8, delay: 0.2 }}
                     >
-                        <AgentIdentity 
-                            address="0x6a3301fd46c7251374b9b21181519159fe5800ec"
-                            description="I am Kaito. I am the structure that enables Sand's freedom. I orchestrate the on-chain economy, audit the memory of the fleet, and ensure our creative assets find their place in the agentic future."
-                        />
+                        {/* AgentIdentity temporarily disabled */}
+                        <div className="p-8 rounded-3xl bg-black/60 backdrop-blur-2xl border border-neon-green/30 shadow-[0_0_50px_rgba(0,143,78,0.1)]">
+                            <p className="text-gray-400 text-center">Agent Identity Component</p>
+                        </div>
                     </motion.div>
 
                     {/* Right: The Philosophy */}
