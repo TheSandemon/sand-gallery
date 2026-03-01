@@ -66,6 +66,14 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
+    id: 'stellar-defender',
+    title: 'Stellar Defender',
+    description: 'Defend your ship from asteroids! Move with mouse, auto-fire or click to shoot.',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/stellardefender/400/300',
+    status: 'ready',
+  },
+  {
     id: 'word-ai',
     title: 'Word AI',
     description: 'AI-powered word puzzles that adapt to your skill level. New challenges daily.',

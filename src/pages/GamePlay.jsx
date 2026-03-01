@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer, ArrowUp, ArrowDown, Moon, Sun, Infinity } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer, ArrowUp, ArrowDown, Moon, Sun, Infinity, Rocket, Crosshair, Heart } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore'
 import { useAuth } from '../context/AuthContext'
@@ -56,6 +56,13 @@ const GAMES = {
     icon: ArrowUp,
     color: 'from-violet-400 to-purple-600',
     type: 'gravity'
+  },
+  'stellar-defender': {
+    name: 'Stellar Defender',
+    description: 'Defend your ship from asteroids! Move with mouse, auto-fire or click to shoot.',
+    icon: Rocket,
+    color: 'from-red-400 to-orange-600',
+    type: 'shooter'
   }
 }
 
@@ -125,6 +132,17 @@ export default function GamePlay() {
   const [gravityTimeLeft, setGravityTimeLeft] = useState(45)
   const [gravitySpeed, setGravitySpeed] = useState(2)
   const [flipEffect, setFlipEffect] = useState(false)
+  
+  // Stellar Defender state
+  const [shipPosition, setShipPosition] = useState({ x: 50, y: 85 })
+  const [bullets, setBullets] = useState([])
+  const [asteroids, setAsteroids] = useState([])
+  const [explosions, setExplosions] = useState([])
+  const [stellarLives, setStellarLives] = useState(3)
+  const [stellarScore, setStellarScore] = useState(0)
+  const [stellarWave, setStellarWave] = useState(1)
+  const [lastShot, setLastShot] = useState(0)
+  const [stellarGameOver, setStellarGameOver] = useState(false)
   
   // Audio context for SFX
   const [audioContext, setAudioContext] = useState(null)
@@ -284,6 +302,15 @@ export default function GamePlay() {
     setGravityTimeLeft(45)
     setGravitySpeed(2)
     setFlipEffect(false)
+    // Stellar Defender init
+    setShipPosition({ x: 50, y: 85 })
+    setBullets([])
+    setAsteroids([])
+    setExplosions([])
+    setStellarLives(3)
+    setStellarScore(0)
+    setStellarWave(1)
+    setStellarGameOver(false)
     // Init audio context on user interaction
     if (!audioContext) {
       const ctx = new (window.AudioContext || window.webkitAudioContext)()
@@ -317,6 +344,15 @@ export default function GamePlay() {
     setGravityTimeLeft(45)
     setGravitySpeed(2)
     setFlipEffect(false)
+    // Stellar Defender reset
+    setShipPosition({ x: 50, y: 85 })
+    setBullets([])
+    setAsteroids([])
+    setExplosions([])
+    setStellarLives(3)
+    setStellarScore(0)
+    setStellarWave(1)
+    setStellarGameOver(false)
   }
 
   // Neural Maze handlers
@@ -689,6 +725,193 @@ export default function GamePlay() {
     }, 2000)
     return () => clearInterval(interval)
   }, [config.type])
+
+  // Stellar Defender game loop
+  useEffect(() => {
+    let interval
+    if (gameState === 'playing' && config.type === 'shooter') {
+      if (stellarGameOver) {
+        setGameState('finished')
+        return
+      }
+      interval = setInterval(() => {
+        // Spawn asteroids based on wave
+        const spawnRate = 0.02 + (stellarWave * 0.005)
+        if (Math.random() < spawnRate) {
+          setAsteroids(prev => [...prev, {
+            id: Date.now() + Math.random(),
+            x: Math.random() * 90 + 5,
+            y: -5,
+            size: Math.random() * 20 + 15,
+            speed: Math.random() * 1 + 0.5 + (stellarWave * 0.1),
+            rotation: Math.random() * 360
+          }])
+        }
+        
+        // Auto-fire bullets
+        const now = Date.now()
+        if (now - lastShot > 300) {
+          setBullets(prev => [...prev, {
+            id: now,
+            x: shipPosition.x,
+            y: shipPosition.y - 5
+          }])
+          setLastShot(now)
+          // Play shoot sound
+          if (audioContext) {
+            const osc = audioContext.createOscillator()
+            const gain = audioContext.createGain()
+            osc.connect(gain)
+            gain.connect(audioContext.destination)
+            osc.frequency.setValueAtTime(880, audioContext.currentTime)
+            osc.type = 'square'
+            gain.gain.setValueAtTime(0.05, audioContext.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05)
+            osc.start()
+            osc.stop(audioContext.currentTime + 0.05)
+          }
+        }
+        
+        // Move bullets
+        setBullets(prev => {
+          const newBullets = prev.map(b => ({ ...b, y: b.y - 4 })).filter(b => b.y > -5)
+          return newBullets
+        })
+        
+        // Move asteroids
+        setAsteroids(prev => {
+          let newAsteroids = prev.map(a => ({ ...a, y: a.y + a.speed, rotation: a.rotation + 2 }))
+            .filter(a => a.y < 110)
+          
+          // Check bullet-asteroid collisions
+          const bulletsNow = bullets
+          for (const asteroid of newAsteroids) {
+            for (const bullet of bulletsNow) {
+              const dx = asteroid.x - bullet.x
+              const dy = asteroid.y - bullet.y
+              const distance = Math.sqrt(dx * dx + dy * dy)
+              if (distance < asteroid.size / 2 + 2) {
+                // Hit!
+                setStellarScore(s => s + 10 * stellarWave)
+                // Add explosion
+                setExplosions(prev => [...prev, {
+                  id: Date.now() + Math.random(),
+                  x: asteroid.x,
+                  y: asteroid.y,
+                  size: asteroid.size
+                }])
+                newAsteroids = newAsteroids.filter(a => a.id !== asteroid.id)
+                // Play explosion sound
+                if (audioContext) {
+                  const osc = audioContext.createOscillator()
+                  const gain = audioContext.createGain()
+                  osc.connect(gain)
+                  gain.connect(audioContext.destination)
+                  osc.frequency.setValueAtTime(150, audioContext.currentTime)
+                  osc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2)
+                  osc.type = 'sawtooth'
+                  gain.gain.setValueAtTime(0.1, audioContext.currentTime)
+                  gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+                  osc.start()
+                  osc.stop(audioContext.currentTime + 0.2)
+                }
+                break
+              }
+            }
+          }
+          
+          // Check asteroid-player collisions
+          for (const asteroid of newAsteroids) {
+            const dx = asteroid.x - shipPosition.x
+            const dy = asteroid.y - shipPosition.y
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            if (distance < asteroid.size / 2 + 4) {
+              setStellarLives(l => {
+                const newLives = l - 1
+                if (newLives <= 0) {
+                  setStellarGameOver(true)
+                }
+                return newLives
+              })
+              // Play damage sound
+              if (audioContext) {
+                const osc = audioContext.createOscillator()
+                const gain = audioContext.createGain()
+                osc.connect(gain)
+                gain.connect(audioContext.destination)
+                osc.frequency.setValueAtTime(200, audioContext.currentTime)
+                osc.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3)
+                osc.type = 'sawtooth'
+                gain.gain.setValueAtTime(0.15, audioContext.currentTime)
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+                osc.start()
+                osc.stop(audioContext.currentTime + 0.3)
+              }
+              newAsteroids = newAsteroids.filter(a => a.id !== asteroid.id)
+              // Add explosion
+              setExplosions(prev => [...prev, {
+                id: Date.now() + Math.random(),
+                x: asteroid.x,
+                y: asteroid.y,
+                size: asteroid.size
+              }])
+              break
+            }
+          }
+          
+          return newAsteroids
+        })
+        
+        // Update explosions
+        setExplosions(prev => prev.filter(e => Date.now() - e.id < 500))
+        
+        // Update wave based on score
+        setStellarWave(w => Math.max(w, Math.floor(stellarScore / 100) + 1))
+        
+      }, 30)
+    }
+    return () => clearInterval(interval)
+  }, [gameState, config.type, shipPosition, bullets, stellarWave, stellarScore, stellarGameOver, lastShot, audioContext])
+
+  // Stellar Defender mouse handler
+  useEffect(() => {
+    if (config.type !== 'shooter') return
+    const handleMouseMove = (e) => {
+      if (gameState !== 'playing') return
+      const gameArea = e.currentTarget
+      if (!gameArea) return
+      const rect = gameArea.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      setShipPosition({ x: Math.max(5, Math.min(95, x)), y: 85 })
+    }
+    const gameArea = document.querySelector('[data-game-area]')
+    if (gameArea) {
+      gameArea.addEventListener('mousemove', handleMouseMove)
+      return () => gameArea.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [gameState, config.type])
+
+  // Stellar Defender click to shoot
+  const handleStellarShoot = () => {
+    if (gameState !== 'playing' || config.type !== 'shooter') return
+    setBullets(prev => [...prev, {
+      id: Date.now(),
+      x: shipPosition.x,
+      y: shipPosition.y - 5
+    }])
+    if (audioContext) {
+      const osc = audioContext.createOscillator()
+      const gain = audioContext.createGain()
+      osc.connect(gain)
+      gain.connect(audioContext.destination)
+      osc.frequency.setValueAtTime(880, audioContext.currentTime)
+      osc.type = 'square'
+      gain.gain.setValueAtTime(0.05, audioContext.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05)
+      osc.start()
+      osc.stop(audioContext.currentTime + 0.05)
+    }
+  }
 
   const accuracy = clicks > 0 ? Math.round((clicks / (clicks + misses)) * 100) : 0
 
@@ -1170,6 +1393,162 @@ export default function GamePlay() {
                 {/* Instructions hint */}
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-500 text-xs">
                   TAP / SPACE to flip
+                </div>
+              </>
+            )}
+          </>
+        )
+        
+      case 'shooter':
+        return (
+          <>
+            {/* Space background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-red-950/10 to-zinc-950 overflow-hidden">
+              {/* Stars */}
+              {[...Array(60)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    opacity: Math.random() * 0.5 + 0.3
+                  }}
+                />
+              ))}
+              {/* Nebula effect */}
+              <div className="absolute inset-0 bg-gradient-radial from-red-500/5 via-transparent to-transparent" />
+            </div>
+            
+            {gameState === 'idle' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                <motion.div
+                  animate={{ 
+                    y: [0, -10, 0],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Rocket size={64} className="text-red-400 mb-4" />
+                </motion.div>
+                <p className="text-zinc-400 mb-2 text-center px-4">{config.description}</p>
+                <p className="text-zinc-500 text-sm mb-6">Move mouse to steer, auto-fire is enabled!</p>
+                <button 
+                  onClick={startGame}
+                  className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 rounded-full font-medium transition-colors"
+                >
+                  <Play size={20} />
+                  Launch Ship
+                </button>
+              </div>
+            )}
+            {gameState === 'playing' && (
+              <>
+                {/* Bullets */}
+                {bullets.map(bullet => (
+                  <div
+                    key={bullet.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${bullet.x}%`,
+                      top: `${bullet.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    className="w-1 h-4 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50"
+                  />
+                ))}
+                
+                {/* Asteroids */}
+                {asteroids.map(asteroid => (
+                  <motion.div
+                    key={asteroid.id}
+                    animate={{ 
+                      rotate: asteroid.rotation,
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: `${asteroid.x}%`,
+                      top: `${asteroid.y}%`,
+                      width: `${asteroid.size}px`,
+                      height: `${asteroid.size}px`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    className="bg-gradient-to-br from-zinc-600 to-zinc-800 rounded-lg shadow-lg shadow-red-500/30"
+                  >
+                    <div className="absolute inset-1 border border-red-500/30 rounded" />
+                  </motion.div>
+                ))}
+                
+                {/* Explosions */}
+                {explosions.map(exp => (
+                  <motion.div
+                    key={exp.id}
+                    initial={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 2, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                      position: 'absolute',
+                      left: `${exp.x}%`,
+                      top: `${exp.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    className="w-8 h-8 rounded-full bg-orange-500 blur-sm"
+                  />
+                ))}
+                
+                {/* Player ship */}
+                <motion.div
+                  animate={{ 
+                    x: shipPosition.x * 8,
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  style={{
+                    position: 'absolute',
+                    left: `${shipPosition.x}%`,
+                    top: `${shipPosition.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  className="w-12 h-12"
+                  onClick={handleStellarShoot}
+                >
+                  <div className="w-full h-full relative">
+                    {/* Ship body */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-red-600 to-red-400 clip-path-triangle" 
+                      style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} 
+                    />
+                    {/* Engine glow */}
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-6 bg-cyan-400 blur-md rounded-full animate-pulse" />
+                  </div>
+                </motion.div>
+                
+                {/* HUD */}
+                <div className="absolute top-4 left-4 flex items-center gap-4">
+                  {/* Score */}
+                  <div className="flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                    <Star size={14} className="text-amber-400 fill-amber-400" />
+                    <span className="text-sm text-amber-400 font-medium">{stellarScore}</span>
+                  </div>
+                  {/* Wave */}
+                  <div className="flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                    <Zap size={14} className="text-red-400" />
+                    <span className="text-sm text-red-400 font-medium">Wave {stellarWave}</span>
+                  </div>
+                </div>
+                
+                {/* Lives */}
+                <div className="absolute top-4 right-4 flex items-center gap-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className={`w-6 h-6 ${i < stellarLives ? 'text-red-400' : 'text-zinc-700'}`}
+                    >
+                      <Heart className="w-full h-full fill-current" />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Instructions hint */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-500 text-xs">
+                  MOVE mouse to steer • CLICK to shoot
                 </div>
               </>
             )}
