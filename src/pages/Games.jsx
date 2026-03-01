@@ -81,6 +81,14 @@ const FALLBACK_GAMES = [
     thumbnail: 'https://picsum.photos/seed/wordai/400/300',
     status: 'ready',
   },
+  {
+    id: 'neon-snake',
+    title: 'Neon Snake',
+    description: 'Classic snake with a neon twist! Use arrow keys or WASD to move. Collect food, avoid walls and yourself!',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/neonsnake/400/300',
+    status: 'ready',
+  },
 ]
 
 export default function Games() {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer, ArrowUp, ArrowDown, Moon, Sun, Infinity, Rocket, Crosshair, Heart } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer, ArrowUp, ArrowDown, Moon, Sun, Infinity, Rocket, Crosshair, Heart, Dna, Wifi, WifiOff, ZapOff, FastForward } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore'
 import { useAuth } from '../context/AuthContext'
@@ -63,6 +63,13 @@ const GAMES = {
     icon: Rocket,
     color: 'from-red-400 to-orange-600',
     type: 'shooter'
+  },
+  'neon-snake': {
+    name: 'Neon Snake',
+    description: 'Classic snake with a neon twist! Use arrow keys or WASD to move. Collect food, avoid walls and yourself!',
+    icon: Dna,
+    color: 'from-lime-400 to-green-600',
+    type: 'snake'
   }
 }
 
@@ -144,6 +151,22 @@ export default function GamePlay() {
   const [lastShot, setLastShot] = useState(0)
   const [stellarGameOver, setStellarGameOver] = useState(false)
   
+  // Neon Snake state
+  const [snake, setSnake] = useState([{ x: 10, y: 10 }])
+  const [snakeDirection, setSnakeDirection] = useState({ x: 1, y: 0 })
+  const [nextSnakeDirection, setNextSnakeDirection] = useState({ x: 1, y: 0 })
+  const [food, setFood] = useState({ x: 15, y: 10 })
+  const [foodColor, setFoodColor] = useState('#ff00ff')
+  const [snakeSpeed, setSnakeSpeed] = useState(150)
+  const [snakeScore, setSnakeScore] = useState(0)
+  const [snakeLength, setSnakeLength] = useState(3)
+  const [powerUp, setPowerUp] = useState(null)
+  const [powerUpPosition, setPowerUpPosition] = useState(null)
+  const [powerUpEffect, setPowerUpEffect] = useState(null)
+  const [snakeGameOver, setSnakeGameOver] = useState(false)
+  const [snakeLives, setSnakeLives] = useState(3)
+  const [glowMode, setGlowMode] = useState(false)
+  
   // Audio context for SFX
   const [audioContext, setAudioContext] = useState(null)
   const { user } = useAuth()
@@ -177,16 +200,17 @@ export default function GamePlay() {
 
   // Save high score to Firebase + localStorage
   useEffect(() => {
-    if (gameState === 'finished' && score > highScore) {
-      setHighScore(score)
-      localStorage.setItem(`sand-gallery-game-${gameId}-highscore`, score.toString())
+    const currentScore = config.type === 'snake' ? snakeScore : score
+    if (gameState === 'finished' && currentScore > highScore) {
+      setHighScore(currentScore)
+      localStorage.setItem(`sand-gallery-game-${gameId}-highscore`, currentScore.toString())
       
       // Also save to Firebase if user is logged in
       if (user?.uid) {
         try {
           const gameRef = doc(db, 'users', user.uid, 'gameScores', gameId)
           setDoc(gameRef, {
-            highScore: score,
+            highScore: currentScore,
             lastPlayed: new Date(),
             gamesPlayed: increment(1)
           }, { merge: true })
@@ -195,7 +219,7 @@ export default function GamePlay() {
         }
       }
     }
-  }, [gameState, score, highScore, gameId, user])
+  }, [gameState, score, snakeScore, highScore, gameId, user, config.type])
 
   // Neural Maze game loop
   useEffect(() => {
@@ -311,6 +335,21 @@ export default function GamePlay() {
     setStellarScore(0)
     setStellarWave(1)
     setStellarGameOver(false)
+    // Neon Snake init
+    setSnake([{ x: 10, y: 10 }])
+    setSnakeDirection({ x: 1, y: 0 })
+    setNextSnakeDirection({ x: 1, y: 0 })
+    setFood({ x: 15, y: 10 })
+    setFoodColor('#ff00ff')
+    setSnakeSpeed(150)
+    setSnakeScore(0)
+    setSnakeLength(3)
+    setPowerUp(null)
+    setPowerUpPosition(null)
+    setPowerUpEffect(null)
+    setSnakeGameOver(false)
+    setSnakeLives(3)
+    setGlowMode(false)
     // Init audio context on user interaction
     if (!audioContext) {
       const ctx = new (window.AudioContext || window.webkitAudioContext)()
@@ -353,6 +392,21 @@ export default function GamePlay() {
     setStellarScore(0)
     setStellarWave(1)
     setStellarGameOver(false)
+    // Neon Snake reset
+    setSnake([{ x: 10, y: 10 }])
+    setSnakeDirection({ x: 1, y: 0 })
+    setNextSnakeDirection({ x: 1, y: 0 })
+    setFood({ x: 15, y: 10 })
+    setFoodColor('#ff00ff')
+    setSnakeSpeed(150)
+    setSnakeScore(0)
+    setSnakeLength(3)
+    setPowerUp(null)
+    setPowerUpPosition(null)
+    setPowerUpEffect(null)
+    setSnakeGameOver(false)
+    setSnakeLives(3)
+    setGlowMode(false)
   }
 
   // Neural Maze handlers
@@ -890,6 +944,201 @@ export default function GamePlay() {
       return () => gameArea.removeEventListener('mousemove', handleMouseMove)
     }
   }, [gameState, config.type])
+
+  // Neon Snake game loop
+  useEffect(() => {
+    let interval
+    if (gameState === 'playing' && config.type === 'snake') {
+      interval = setInterval(() => {
+        // Apply direction change
+        setSnakeDirection(nextSnakeDirection)
+        
+        setSnake(prev => {
+          const head = prev[0]
+          const newHead = {
+            x: head.x + nextSnakeDirection.x,
+            y: head.y + nextSnakeDirection.y
+          }
+          
+          // Check wall collision (grid is 20x15)
+          if (newHead.x < 0 || newHead.x >= 20 || newHead.y < 0 || newHead.y >= 15) {
+            if (snakeLives > 1) {
+              setSnakeLives(l => l - 1)
+              // Play damage sound
+              if (audioContext) {
+                const osc = audioContext.createOscillator()
+                const gain = audioContext.createGain()
+                osc.connect(gain)
+                gain.connect(audioContext.destination)
+                osc.frequency.setValueAtTime(200, audioContext.currentTime)
+                osc.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.3)
+                osc.type = 'sawtooth'
+                gain.gain.setValueAtTime(0.15, audioContext.currentTime)
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+                osc.start()
+                osc.stop(audioContext.currentTime + 0.3)
+              }
+              // Reset snake position
+              return [{ x: 10, y: 10 }]
+            } else {
+              setSnakeGameOver(true)
+              setGameState('finished')
+              return prev
+            }
+          }
+          
+          // Check self collision
+          for (let i = 0; i < prev.length - 1; i++) {
+            if (newHead.x === prev[i].x && newHead.y === prev[i].y) {
+              if (snakeLives > 1) {
+                setSnakeLives(l => l - 1)
+                if (audioContext) {
+                  const osc = audioContext.createOscillator()
+                  const gain = audioContext.createGain()
+                  osc.connect(gain)
+                  gain.connect(audioContext.destination)
+                  osc.frequency.setValueAtTime(200, audioContext.currentTime)
+                  osc.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.3)
+                  osc.type = 'sawtooth'
+                  gain.gain.setValueAtTime(0.15, audioContext.currentTime)
+                  gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+                  osc.start()
+                  osc.stop(audioContext.currentTime + 0.3)
+                }
+                return [{ x: 10, y: 10 }]
+              } else {
+                setSnakeGameOver(true)
+                setGameState('finished')
+                return prev
+              }
+            }
+          }
+          
+          const newSnake = [newHead, ...prev]
+          
+          // Check food collision
+          if (newHead.x === food.x && newHead.y === food.y) {
+            setSnakeScore(s => s + 10 * snakeLength)
+            setSnakeLength(l => l + 1)
+            // Play eat sound
+            if (audioContext) {
+              const osc = audioContext.createOscillator()
+              const gain = audioContext.createGain()
+              osc.connect(gain)
+              gain.connect(audioContext.destination)
+              osc.frequency.setValueAtTime(660 + snakeLength * 20, audioContext.currentTime)
+              osc.frequency.exponentialRampToValueAtTime(880 + snakeLength * 20, audioContext.currentTime + 0.1)
+              osc.type = 'sine'
+              gain.gain.setValueAtTime(0.15, audioContext.currentTime)
+              gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15)
+              osc.start()
+              osc.stop(audioContext.currentTime + 0.15)
+            }
+            // Spawn new food
+            let newFood
+            do {
+              newFood = {
+                x: Math.floor(Math.random() * 20),
+                y: Math.floor(Math.random() * 15)
+              }
+            } while (newSnake.some(s => s.x === newFood.x && s.y === newFood.y) || 
+                     (powerUpPosition && newFood.x === powerUpPosition.x && newFood.y === powerUpPosition.y))
+            setFood(newFood)
+            setFoodColor(['#ff00ff', '#00ffff', '#ffff00', '#ff6600', '#00ff00'][Math.floor(Math.random() * 5)])
+            
+            // Increase speed every 5 points
+            if ((snakeScore + 10 * snakeLength) % 50 === 0) {
+              setSnakeSpeed(s => Math.max(50, s - 10))
+            }
+            
+            // Spawn power-up occasionally
+            if (Math.random() < 0.15 && !powerUpPosition) {
+              const powerUpTypes = [
+                { type: 'speed', name: '⚡', duration: 5000 },
+                { type: 'glow', name: '✨', duration: 8000 },
+                { type: 'double', name: '2x', duration: 6000 }
+              ]
+              const pu = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]
+              setPowerUp(pu)
+              let puPos
+              do {
+                puPos = {
+                  x: Math.floor(Math.random() * 20),
+                  y: Math.floor(Math.random() * 15)
+                }
+              } while (newSnake.some(s => s.x === puPos.x && s.y === puPos.y) || 
+                       (newFood.x === puPos.x && newFood.y === puPos.y))
+              setPowerUpPosition(puPos)
+            }
+          }
+          
+          // Check power-up collision
+          if (powerUpPosition && newHead.x === powerUpPosition.x && newHead.y === powerUpPosition.y) {
+            setPowerUpEffect(powerUp.type)
+            setPowerUp(null)
+            setPowerUpPosition(null)
+            // Apply power-up effect
+            if (powerUp.type === 'speed') {
+              setSnakeSpeed(s => Math.max(50, s - 30))
+            } else if (powerUp.type === 'glow') {
+              setGlowMode(true)
+            }
+            // Clear effect after duration
+            setTimeout(() => {
+              setPowerUpEffect(null)
+              if (powerUp.type === 'speed') {
+                setSnakeSpeed(s => Math.max(50, s + 30))
+              } else if (powerUp.type === 'glow') {
+                setGlowMode(false)
+              }
+            }, powerUp.duration)
+            // Play power-up sound
+            if (audioContext) {
+              const osc = audioContext.createOscillator()
+              const gain = audioContext.createGain()
+              osc.connect(gain)
+              gain.connect(audioContext.destination)
+              osc.frequency.setValueAtTime(880, audioContext.currentTime)
+              osc.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.15)
+              osc.type = 'sine'
+              gain.gain.setValueAtTime(0.2, audioContext.currentTime)
+              gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+              osc.start()
+              osc.stop(audioContext.currentTime + 0.2)
+            }
+          }
+          
+          // Remove tail if not eating
+          while (newSnake.length > snakeLength) {
+            newSnake.pop()
+          }
+          
+          return newSnake
+        })
+      }, snakeSpeed)
+    }
+    return () => clearInterval(interval)
+  }, [gameState, config.type, nextSnakeDirection, food, powerUpPosition, snakeLength, snakeScore, snakeLives, powerUp, snakeSpeed, audioContext])
+
+  // Neon Snake keyboard controls
+  useEffect(() => {
+    if (config.type !== 'snake') return
+    const handleKeyDown = (e) => {
+      if (gameState !== 'playing') return
+      const key = e.key.toLowerCase()
+      if (key === 'arrowup' || key === 'w') {
+        if (snakeDirection.y !== 1) setNextSnakeDirection({ x: 0, y: -1 })
+      } else if (key === 'arrowdown' || key === 's') {
+        if (snakeDirection.y !== -1) setNextSnakeDirection({ x: 0, y: 1 })
+      } else if (key === 'arrowleft' || key === 'a') {
+        if (snakeDirection.x !== 1) setNextSnakeDirection({ x: -1, y: 0 })
+      } else if (key === 'arrowright' || key === 'd') {
+        if (snakeDirection.x !== -1) setNextSnakeDirection({ x: 1, y: 0 })
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [gameState, config.type, snakeDirection])
 
   // Stellar Defender click to shoot
   const handleStellarShoot = () => {
@@ -1555,6 +1804,176 @@ export default function GamePlay() {
           </>
         )
         
+      case 'snake':
+        return (
+          <>
+            {/* Neon grid background */}
+            <div className="absolute inset-0 bg-zinc-950 overflow-hidden">
+              {/* Grid lines */}
+              <div className="absolute inset-0" style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(34, 197, 94, 0.1) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(34, 197, 94, 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: '5% 6.67%'
+              }} />
+              {/* Glow effect at edges */}
+              <div className="absolute inset-0 bg-gradient-radial from-lime-500/5 via-transparent to-transparent" />
+            </div>
+            
+            {gameState === 'idle' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Dna size={64} className="text-lime-400 mb-4" />
+                </motion.div>
+                <p className="text-zinc-400 mb-2 text-center px-4">{config.description}</p>
+                <p className="text-zinc-500 text-sm mb-6">Arrow Keys / WASD to move</p>
+                <button 
+                  onClick={startGame}
+                  className="flex items-center gap-2 px-6 py-3 bg-lime-600 hover:bg-lime-500 rounded-full font-medium transition-colors"
+                >
+                  <Play size={20} />
+                  Start Game
+                </button>
+              </div>
+            )}
+            {gameState === 'playing' && (
+              <>
+                {/* Snake grid area */}
+                <div className="absolute inset-2 border border-lime-500/30 rounded-lg overflow-hidden">
+                  {/* Food */}
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                    style={{
+                      position: 'absolute',
+                      left: `${food.x * 5 + 2.5}%`,
+                      top: `${food.y * 6.67 + 3.33}%`,
+                      transform: 'translate(-50%, -50%)',
+                      width: '4%',
+                      height: '5.5%'
+                    }}
+                  >
+                    <div 
+                      className="w-full h-full rounded-full animate-pulse"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, white, ${foodColor})`,
+                        boxShadow: `0 0 15px ${foodColor}, 0 0 30px ${foodColor}`
+                      }}
+                    />
+                  </motion.div>
+                  
+                  {/* Power-up */}
+                  {powerUpPosition && (
+                    <motion.div
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        rotate: [0, 180, 360]
+                      }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      style={{
+                        position: 'absolute',
+                        left: `${powerUpPosition.x * 5 + 2.5}%`,
+                        top: `${powerUpPosition.y * 6.67 + 3.33}%`,
+                        transform: 'translate(-50%, -50%)',
+                        width: '4%',
+                        height: '5.5%'
+                      }}
+                      className="text-lg flex items-center justify-center"
+                    >
+                      {powerUp?.name}
+                    </motion.div>
+                  )}
+                  
+                  {/* Snake body */}
+                  {snake.map((segment, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      style={{
+                        position: 'absolute',
+                        left: `${segment.x * 5 + 2.5}%`,
+                        top: `${segment.y * 6.67 + 3.33}%`,
+                        transform: 'translate(-50%, -50%)',
+                        width: '4.5%',
+                        height: '6%',
+                        borderRadius: index === 0 ? '30%' : '10%'
+                      }}
+                      className={index === 0 ? 'z-10' : ''}
+                    >
+                      <div 
+                        className="w-full h-full"
+                        style={{
+                          background: index === 0 
+                            ? 'radial-gradient(circle at 30% 30%, #86efac, #22c55e, #15803d)'
+                            : `linear-gradient(180deg, rgba(134, 239, 172, ${1 - index * 0.05}) 0%, rgba(34, 197, 94, ${1 - index * 0.05}) 100%)`,
+                          boxShadow: glowMode 
+                            ? `0 0 ${10 + index * 2}px #22c55e, 0 0 ${20 + index * 4}px #22c55e`
+                            : `0 0 ${5 + index}px rgba(34, 197, 94, 0.5)`,
+                          border: index === 0 ? '2px solid #86efac' : '1px solid rgba(34, 197, 94, 0.5)'
+                        }}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+                
+                {/* HUD */}
+                <div className="absolute top-4 left-4 flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                    <Star size={14} className="text-lime-400 fill-lime-400" />
+                    <span className="text-sm text-lime-400 font-medium">{snakeScore}</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                    <Grid size={14} className="text-cyan-400" />
+                    <span className="text-sm text-cyan-400 font-medium">Length: {snakeLength}</span>
+                  </div>
+                </div>
+                
+                {/* Lives */}
+                <div className="absolute top-4 right-4 flex items-center gap-1">
+                  {[...Array(3)].map((_, i) => (
+                    <Heart 
+                      key={i}
+                      size={20}
+                      className={`${i < snakeLives ? 'text-lime-400 fill-lime-400' : 'text-zinc-700'}`}
+                    />
+                  ))}
+                </div>
+                
+                {/* Power-up effect indicator */}
+                {powerUpEffect && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-lime-500/20 to-cyan-500/20 rounded-full">
+                    {powerUpEffect === 'speed' && <Zap size={16} className="text-yellow-400" />}
+                    {powerUpEffect === 'glow' && <Sparkles size={16} className="text-purple-400" />}
+                    {powerUpEffect === 'double' && <FastForward size={16} className="text-blue-400" />}
+                    <span className="text-xs text-lime-400 font-medium uppercase">{powerUpEffect} ACTIVE!</span>
+                  </div>
+                )}
+                
+                {/* Speed indicator */}
+                <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                  <span className="text-xs text-zinc-400">Speed:</span>
+                  <span className="text-xs text-lime-400 font-medium">{Math.round(150 / snakeSpeed * 100)}%</span>
+                </div>
+                
+                {/* Instructions hint */}
+                <div className="absolute bottom-4 left-4 text-zinc-500 text-xs">
+                  ARROW KEYS / WASD to move
+                </div>
+              </>
+            )}
+          </>
+        )
+        
       default:
         return (
           <div className="absolute inset-0 flex items-center justify-center text-zinc-500">
@@ -1712,6 +2131,28 @@ export default function GamePlay() {
                   <ArrowUp size={32} className="text-violet-400 mx-auto" />
                 )}
                 <div className="text-xs text-zinc-500">GRAVITY</div>
+              </div>
+            </>
+          )}
+          {config.type === 'snake' && (
+            <>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-lime-400">{snakeScore}</div>
+                <div className="text-xs text-zinc-500">SCORE</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-cyan-400">{snakeLength}</div>
+                <div className="text-xs text-zinc-500">LENGTH</div>
+              </div>
+              <div className="text-center flex items-center justify-center gap-1">
+                {[...Array(3)].map((_, i) => (
+                  <Heart 
+                    key={i}
+                    size={20}
+                    className={`${i < snakeLives ? 'text-lime-400 fill-lime-400' : 'text-zinc-700'}`}
+                  />
+                ))}
+                <div className="text-xs text-zinc-500 ml-1">LIVES</div>
               </div>
             </>
           )}
