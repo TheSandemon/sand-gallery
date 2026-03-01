@@ -32,16 +32,16 @@
         "function": "toolsCall"
       },
       {
-        "source": "/mcp",
-        "function": "mcp"
-      },
-      {
         "source": "/query",
         "function": "query"
       },
       {
         "source": "/status/**",
         "function": "status"
+      },
+      {
+  "source": "/expand",
+        "function": "expandPlaceholders"
       },
       {
         "source": "**",

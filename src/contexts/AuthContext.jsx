@@ -104,8 +104,9 @@ export function AuthProvider({ children }) {
     logout,
     addCredits,
     useCredits,
-    isAdmin: profile?.role === 'admin',
-    isEditor: profile?.role === 'editor' || profile?.role === 'admin',
+    isAdmin: profile?.role === 'admin' || profile?.role === 'owner',
+    isOwner: profile?.role === 'owner',
+    isEditor: profile?.role === 'editor' || profile?.role === 'admin' || profile?.role === 'owner',
   }
 
   return (

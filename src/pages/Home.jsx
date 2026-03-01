@@ -112,11 +112,11 @@ export default function Home() {
             
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <Link
-                to="/works"
+                to="/gallery"
                 class="group flex items-center gap-3 px-8 py-4 bg-amber-600 hover:bg-amber-700 rounded-full text-lg font-semibold transition-all hover:scale-105 shadow-lg shadow-amber-600/20"
               >
                 <Play size={20} class="group-hover:scale-110 transition-transform" />
-                Watch Works
+                Watch Gallery
                 <ArrowRight class="group-hover:translate-x-1 transition-transform" size={18} />
               </Link>
               <Link
@@ -172,7 +172,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Works Preview */}
+      {/* Gallery Preview */}
       <section class="py-32 px-4">
         <div class="max-w-6xl mx-auto">
           <motion.div
@@ -183,12 +183,12 @@ export default function Home() {
           >
             <div>
               <h2 class="text-3xl md:text-4xl font-display font-bold mb-2">
-                Selected Works
+                Featured Work
               </h2>
               <p class="text-zinc-500">Films, experiments, and explorations</p>
             </div>
             <Link
-              to="/works"
+              to="/gallery"
               class="hidden md:flex items-center gap-2 text-amber-500 hover:text-amber-400 transition-colors"
             >
               View All <ArrowRight size={16} />
@@ -231,10 +231,10 @@ export default function Home() {
           </div>
 
           <Link
-            to="/works"
+            to="/gallery"
             class="md:hidden flex items-center justify-center gap-2 mt-8 text-amber-500"
           >
-            View All Works <ArrowRight size={16} />
+            View All <ArrowRight size={16} />
           </Link>
         </div>
       </section>

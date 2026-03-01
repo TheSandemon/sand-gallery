@@ -1,19 +1,24 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { motion } from 'framer-motion'
-import { Menu, X, User, LogOut, Bot } from 'lucide-react'
+import { Menu, X, User, LogOut, Bot, Gamepad2, Wrench, Settings } from 'lucide-react'
 import { useState } from 'react'
 
 const navLinks = [
   { path: '/', label: 'Home' },
-  { path: '/works', label: 'Works' },
-  { path: '/services', label: 'Services' },
+  { path: '/gallery', label: 'Gallery' },
+  { path: '/games', label: 'Games', icon: Gamepad2 },
+  { path: '/tools', label: 'Tools', icon: Wrench },
 ]
 
+const adminLink = { path: '/admin', label: 'Admin', icon: Settings }
+
 export default function Navbar() {
-  const { user, profile, logout } = useAuth()
+  const { user, profile, logout, isOwner } = useAuth()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const allLinks = isOwner ? [...navLinks, adminLink] : navLinks
 
   return (
     <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-zinc-800/50">
@@ -33,16 +38,17 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div class="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
+            {allLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                class={`text-sm font-medium transition-colors ${
+                class={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                   location.pathname === link.path
                     ? 'text-white'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
+                {link.icon && <link.icon size={14} />}
                 {link.label}
               </Link>
             ))}
@@ -101,13 +107,16 @@ export default function Navbar() {
           class="md:hidden border-t border-zinc-800"
         >
           <div class="px-4 py-4 space-y-3">
-            {navLinks.map((link) => (
+            {allLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
-                class="block py-2 text-zinc-400 hover:text-white"
+                class={`flex items-center gap-2 py-2 ${
+                  location.pathname === link.path ? 'text-white' : 'text-zinc-400 hover:text-white'
+                }`}
               >
+                {link.icon && <link.icon size={16} />}
                 {link.label}
               </Link>
             ))}
