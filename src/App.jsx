@@ -11,6 +11,7 @@ import Editor from './pages/Editor'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import Kaito from './pages/Kaito'
+import Studio from './pages/Studio'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/editor" element={<Editor />} />
         <Route path="/kaito" element={<Kaito />} />
+        <Route path="/studio" element={<Studio />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
