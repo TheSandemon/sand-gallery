@@ -5,8 +5,10 @@ import MasonryGrid from './MasonryGrid';
 import MediaCard from './MediaCard';
 import useMediaLibrary from '../../hooks/useMediaLibrary';
 import MediaViewer from '../MediaViewer';
+import { CATEGORIES } from '../../config/constants';
 
-const TAGS = ['All', 'Video', 'Image', 'Audio', '3D', 'Cyberpunk', 'Nature', 'Abstract', 'Character'];
+// TAGS alias for backward compatibility - centralized in constants.js
+const TAGS = CATEGORIES;
 
 const GalleryExplorer = () => {
     const { mediaItems, loading, error } = useMediaLibrary();

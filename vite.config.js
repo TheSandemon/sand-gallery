@@ -13,7 +13,21 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(versionString),
   },
   build: {
-    // Let Vite handle all chunking - don't force any manual chunks
-    // This prevents dual React initialization issues
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React ecosystem
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Animation
+          'vendor-motion': ['framer-motion'],
+          // Wallet/Web3 (large - lazy load via dynamic imports in code)
+          'vendor-wallet': [
+            '@coinbase/wallet-sdk',
+            'viem',
+            'wagmi',
+          ],
+        },
+      },
+    },
   },
 })

@@ -1,22 +1,31 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CircuitEffect from './components/CircuitEffect';
 import PageLoader from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import AppProviders from './components/AppProviders';
-import Home from './pages/Home';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
-import Studio from './pages/Studio';
-import Pricing from './pages/Pricing';
-import CRM from './pages/CRM';
-import Editor from './pages/admin/Editor';
-import Gallery from './pages/Gallery';
-import Anthem from './pages/Anthem';
+import DemoModeBanner from './components/DemoModeBanner';
 import NotFound from './pages/NotFound';
 import './index.css';
+
+// Lazy load pages for code splitting (reduces initial bundle size)
+const Home = lazy(() => import('./pages/Home'));
+const Profile = lazy(() => import('./pages/Profile'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Studio = lazy(() => import('./pages/Studio'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const CRM = lazy(() => import('./pages/CRM'));
+const Editor = lazy(() => import('./pages/admin/Editor'));
+const Gallery = lazy(() => import('./pages/Gallery'));
+const Anthem = lazy(() => import('./pages/Anthem'));
+
+// Page loading fallback
+const PageSuspense = ({ children }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
 
 // Pages that should show CircuitEffect (public landing pages)
 const PUBLIC_PAGES = ['/', '/gallery', '/pricing', '/anthem', '/profile'];
@@ -57,19 +66,20 @@ function AppContent() {
     <>
       <SkipLink />
       {showCircuitEffect && <CircuitEffect />}
+      <DemoModeBanner />
       <AppLayout>
         <main id="main-content">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/anthem" element={<Anthem />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/editor" element={<Editor />} />
-            <Route path="/studio" element={<Studio />} />
-            <Route path="/crm" element={<CRM />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<PageSuspense><RouteErrorBoundary><Home /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/gallery" element={<PageSuspense><RouteErrorBoundary><Gallery /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/anthem" element={<PageSuspense><RouteErrorBoundary><Anthem /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/profile" element={<PageSuspense><RouteErrorBoundary><Profile /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/admin" element={<PageSuspense><RouteErrorBoundary><AdminDashboard /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/admin/editor" element={<PageSuspense><RouteErrorBoundary><Editor /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/studio" element={<PageSuspense><RouteErrorBoundary><Studio /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/crm" element={<PageSuspense><RouteErrorBoundary><CRM /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="/pricing" element={<PageSuspense><RouteErrorBoundary><Pricing /></RouteErrorBoundary></PageSuspense>} />
+            <Route path="*" element={<RouteErrorBoundary><NotFound /></RouteErrorBoundary>} />
           </Routes>
         </main>
       </AppLayout>

@@ -1,61 +1,24 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useViewCount from '../../hooks/useViewCount';
-import WishlistButton from './WishlistButton';
 
 /**
  * Lightbox - Modal detail view for gallery items
- * Features:
- * - Full image display with click-to-zoom
- * - Pan/zoom navigation when zoomed
- * - Keyboard navigation (arrow keys, escape)
- * - View count tracking
- * - Social sharing
- * - Wishlist support
+ * Displays full image, description, tags, and external links
  * 
  * @param {Object} props
  * @param {Object} props.item - The gallery item to display
  * @param {boolean} props.isOpen - Whether the lightbox is visible
  * @param {Function} props.onClose - Callback to close the lightbox
- * @param {Function} props.onNavigate - Callback to navigate (direction: 'next'|'prev')
  * @param {boolean} props.enableViewTracking - Whether to track view counts (default: false)
- * @param {boolean} props.enableWishlist - Whether to show wishlist button (default: true)
  */
-const Lightbox = ({ 
-    item, 
-    isOpen, 
-    onClose, 
-    onNavigate, 
-    enableViewTracking = false,
-    enableWishlist = true 
-}) => {
-    const [isZoomed, setIsZoomed] = useState(false);
-    const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-    // Handle keyboard navigation
+const Lightbox = ({ item, isOpen, onClose, enableViewTracking = false }) => {
+    // Handle escape key to close
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape') {
-            if (isZoomed) {
-                // First exit zoom mode
-                setIsZoomed(false);
-                setPanPosition({ x: 0, y: 0 });
-            } else {
-                onClose();
-            }
-        } else if (e.key === 'ArrowRight' && onNavigate && !isZoomed) {
-            onNavigate('next');
-        } else if (e.key === 'ArrowLeft' && onNavigate && !isZoomed) {
-            onNavigate('prev');
-        } else if (e.key === 'z' || e.key === 'Z') {
-            // Toggle zoom with 'z' key
-            setIsZoomed(prev => !prev);
-            if (isZoomed) {
-                setPanPosition({ x: 0, y: 0 });
-            }
+            onClose();
         }
-    }, [onClose, onNavigate, isZoomed]);
+    }, [onClose]);
 
     // View count tracking
     const { views, isLoading: viewsLoading, incrementViews } = useViewCount(item?.id);
@@ -63,6 +26,7 @@ const Lightbox = ({
     // Track view when lightbox opens (only once per open)
     useEffect(() => {
         if (isOpen && item && enableViewTracking && item.id) {
+            // Increment view count on first open
             const hasViewedKey = `viewed_${item.id}`;
             const hasViewed = sessionStorage.getItem(hasViewedKey);
             
@@ -73,7 +37,6 @@ const Lightbox = ({
         }
     }, [isOpen, item, enableViewTracking, incrementViews]);
 
-    // Setup keyboard and scroll lock
     useEffect(() => {
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
@@ -82,57 +45,16 @@ const Lightbox = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = 'unset';
-            // Reset zoom state on unmount
-            setIsZoomed(false);
-            setPanPosition({ x: 0, y: 0 });
         };
     }, [isOpen, handleKeyDown]);
-
-    // Reset zoom when item changes
-    useEffect(() => {
-        setIsZoomed(false);
-        setPanPosition({ x: 0, y: 0 });
-    }, [item?.id]);
 
     // Don't render if not open or no item
     if (!isOpen || !item) return null;
 
     const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget && !isZoomed) {
+        if (e.target === e.currentTarget) {
             onClose();
         }
-    };
-
-    // Toggle zoom on image click
-    const handleImageClick = () => {
-        if (!isZoomed) {
-            setIsZoomed(true);
-        }
-    };
-
-    // Pan handling for dragging
-    const handleMouseDown = (e) => {
-        if (isZoomed) {
-            setIsDragging(true);
-            setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
-        }
-    };
-
-    const handleMouseMove = (e) => {
-        if (isZoomed && isDragging) {
-            const newX = e.clientX - dragStart.x;
-            const newY = e.clientY - dragStart.y;
-            // Limit pan range
-            const maxPan = 200;
-            setPanPosition({
-                x: Math.max(-maxPan, Math.min(maxPan, newX)),
-                y: Math.max(-maxPan, Math.min(maxPan, newY))
-            });
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
     };
 
     const handleShare = async (platform) => {
@@ -168,17 +90,14 @@ const Lightbox = ({
                 transition={{ duration: 0.2 }}
                 className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
                 onClick={handleBackdropClick}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
             >
                 {/* Backdrop */}
-                <div className="absolute inset-0 bg-black/95 backdrop-blur-md" />
+                <div className="absolute inset-0 bg-black/90 backdrop-blur-md" />
                 
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+                    className="absolute top-4 right-4 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
                     aria-label="Close lightbox"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,69 +105,23 @@ const Lightbox = ({
                     </svg>
                 </button>
 
-                {/* Zoom indicator */}
-                <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-                    <span className="px-3 py-1.5 bg-black/50 rounded-full text-white text-sm">
-                        {isZoomed ? '🔍 Zoomed - Drag to pan • Press ESC or Z to exit' : 'Click image to zoom • Z to toggle'}
-                    </span>
-                </div>
-
-                {/* Navigation buttons */}
-                {onNavigate && !isZoomed && (
-                    <>
-                        <button
-                            onClick={() => onNavigate('prev')}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
-                            aria-label="Previous item"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <button
-                            onClick={() => onNavigate('next')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
-                            aria-label="Next item"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </>
-                )}
-
                 {/* Content */}
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative max-w-6xl w-full max-h-[90vh] overflow-hidden rounded-2xl bg-[var(--bg-elevated)] shadow-2xl"
+                    className="relative max-w-5xl w-full max-h-[90vh] overflow-hidden rounded-2xl bg-[var(--bg-elevated)] shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
                         {/* Image section */}
-                        <div 
-                            className={`
-                                lg:w-3/5 bg-black flex items-center justify-center relative overflow-hidden
-                                ${isZoomed ? 'cursor-grabbing' : 'cursor-zoom-in'}
-                            `}
-                            onClick={handleImageClick}
-                            onMouseDown={handleMouseDown}
-                        >
+                        <div className="lg:w-3/5 bg-black flex items-center justify-center relative">
                             {item.thumbnail ? (
-                                <motion.img 
+                                <img 
                                     src={item.thumbnail} 
                                     alt={item.title}
-                                    className="w-full h-full max-h-[50vh] lg:max-h-[90vh] object-contain select-none"
-                                    style={{
-                                        transform: isZoomed 
-                                            ? `scale(2.5) translate(${panPosition.x}px, ${panPosition.y}px)` 
-                                            : 'scale(1) translate(0, 0)',
-                                        cursor: isZoomed ? 'grabbing' : 'zoom-in',
-                                        transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-                                    }}
-                                    draggable={false}
+                                    className="w-full h-full max-h-[50vh] lg:max-h-[90vh] object-contain"
                                 />
                             ) : (
                                 <div className="aspect-[4/3] flex items-center justify-center">
@@ -257,18 +130,11 @@ const Lightbox = ({
                             )}
                             
                             {/* Category badge on image */}
-                            <div className="absolute top-4 left-4 z-10">
+                            <div className="absolute top-4 left-4">
                                 <span className="px-4 py-2 bg-[var(--accent-primary)] text-white rounded-full text-sm font-medium">
                                     {item.category}
                                 </span>
                             </div>
-
-                            {/* Wishlist button on image */}
-                            {enableWishlist && (
-                                <div className="absolute bottom-4 right-4 z-10">
-                                    <WishlistButton item={item} size="lg" />
-                                </div>
-                            )}
                         </div>
 
                         {/* Details section */}
