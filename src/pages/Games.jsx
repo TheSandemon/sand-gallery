@@ -58,6 +58,14 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
+    id: 'gravity-flip',
+    title: 'Gravity Flip',
+    description: 'Tap to flip gravity! Navigate through the void collecting stars while avoiding red obstacles.',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/gravityflip/400/300',
+    status: 'ready',
+  },
+  {
     id: 'word-ai',
     title: 'Word AI',
     description: 'AI-powered word puzzles that adapt to your skill level. New challenges daily.',

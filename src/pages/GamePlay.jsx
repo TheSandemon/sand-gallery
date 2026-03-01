@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer, ArrowUp, ArrowDown, Moon, Sun, Infinity } from 'lucide-react'
+import { db } from '../lib/firebase'
+import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore'
+import { useAuth } from '../context/AuthContext'
 
 // Game configurations
 const GAMES = {
@@ -46,6 +49,13 @@ const GAMES = {
     icon: Gem,
     color: 'from-cyan-400 to-blue-600',
     type: 'cavern'
+  },
+  'gravity-flip': {
+    name: 'Gravity Flip',
+    description: 'Tap or press SPACE to flip gravity! Collect stars, avoid red obstacles.',
+    icon: ArrowUp,
+    color: 'from-violet-400 to-purple-600',
+    type: 'gravity'
   }
 }
 
@@ -107,22 +117,67 @@ export default function GamePlay() {
   const [cavernTimeLeft, setCavernTimeLeft] = useState(60)
   const [collected, setCollected] = useState(0)
   
+  // Gravity Flip state
+  const [gravityFlipped, setGravityFlipped] = useState(false)
+  const [gravityPlayerY, setGravityPlayerY] = useState(85)
+  const [gravityObstacles, setGravityObstacles] = useState([])
+  const [stars, setStars] = useState([])
+  const [gravityTimeLeft, setGravityTimeLeft] = useState(45)
+  const [gravitySpeed, setGravitySpeed] = useState(2)
+  const [flipEffect, setFlipEffect] = useState(false)
+  
   // Audio context for SFX
   const [audioContext, setAudioContext] = useState(null)
+  const { user } = useAuth()
 
-  // Load high score
+  // Load high score from Firebase + localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(`sand-gallery-game-${gameId}-highscore`)
-    if (saved) setHighScore(parseInt(saved))
-  }, [gameId])
+    const loadHighScore = async () => {
+      // First load from localStorage as fallback
+      const localSaved = localStorage.getItem(`sand-gallery-game-${gameId}-highscore`)
+      if (localSaved) setHighScore(parseInt(localSaved))
+      
+      // Then try to load from Firebase if user is logged in
+      if (user?.uid) {
+        try {
+          const gameRef = doc(db, 'users', user.uid, 'gameScores', gameId)
+          const gameSnap = await getDoc(gameRef)
+          if (gameSnap.exists()) {
+            const fbScore = gameSnap.data()?.highScore || 0
+            if (fbScore > (parseInt(localSaved) || 0)) {
+              setHighScore(fbScore)
+              localStorage.setItem(`sand-gallery-game-${gameId}-highscore`, fbScore.toString())
+            }
+          }
+        } catch (err) {
+          console.log('Could not load Firebase high score:', err.message)
+        }
+      }
+    }
+    loadHighScore()
+  }, [gameId, user])
 
-  // Save high score
+  // Save high score to Firebase + localStorage
   useEffect(() => {
     if (gameState === 'finished' && score > highScore) {
       setHighScore(score)
       localStorage.setItem(`sand-gallery-game-${gameId}-highscore`, score.toString())
+      
+      // Also save to Firebase if user is logged in
+      if (user?.uid) {
+        try {
+          const gameRef = doc(db, 'users', user.uid, 'gameScores', gameId)
+          setDoc(gameRef, {
+            highScore: score,
+            lastPlayed: new Date(),
+            gamesPlayed: increment(1)
+          }, { merge: true })
+        } catch (err) {
+          console.log('Could not save Firebase high score:', err.message)
+        }
+      }
     }
-  }, [gameState, score, highScore, gameId])
+  }, [gameState, score, highScore, gameId, user])
 
   // Neural Maze game loop
   useEffect(() => {
@@ -221,6 +276,14 @@ export default function GamePlay() {
     setCombo(0)
     setCavernTimeLeft(60)
     setCollected(0)
+    // Gravity Flip init
+    setGravityFlipped(false)
+    setGravityPlayerY(85)
+    setGravityObstacles([])
+    setStars([])
+    setGravityTimeLeft(45)
+    setGravitySpeed(2)
+    setFlipEffect(false)
     // Init audio context on user interaction
     if (!audioContext) {
       const ctx = new (window.AudioContext || window.webkitAudioContext)()
@@ -246,6 +309,14 @@ export default function GamePlay() {
     setCombo(0)
     setCavernTimeLeft(60)
     setCollected(0)
+    // Gravity Flip reset
+    setGravityFlipped(false)
+    setGravityPlayerY(85)
+    setGravityObstacles([])
+    setStars([])
+    setGravityTimeLeft(45)
+    setGravitySpeed(2)
+    setFlipEffect(false)
   }
 
   // Neural Maze handlers
@@ -446,6 +517,150 @@ export default function GamePlay() {
     }
     return () => clearInterval(interval)
   }, [gameState, config.type, cavernPlayer, combo, audioContext])
+
+  // Gravity Flip game loop
+  useEffect(() => {
+    let interval
+    if (gameState === 'playing' && config.type === 'gravity') {
+      interval = setInterval(() => {
+        // Timer
+        setGravityTimeLeft(t => {
+          if (t <= 1) {
+            setGameState('finished')
+            return 0
+          }
+          return t - 1
+        })
+        
+        // Increase speed over time
+        setGravitySpeed(s => Math.min(5, 2 + (45 - gravityTimeLeft) * 0.05))
+        
+        // Move player based on gravity
+        setGravityPlayerY(y => {
+          const targetY = gravityFlipped ? 15 : 85
+          // Smooth transition toward target
+          const diff = targetY - y
+          return y + diff * 0.15
+        })
+        
+        // Spawn obstacles
+        if (Math.random() < 0.08) {
+          const isTop = Math.random() > 0.5
+          setGravityObstacles(prev => [...prev, {
+            id: Date.now(),
+            x: 105,
+            y: isTop ? 5 : 75,
+            width: Math.random() * 15 + 10,
+            height: 20
+          }])
+        }
+        
+        // Spawn stars
+        if (Math.random() < 0.1) {
+          const starY = Math.random() > 0.5 ? 20 + Math.random() * 60 : 20 + Math.random() * 60
+          setStars(prev => [...prev, {
+            id: Date.now(),
+            x: 105,
+            y: starY,
+            rotation: 0
+          }])
+        }
+        
+        // Move obstacles
+        setGravityObstacles(prev => {
+          const newObstacles = prev.map(o => ({ ...o, x: o.x - gravitySpeed })).filter(o => o.x > -20)
+          
+          // Check collision with player
+          const playerY = gravityPlayerY
+          const playerX = 15
+          for (const obs of newObstacles) {
+            if (obs.x < playerX + 5 && obs.x + obs.width > playerX - 5 &&
+                Math.abs(obs.y - playerY) < 15) {
+              // Collision! Play crash sound
+              if (audioContext) {
+                const osc = audioContext.createOscillator()
+                const gain = audioContext.createGain()
+                osc.connect(gain)
+                gain.connect(audioContext.destination)
+                osc.frequency.setValueAtTime(150, audioContext.currentTime)
+                osc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3)
+                osc.type = 'sawtooth'
+                gain.gain.setValueAtTime(0.2, audioContext.currentTime)
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+                osc.start()
+                osc.stop(audioContext.currentTime + 0.3)
+              }
+              setGameState('finished')
+              return []
+            }
+          }
+          return newObstacles
+        })
+        
+        // Move stars
+        setStars(prev => {
+          const newStars = prev.map(s => ({ ...s, x: s.x - gravitySpeed, rotation: s.rotation + 5 })).filter(s => s.x > -10)
+          
+          // Check star collection
+          const playerY = gravityPlayerY
+          const playerX = 15
+          const collected = newStars.filter(s => 
+            s.x < playerX + 8 && s.x > playerX - 8 &&
+            Math.abs(s.y - playerY) < 12
+          )
+          
+          if (collected.length > 0) {
+            setScore(s => s + collected.length * 25)
+            // Play star sound
+            if (audioContext) {
+              const osc = audioContext.createOscillator()
+              const gain = audioContext.createGain()
+              osc.connect(gain)
+              gain.connect(audioContext.destination)
+              osc.frequency.setValueAtTime(880, audioContext.currentTime)
+              osc.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + 0.1)
+              osc.type = 'sine'
+              gain.gain.setValueAtTime(0.15, audioContext.currentTime)
+              gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15)
+              osc.start()
+              osc.stop(audioContext.currentTime + 0.15)
+            }
+          }
+          return newStars.filter(s => !collected.includes(s))
+        })
+      }, 30)
+    }
+    return () => clearInterval(interval)
+  }, [gameState, config.type, gravityFlipped, gravityPlayerY, gravitySpeed, gravityTimeLeft, audioContext])
+
+  // Gravity Flip input handler
+  useEffect(() => {
+    const handleGravityFlip = (e) => {
+      if (gameState !== 'playing' || config.type !== 'gravity') return
+      if (e.type === 'click' || e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        setGravityFlipped(f => !f)
+        setFlipEffect(true)
+        setTimeout(() => setFlipEffect(false), 300)
+        // Play flip sound
+        if (audioContext) {
+          const osc = audioContext.createOscillator()
+          const gain = audioContext.createGain()
+          osc.connect(gain)
+          gain.connect(audioContext.destination)
+          osc.frequency.setValueAtTime(440, audioContext.currentTime)
+          osc.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.08)
+          osc.type = 'sine'
+          gain.gain.setValueAtTime(0.1, audioContext.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+          osc.start()
+          osc.stop(audioContext.currentTime + 0.1)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleGravityFlip)
+    return () => window.removeEventListener('keydown', handleGravityFlip)
+  }, [gameState, config.type, audioContext])
 
   // Mouse movement handler for Crystal Cavern
   useEffect(() => {
@@ -821,6 +1036,146 @@ export default function GamePlay() {
           </>
         )
         
+      case 'gravity':
+        return (
+          <>
+            {/* Space background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-purple-950/20 to-zinc-950 overflow-hidden">
+              {/* Stars */}
+              {[...Array(50)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    opacity: Math.random() * 0.5 + 0.3
+                  }}
+                />
+              ))}
+              {/* Gravity indicator lines */}
+              <div className={`absolute inset-0 transition-transform duration-300 ${flipEffect ? 'scale-y-125' : ''} ${gravityFlipped ? 'bg-gradient-to-t from-purple-500/5 to-transparent' : 'bg-gradient-to-b from-purple-500/5 to-transparent'}`} />
+            </div>
+            
+            {gameState === 'idle' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                <motion.div
+                  animate={{ 
+                    y: [0, -10, 0],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <ArrowUp size={64} className="text-violet-400 mb-4" />
+                </motion.div>
+                <p className="text-zinc-400 mb-2 text-center px-4">{config.description}</p>
+                <p className="text-zinc-500 text-sm mb-6">Tap, click, or press SPACE to flip gravity!</p>
+                <button 
+                  onClick={startGame}
+                  className="flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 rounded-full font-medium transition-colors"
+                >
+                  <Play size={20} />
+                  Enter the Void
+                </button>
+              </div>
+            )}
+            {gameState === 'playing' && (
+              <>
+                {/* Top and bottom boundaries */}
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-violet-500/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-violet-500/30 to-transparent" />
+                
+                {/* Stars to collect */}
+                {stars.map(star => (
+                  <motion.div
+                    key={star.id}
+                    animate={{ 
+                      rotate: star.rotation,
+                      x: 0
+                    }}
+                    transition={{ duration: 0 }}
+                    style={{
+                      position: 'absolute',
+                      left: `${star.x}%`,
+                      top: `${star.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    className="w-8 h-8"
+                  >
+                    <Star className="w-full h-full text-yellow-400 fill-yellow-400 drop-shadow-lg" />
+                  </motion.div>
+                ))}
+                
+                {/* Obstacles */}
+                {gravityObstacles.map(obs => (
+                  <div
+                    key={obs.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${obs.x}%`,
+                      top: `${obs.y}%`,
+                      width: `${obs.width}%`,
+                      height: `${obs.height}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    className="bg-gradient-to-b from-red-500 to-red-700 rounded-lg shadow-lg shadow-red-500/50"
+                  />
+                ))}
+                
+                {/* Player ship */}
+                <motion.div
+                  animate={{ 
+                    y: gravityPlayerY * 4,
+                    rotate: gravityFlipped ? 180 : 0
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  style={{
+                    position: 'absolute',
+                    left: '15%',
+                    top: `${gravityPlayerY}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  className="w-10 h-10"
+                >
+                  <div 
+                    className="w-full h-full rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, white, #8b5cf6, #4c1d95)',
+                      boxShadow: '0 0 20px #8b5cf6, 0 0 40px #4c1d95, inset 0 0 15px rgba(255,255,255,0.5)'
+                    }}
+                  />
+                  {/* Engine trail */}
+                  <motion.div
+                    animate={{ scaleY: [1, 1.5, 1] }}
+                    transition={{ duration: 0.2, repeat: Infinity }}
+                    className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3 h-6 bg-gradient-to-t from-violet-500 to-transparent rounded-full blur-sm"
+                  />
+                </motion.div>
+                
+                {/* Gravity indicator */}
+                <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                  {gravityFlipped ? (
+                    <ArrowDown size={14} className="text-violet-400" />
+                  ) : (
+                    <ArrowUp size={14} className="text-violet-400" />
+                  )}
+                  <span className="text-xs text-violet-400 font-medium">GRAVITY</span>
+                </div>
+                
+                {/* Speed indicator */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 bg-zinc-900/80 rounded-full">
+                  <Zap size={14} className="text-amber-400" />
+                  <span className="text-xs text-amber-400 font-medium">x{gravitySpeed.toFixed(1)}</span>
+                </div>
+                
+                {/* Instructions hint */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-zinc-500 text-xs">
+                  TAP / SPACE to flip
+                </div>
+              </>
+            )}
+          </>
+        )
+        
       default:
         return (
           <div className="absolute inset-0 flex items-center justify-center text-zinc-500">
@@ -959,6 +1314,28 @@ export default function GamePlay() {
               </div>
             </>
           )}
+          {config.type === 'gravity' && (
+            <>
+              <div className="text-center">
+                <div className={`text-2xl font-bold ${gravityTimeLeft <= 10 ? 'text-red-500' : 'text-violet-400'}`}>
+                  {gravityTimeLeft}s
+                </div>
+                <div className="text-xs text-zinc-500">TIME</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-400">x{gravitySpeed.toFixed(1)}</div>
+                <div className="text-xs text-zinc-500">SPEED</div>
+              </div>
+              <div className="text-center">
+                {gravityFlipped ? (
+                  <ArrowDown size={32} className="text-violet-400 mx-auto" />
+                ) : (
+                  <ArrowUp size={32} className="text-violet-400 mx-auto" />
+                )}
+                <div className="text-xs text-zinc-500">GRAVITY</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Game Area */}
@@ -967,7 +1344,28 @@ export default function GamePlay() {
           animate={{ scale: 1 }}
           data-game-area
           className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden aspect-video cursor-crosshair"
-          onClick={config.type === 'reaction' ? handleReactionMiss : undefined}
+          onClick={(e) => {
+            if (config.type === 'reaction') handleReactionMiss()
+            if (config.type === 'gravity' && gameState === 'playing') {
+              setGravityFlipped(f => !f)
+              setFlipEffect(true)
+              setTimeout(() => setFlipEffect(false), 300)
+              // Play flip sound
+              if (audioContext) {
+                const osc = audioContext.createOscillator()
+                const gain = audioContext.createGain()
+                osc.connect(gain)
+                gain.connect(audioContext.destination)
+                osc.frequency.setValueAtTime(440, audioContext.currentTime)
+                osc.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.08)
+                osc.type = 'sine'
+                gain.gain.setValueAtTime(0.1, audioContext.currentTime)
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+                osc.start()
+                osc.stop(audioContext.currentTime + 0.1)
+              }
+            }
+          }}
         >
           <AnimatePresence mode="wait">
             {gameState === 'idle' && renderGameArea()}
