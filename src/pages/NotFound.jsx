@@ -1,49 +1,32 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Home, Search } from 'lucide-react';
+import { Link } from 'react-router-dom'
+import { Home, ArrowLeft } from 'lucide-react'
 
-const NotFound = () => {
+export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center px-4 pt-20">
-      <div className="text-center max-w-lg">
-        {/* 404 Visual */}
-        <div className="relative mb-8">
-          <h1 className="text-[12rem] md:text-[16rem] leading-none font-bold text-[var(--accent-primary)] opacity-20 select-none">
-            404
-          </h1>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full border-4 border-[var(--accent-secondary)] opacity-30 animate-pulse" />
-          </div>
-        </div>
-
-        {/* Message */}
-        <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-4">
-          Page Not Found
-        </h2>
-        <p className="text-[var(--text-dim)] text-lg mb-8 max-w-md mx-auto">
-          The page you're looking for doesn't exist or has been moved to another location.
+    <div class="pt-24 min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <h1 class="text-9xl font-display font-bold text-zinc-800">404</h1>
+        <p class="text-2xl font-semibold mb-4">Page Not Found</p>
+        <p class="text-zinc-400 mb-8 max-w-md mx-auto">
+          The page you're looking for doesn't exist or has been moved.
         </p>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div class="flex items-center justify-center gap-4">
           <Link
             to="/"
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-black font-bold rounded-lg hover:opacity-90 transition-all duration-300"
+            class="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors"
           >
-            <Home size={20} />
+            <Home size={18} />
             Go Home
           </Link>
-          <Link
-            to="/gallery"
-            className="flex items-center gap-2 px-6 py-3 border border-[var(--accent-primary)]/30 text-[var(--text-primary)] font-semibold rounded-lg hover:bg-[var(--accent-primary)]/10 transition-all duration-300"
+          <button
+            onClick={() => window.history.back()}
+            class="flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium transition-colors"
           >
-            <Search size={20} />
-            Browse Gallery
-          </Link>
+            <ArrowLeft size={18} />
+            Go Back
+          </button>
         </div>
       </div>
     </div>
-  );
-};
-
-export default NotFound;
+  )
+}
