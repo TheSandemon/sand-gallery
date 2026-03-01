@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #6366f1;
-  --color-accent: #f43f5e;
+  --color-primary: #f59e0b;
+  --color-accent: #fb923c;
   --color-background: #09090b;
   --color-surface: #18181b;
   --color-surface-elevated: #27272a;
@@ -53,7 +53,7 @@ body {
 /* Selection */
 ::selection {
   background-color: var(--color-primary);
-  color: white;
+  color: black;
 }
 
 /* Focus styles */
@@ -75,7 +75,7 @@ a {
   text-decoration: none;
 }
 
-/* Buttons base */
+/* Buttons */
 button {
   font-family: inherit;
   cursor: pointer;
@@ -95,7 +95,7 @@ img {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1, #f43f5e);
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -111,3 +111,8 @@ img {
 .animate-stagger > *:nth-child(4) { animation-delay: 300ms; }
 .animate-stagger > *:nth-child(5) { animation-delay: 400ms; }
 .animate-stagger > *:nth-child(6) { animation-delay: 500ms; }
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
