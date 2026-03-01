@@ -1,9 +1,10 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Home from './pages/Home'
-import Works from './pages/Works'
-import Services from './pages/Services'
 import Gallery from './pages/Gallery'
+import Services from './pages/Services'
+import Games from './pages/Games'
+import Tools from './pages/Tools'
 import Editor from './pages/Editor'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
@@ -15,9 +16,10 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/works" element={<Works />} />
-        <Route path="/services" element={<Services />} />
         <Route path="/gallery" element={<Gallery />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/games" element={<Games />} />
+        <Route path="/tools" element={<Tools />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/editor" element={<Editor />} />

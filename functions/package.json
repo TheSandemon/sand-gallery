@@ -17,7 +17,7 @@
         "@octokit/rest": "^22.0.1",
         "cors": "^2.8.5",
         "dotenv": "^16.0.3",
-        "firebase-admin": "^11.5.0",
+        "firebase-admin": "^11.11.1",
         "firebase-functions": "^6.0.0",
         "replicate": "^0.25.1"
     },
