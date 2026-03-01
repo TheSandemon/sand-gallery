@@ -18,7 +18,7 @@ const GAME_CATEGORIES = [
 // Fallback games when Firestore is empty
 const FALLBACK_GAMES = [
   {
-    id: 'fallback-1',
+    id: 'neural-maze',
     title: 'Neural Maze',
     description: 'AI-generated maze game with adaptive difficulty. Navigate through procedurally generated neural networks.',
     category: 'puzzle',
@@ -26,7 +26,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-2',
+    id: 'crypto-runner',
     title: 'Crypto Runner',
     description: 'Endless runner with crypto-themed obstacles. Dodge the bears and catch the bulls!',
     category: 'arcade',
@@ -34,7 +34,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-3',
+    id: 'quantum-chess',
     title: 'Quantum Chess',
     description: 'Chess variant where pieces can exist in superposition. Checkmate in ways never before possible.',
     category: 'strategy',
@@ -42,7 +42,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-4',
+    id: 'beat-synth',
     title: 'Beat Synth',
     description: 'Create beats with AI. Mix, match, and discover new sounds powered by neural synthesis.',
     category: 'music',
@@ -50,15 +50,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-5',
-    title: 'Art Generator',
-    description: 'Describe your vision and watch AI bring it to life. Compete with others for the best creations.',
-    category: 'art',
-    thumbnail: 'https://picsum.photos/seed/artgen/400/300',
-    status: 'ready',
-  },
-  {
-    id: 'fallback-6',
+    id: 'word-ai',
     title: 'Word AI',
     description: 'AI-powered word puzzles that adapt to your skill level. New challenges daily.',
     category: 'puzzle',
