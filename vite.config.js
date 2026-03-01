@@ -16,8 +16,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // React ecosystem
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // React ecosystem - include react-grid-layout to prevent dual React
+          'vendor-react': ['react', 'react-dom', 'react-router-dom', 'react-grid-layout'],
           // Animation
           'vendor-motion': ['framer-motion'],
           // Wallet/Web3 (large - lazy load via dynamic imports in code)

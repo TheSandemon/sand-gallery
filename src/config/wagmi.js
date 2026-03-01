@@ -11,7 +11,7 @@ export const wagmiConfig = createConfig({
         }),
         metaMask(),
         walletConnect({
-            projectId: 'f410f0efd044c134d2af196d3951aea95' || import.meta.env.VITE_WC_PROJECT_ID, 
+            projectId: import.meta.env.VITE_WC_PROJECT_ID || 'f410f0efd044c134d2af196d3951aea95', 
         }),
     ],
     ssr: true,
