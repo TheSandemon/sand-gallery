@@ -5,7 +5,7 @@ import {
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
 
 const AuthContext = createContext({})
@@ -13,6 +13,9 @@ const AuthContext = createContext({})
 export function useAuth() {
   return useContext(AuthContext)
 }
+
+// Default credits for new users
+const STARTER_CREDITS = 100
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -23,26 +26,34 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser)
-        // Fetch or create user profile
+        // Fetch user profile from Firestore
         const profileRef = doc(db, 'users', firebaseUser.uid)
-        const profileSnap = await getDoc(profileRef)
         
-        if (profileSnap.exists()) {
-          setProfile(profileSnap.data())
-        } else {
-          // Create new profile
-          const newProfile = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-            credits: 100, // Free starter credits
-            role: 'user',
-            createdAt: new Date().toISOString(),
+        const unsubscribeProfile = onSnapshot(profileRef, (snap) => {
+          if (snap.exists()) {
+            setProfile({ id: snap.id, ...snap.data() })
+          } else {
+            // Create new profile if doesn't exist
+            const newProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+              photoURL: firebaseUser.photoURL,
+              credits: STARTER_CREDITS,
+              role: 'user',
+              createdAt: new Date().toISOString(),
+              lastSeen: new Date().toISOString(),
+            }
+            setDoc(profileRef, newProfile).then(() => {
+              setProfile(newProfile)
+            })
           }
-          await setDoc(profileRef, newProfile)
-          setProfile(newProfile)
-        }
+        })
+
+        // Update last seen
+        updateDoc(profileRef, { lastSeen: new Date().toISOString() }).catch(() => {})
+
+        return () => unsubscribeProfile()
       } else {
         setUser(null)
         setProfile(null)
@@ -71,12 +82,28 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const addCredits = async (amount) => {
+    if (!profile) return
+    const newCredits = (profile.credits || 0) + amount
+    await updateDoc(doc(db, 'users', profile.uid), { credits: newCredits })
+  }
+
+  const useCredits = async (amount) => {
+    if (!profile) return false
+    if ((profile.credits || 0) < amount) return false
+    const newCredits = profile.credits - amount
+    await updateDoc(doc(db, 'users', profile.uid), { credits: newCredits })
+    return true
+  }
+
   const value = {
     user,
     profile,
     loading,
     signInWithGoogle,
     logout,
+    addCredits,
+    useCredits,
     isAdmin: profile?.role === 'admin',
     isEditor: profile?.role === 'editor' || profile?.role === 'admin',
   }

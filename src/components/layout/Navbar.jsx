@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { motion } from 'framer-motion'
-import { Menu, X, User, LogOut } from 'lucide-react'
+import { Menu, X, User, LogOut, Bot } from 'lucide-react'
 import { useState } from 'react'
 
 const navLinks = [
   { path: '/', label: 'Home' },
-  { path: '/gallery', label: 'Gallery' },
+  { path: '/works', label: 'Works' },
+  { path: '/services', label: 'Services' },
 ]
 
 export default function Navbar() {
@@ -15,28 +16,28 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-zinc-800/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" class="flex items-center gap-2">
             <motion.div
               whileHover={{ rotate: 180 }}
               transition={{ duration: 0.3 }}
-              className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-rose-500 flex items-center justify-center"
+              class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center"
             >
-              <span className="text-white font-bold text-lg">S</span>
+              <span class="text-white font-bold text-lg">K</span>
             </motion.div>
-            <span className="font-display font-semibold text-lg">Sand Gallery</span>
+            <span class="font-display font-semibold text-lg hidden sm:block">Kyle Touchet</span>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-6">
+          <div class="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-sm font-medium transition-colors ${
+                class={`text-sm font-medium transition-colors ${
                   location.pathname === link.path
                     ? 'text-white'
                     : 'text-zinc-400 hover:text-white'
@@ -48,48 +49,43 @@ export default function Navbar() {
 
             {/* Auth Section */}
             {user ? (
-              <div className="flex items-center gap-4">
+              <div class="flex items-center gap-3">
                 <Link
-                  to="/editor"
-                  className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                  to="/kaito"
+                  class={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                    location.pathname === '/kaito'
+                      ? 'bg-amber-600/20 text-amber-400'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
                 >
-                  Editor
+                  <Bot size={14} />
+                  Kaito
                 </Link>
                 <Link
-                  to="/admin"
-                  className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                  to="/profile"
+                  class="flex items-center gap-2"
                 >
-                  Admin
-                </Link>
-                <div className="flex items-center gap-2">
                   <img
                     src={profile?.photoURL || user.photoURL || '/default-avatar.png'}
                     alt={profile?.displayName || user.displayName}
-                    className="w-8 h-8 rounded-full border-2 border-zinc-700"
+                    class="w-8 h-8 rounded-full border border-zinc-700"
                   />
-                  <button
-                    onClick={logout}
-                    className="p-2 text-zinc-400 hover:text-white transition-colors"
-                    title="Sign out"
-                  >
-                    <LogOut size={18} />
-                  </button>
-                </div>
+                </Link>
               </div>
             ) : (
-              <button
-                onClick={() => import('../../contexts/AuthContext').then(m => m.useAuth().signInWithGoogle())}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-colors"
+              <Link
+                to="/profile"
+                class="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-full text-sm font-medium transition-colors"
               >
-                <User size={18} />
+                <User size={16} />
                 Sign In
-              </button>
+              </Link>
             )}
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 text-zinc-400"
+            class="md:hidden p-2 text-zinc-400"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -102,37 +98,35 @@ export default function Navbar() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="md:hidden border-t border-zinc-800"
+          class="md:hidden border-t border-zinc-800"
         >
-          <div className="px-4 py-4 space-y-3">
+          <div class="px-4 py-4 space-y-3">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
-                className="block py-2 text-zinc-400 hover:text-white"
+                class="block py-2 text-zinc-400 hover:text-white"
               >
                 {link.label}
               </Link>
             ))}
             {user && (
-              <>
-                <Link
-                  to="/editor"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-2 text-zinc-400 hover:text-white"
-                >
-                  Editor
-                </Link>
-                <Link
-                  to="/admin"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-2 text-zinc-400 hover:text-white"
-                >
-                  Admin
-                </Link>
-              </>
+              <Link
+                to="/kaito"
+                onClick={() => setMobileOpen(false)}
+                class="flex items-center gap-2 py-2 text-amber-400"
+              >
+                <Bot size={16} /> Kaito
+              </Link>
             )}
+            <Link
+              to="/profile"
+              onClick={() => setMobileOpen(false)}
+              class="block py-2 text-zinc-400 hover:text-white"
+            >
+              {user ? 'Profile' : 'Sign In'}
+            </Link>
           </div>
         </motion.div>
       )}
