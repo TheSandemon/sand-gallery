@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Gamepad2, Sparkles, Play, Star, Clock, Zap, Brain, Puzzle, Music, Palette, Loader2, RefreshCw } from 'lucide-react'
 import { db } from '../lib/firebase'
@@ -71,6 +72,7 @@ export default function Games() {
   const [games, setGames] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Subscribe to Firestore games collection
@@ -101,10 +103,10 @@ export default function Games() {
   }
 
   const handlePlayGame = (game) => {
-    // Increment play count in Firestore
+    // Navigate to the game page
     if (game.status === 'ready') {
-      console.log('Launching game:', game.title)
-      // TODO: Navigate to actual game or open in new tab
+      const gameId = game.id.toLowerCase().replace(/\s+/g, '-')
+      navigate(`/games/${gameId}`)
     }
   }
 

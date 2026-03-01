@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Wrench, Sparkles, Play, Star, Clock, Zap, Brain, Code, Image, MessageSquare, Search, Terminal, Loader2, ExternalLink } from 'lucide-react'
 import { db } from '../lib/firebase'
@@ -76,6 +77,7 @@ export default function Tools() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [tools, setTools] = useState([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Subscribe to Firestore tools collection
@@ -107,8 +109,8 @@ export default function Tools() {
 
   const handleUseTool = (tool) => {
     if (tool.status === 'ready') {
-      console.log('Opening tool:', tool.title)
-      // TODO: Open tool interface or navigate to tool page
+      const toolId = tool.title.toLowerCase().replace(/\s+/g, '-')
+      navigate(`/tools/${toolId}`)
     }
   }
 
