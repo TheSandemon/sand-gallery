@@ -12,7 +12,6 @@ import CRM from './pages/CRM';
 import Editor from './pages/admin/Editor';
 import Gallery from './pages/Gallery';
 import Anthem from './pages/Anthem';
-import MushroomRunner from './pages/MushroomRunner';
 import { AuthProvider } from './context/AuthContext';
 import { Web3Provider } from './context/Web3Provider';
 import './App.css';
@@ -48,7 +47,6 @@ function App() {
               <Route path="/studio" element={<Studio />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/pricing" element={<Pricing />} />
-              <Route path="/game" element={<MushroomRunner />} />
             </Routes>
           </AppLayout>
         </Router>
