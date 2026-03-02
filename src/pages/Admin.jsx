@@ -5,7 +5,7 @@ import {
   Wallet, Code, Cloud, Trash2, Edit, Save, Loader2,
   Search, Filter, MoreVertical, Shield, UserPlus, Mail
 } from 'lucide-react'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 import { doc, getDoc, updateDoc, collection, getDocs, deleteDoc, query, where } from 'firebase/firestore'
 
 export default function Admin() {

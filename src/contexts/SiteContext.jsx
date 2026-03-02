@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 
 const SiteContext = createContext({})
 

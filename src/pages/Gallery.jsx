@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Filter, Grid, List, Heart, Eye, Loader2 } from 'lucide-react'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 import { collection, getDocs, updateDoc, doc, increment } from 'firebase/firestore'
 
 // Mock gallery items for demo

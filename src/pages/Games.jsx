@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Gamepad2, Sparkles, Play, Star, Clock, Zap, Brain, Puzzle, Music, Palette, Loader2, RefreshCw, Gem } from 'lucide-react'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 
 // Fallback categories if Firestore unavailable

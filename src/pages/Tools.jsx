@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Wrench, Sparkles, Play, Star, Clock, Zap, Brain, Code, Image, MessageSquare, Search, Terminal, Loader2, ExternalLink } from 'lucide-react'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 import { doc, onSnapshot } from 'firebase/firestore'
 
 // Fallback categories

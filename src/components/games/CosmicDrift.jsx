@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 import { 
   Play, Pause, RotateCcw, Trophy, Star, Lock
 } from 'lucide-react'

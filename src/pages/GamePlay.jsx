@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Play, Pause, RotateCcw, Zap, Target, Clock, Star, Grid, Music, Puzzle, Brain, Hash, TrendingUp, TrendingDown, Shield, Sword, Gem, Sparkles, Timer, ArrowUp, ArrowDown, Moon, Sun, Infinity, Rocket, Crosshair, Heart, Dna, Wifi, WifiOff, ZapOff, FastForward } from 'lucide-react'
-import { db } from '../lib/firebase'
+import { db } from '../firebase'
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore'
 import { useAuth } from '../context/AuthContext'
 
