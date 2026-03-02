@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Gamepad2, Sparkles, Play, Star, Clock, Zap, Brain, Puzzle, Music, Palette, Loader2, RefreshCw } from 'lucide-react'
+import { Gamepad2, Sparkles, Play, Star, Clock, Zap, Brain, Puzzle, Music, Palette, Loader2, RefreshCw, Gem } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 
@@ -17,7 +18,7 @@ const GAME_CATEGORIES = [
 // Fallback games when Firestore is empty
 const FALLBACK_GAMES = [
   {
-    id: 'fallback-1',
+    id: 'neural-maze',
     title: 'Neural Maze',
     description: 'AI-generated maze game with adaptive difficulty. Navigate through procedurally generated neural networks.',
     category: 'puzzle',
@@ -25,7 +26,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-2',
+    id: 'crypto-runner',
     title: 'Crypto Runner',
     description: 'Endless runner with crypto-themed obstacles. Dodge the bears and catch the bulls!',
     category: 'arcade',
@@ -33,7 +34,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-3',
+    id: 'quantum-chess',
     title: 'Quantum Chess',
     description: 'Chess variant where pieces can exist in superposition. Checkmate in ways never before possible.',
     category: 'strategy',
@@ -41,7 +42,7 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-4',
+    id: 'beat-synth',
     title: 'Beat Synth',
     description: 'Create beats with AI. Mix, match, and discover new sounds powered by neural synthesis.',
     category: 'music',
@@ -49,19 +50,43 @@ const FALLBACK_GAMES = [
     status: 'ready',
   },
   {
-    id: 'fallback-5',
-    title: 'Art Generator',
-    description: 'Describe your vision and watch AI bring it to life. Compete with others for the best creations.',
-    category: 'art',
-    thumbnail: 'https://picsum.photos/seed/artgen/400/300',
+    id: 'crystal-cavern',
+    title: 'Crystal Cavern',
+    description: 'Navigate the dark cave and collect glowing crystals! Chain collections for combo multipliers.',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/crystalcavern/400/300',
     status: 'ready',
   },
   {
-    id: 'fallback-6',
+    id: 'gravity-flip',
+    title: 'Gravity Flip',
+    description: 'Tap to flip gravity! Navigate through the void collecting stars while avoiding red obstacles.',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/gravityflip/400/300',
+    status: 'ready',
+  },
+  {
+    id: 'stellar-defender',
+    title: 'Stellar Defender',
+    description: 'Defend your ship from asteroids! Move with mouse, auto-fire or click to shoot.',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/stellardefender/400/300',
+    status: 'ready',
+  },
+  {
+    id: 'word-ai',
     title: 'Word AI',
     description: 'AI-powered word puzzles that adapt to your skill level. New challenges daily.',
     category: 'puzzle',
     thumbnail: 'https://picsum.photos/seed/wordai/400/300',
+    status: 'ready',
+  },
+  {
+    id: 'neon-snake',
+    title: 'Neon Snake',
+    description: 'Classic snake with a neon twist! Use arrow keys or WASD to move. Collect food, avoid walls and yourself!',
+    category: 'arcade',
+    thumbnail: 'https://picsum.photos/seed/neonsnake/400/300',
     status: 'ready',
   },
 ]
@@ -71,6 +96,7 @@ export default function Games() {
   const [games, setGames] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Subscribe to Firestore games collection
@@ -101,10 +127,10 @@ export default function Games() {
   }
 
   const handlePlayGame = (game) => {
-    // Increment play count in Firestore
+    // Navigate to the game page
     if (game.status === 'ready') {
-      console.log('Launching game:', game.title)
-      // TODO: Navigate to actual game or open in new tab
+      const gameId = game.id.toLowerCase().replace(/\s+/g, '-')
+      navigate(`/games/${gameId}`)
     }
   }
 
