@@ -4,6 +4,9 @@ import StudioLayout from './StudioLayout';
 import StudioSettings from './StudioSettings';
 import MediaViewer from './MediaViewer';
 import { useAuth } from '../context/AuthContext';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase';
 import {
     Zap, Sparkles, Film, Music, FileText,
     Search, Sliders, ArrowUp, Clock, Grid, Mic, Volume2,
@@ -42,26 +45,20 @@ const StudioContent = () => {
         if (!user) return;
         let unsubscribe = () => { };
 
-        const setup = async () => {
-            const { getFirestore, collection, query, where, orderBy, onSnapshot } = await import('firebase/firestore');
-            const { app } = await import('../firebase');
-            const db = getFirestore(app);
+        const q = query(
+            collection(db, 'creations'),
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+        );
 
-            const q = query(
-                collection(db, 'creations'),
-                where('userId', '==', user.uid),
-                orderBy('createdAt', 'desc')
-            );
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setHistory(data);
+        }, (error) => {
+            console.error("Firestore History Error:", error);
+            setStatus("History Error: " + error.code);
+        });
 
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setHistory(data);
-            }, (error) => {
-                console.error("Firestore History Error:", error);
-                setStatus("History Error: " + error.code);
-            });
-        };
-        setup();
         return () => unsubscribe();
     }, [user]);
 
@@ -75,9 +72,6 @@ const StudioContent = () => {
         setResultData(null);
 
         try {
-            const { httpsCallable } = await import('firebase/functions');
-            const { functions } = await import('../firebase');
-
             // Map modes to functions
             const map = {
                 voice: 'generateAudio',

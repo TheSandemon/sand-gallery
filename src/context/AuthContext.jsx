@@ -14,8 +14,7 @@ import {
     serverTimestamp,
     collection,
     getDocs,
-    query,
-    where
+    onSnapshot
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
@@ -23,8 +22,12 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Default credits for new users
+const STARTER_CREDITS = 100;
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const signInWithGoogle = async () => {
@@ -40,23 +43,17 @@ export const AuthProvider = ({ children }) => {
     const logout = () => signOut(auth);
 
     const deductCredits = async (amount) => {
-        if (!user) return false;
-        if ((user.credits || 0) < amount) {
+        if (!profile) return false;
+        if ((profile.credits || 0) < amount) {
             alert("Insufficient credits!");
             return false;
         }
 
         try {
-            const userRef = doc(db, 'users', user.uid);
+            const userRef = doc(db, 'users', profile.uid);
             await updateDoc(userRef, {
                 credits: increment(-amount)
             });
-
-            // Optimistic update for immediate UI feedback
-            setUser(prev => ({
-                ...prev,
-                credits: (prev.credits || 0) - amount
-            }));
             return true;
         } catch (error) {
             console.error("Error deducting credits:", error);
@@ -78,6 +75,20 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const addCredits = async (amount) => {
+        if (!profile) return;
+        const newCredits = (profile.credits || 0) + amount;
+        await updateDoc(doc(db, 'users', profile.uid), { credits: newCredits });
+    };
+
+    const useCredits = async (amount) => {
+        if (!profile) return false;
+        if ((profile.credits || 0) < amount) return false;
+        const newCredits = profile.credits - amount;
+        await updateDoc(doc(db, 'users', profile.uid), { credits: newCredits });
+        return true;
+    };
+
     const getAllUsers = async () => {
         try {
             const usersRef = collection(db, 'users');
@@ -89,68 +100,62 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-
-
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (!currentUser) {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                setUser(firebaseUser);
+                // Fetch user profile from Firestore
+                const profileRef = doc(db, 'users', firebaseUser.uid);
+
+                const unsubscribeProfile = onSnapshot(profileRef, (snap) => {
+                    if (snap.exists()) {
+                        setProfile({ id: snap.id, ...snap.data() });
+                    } else {
+                        // Create new profile if doesn't exist
+                        const newProfile = {
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+                            photoURL: firebaseUser.photoURL,
+                            credits: STARTER_CREDITS,
+                            role: 'user',
+                            createdAt: new Date().toISOString(),
+                            lastSeen: new Date().toISOString(),
+                        };
+                        setDoc(profileRef, newProfile).then(() => {
+                            setProfile(newProfile);
+                        });
+                    }
+                });
+
+                // Update last seen
+                updateDoc(profileRef, { lastSeen: new Date().toISOString() }).catch(() => {});
+
+                return () => unsubscribeProfile();
+            } else {
                 setUser(null);
-                setLoading(false);
-                return;
+                setProfile(null);
             }
-
-            // 1. Set user IMMEDIATELY with Auth data to hide loading screen faster
-            setUser({
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL,
-                role: 'user', // Default temporary role
-                credits: 0
-            });
             setLoading(false);
-
-            // 2. Background Sync: Fetch the rest of the CRM data from Firestore
-            try {
-                const userRef = doc(db, 'users', currentUser.uid);
-                const userSnap = await getDoc(userRef);
-
-                let userData = userSnap.data() || {};
-
-                if (!userSnap.exists()) {
-                    userData = {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        displayName: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
-                        role: 'user',
-                        credits: 10,
-                        createdAt: serverTimestamp(),
-                    };
-                    await setDoc(userRef, userData);
-                }
-
-                // 3. Update state in background once Firestore data arrives
-                setUser(prev => ({
-                    ...prev,
-                    ...userData
-                }));
-            } catch (error) {
-                console.error("Background CRM Sync Error:", error);
-            }
         });
 
-        return unsubscribe;
+        return () => unsubscribe();
     }, []);
 
     const value = {
         user,
+        profile,
         signInWithGoogle,
         logout,
         deductCredits,
         grantCredits,
+        addCredits,
+        useCredits,
         getAllUsers,
-        loading
+        loading,
+        isAdmin: profile?.role === 'admin' || profile?.role === 'owner',
+        isOwner: profile?.role === 'owner',
+        isEditor: profile?.role === 'editor' || profile?.role === 'admin' || profile?.role === 'owner',
     };
 
     return (

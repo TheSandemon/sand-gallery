@@ -5,7 +5,7 @@ import {
   Sparkles, Send, Bot, User, ArrowLeft, 
   Loader2, Copy, Check, Zap, Settings
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../context/AuthContext'
 
 // Kaito's system prompt
 const KAITO_SYSTEM = `You are Kaito, an AI concierge for Kyle Touchet's creative portfolio. 

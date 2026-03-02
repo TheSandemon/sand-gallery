@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { motion } from 'framer-motion'
 import { Menu, X, User, LogOut, Bot, Gamepad2, Wrench, Settings } from 'lucide-react'
 import { useState } from 'react'

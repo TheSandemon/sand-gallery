@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../firebase';
 
 const AudioGenerator = () => {
     // Note: deducted on server side now! 
@@ -22,10 +24,6 @@ const AudioGenerator = () => {
         setStatus('Initializing AudioLDM...');
 
         try {
-            // Dynamically import to avoid import errors if firebase isn't fully set up
-            const { httpsCallable } = await import('firebase/functions');
-            const { functions } = await import('../../firebase');
-
             const generateAudio = httpsCallable(functions, 'generateAudio');
 
             setStatus('Sending to Neural Cloud...');

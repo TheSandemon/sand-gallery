@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { 
