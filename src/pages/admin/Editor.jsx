@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -23,6 +23,9 @@ const useIsMobile = () => {
     return isMobile;
 };
 
+const AUTO_SAVE_DELAY = 30000; // 30 seconds
+const MAX_HISTORY = 50;
+
 const Editor = () => {
     const { user } = useAuth();
     const isMobile = useIsMobile();
@@ -31,23 +34,153 @@ const Editor = () => {
     const [selectedId, setSelectedId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [lastSaved, setLastSaved] = useState(null);
+
+    // Undo/Redo history
+    const [history, setHistory] = useState([]);
+    const [historyIndex, setHistoryIndex] = useState(-1);
+
+    // Refs for cleanup
+    const autoSaveTimeoutRef = useRef(null);
+    const originalPageDataRef = useRef(null);
+
+    // Save to history when pageData changes
+    const saveToHistory = useCallback((newPageData) => {
+        setHistory(prev => {
+            const newHistory = prev.slice(0, historyIndex + 1);
+            newHistory.push(JSON.stringify(newPageData));
+            if (newHistory.length > MAX_HISTORY) {
+                newHistory.shift();
+                return newHistory;
+            }
+            return newHistory;
+        });
+        setHistoryIndex(prev => Math.min(prev + 1, MAX_HISTORY - 1));
+        setHasUnsavedChanges(true);
+    }, [historyIndex]);
+
+    // Undo action
+    const undo = useCallback(() => {
+        if (historyIndex > 0) {
+            const prevData = JSON.parse(history[historyIndex - 1]);
+            setPageData(prevData);
+            setHistoryIndex(prev => prev - 1);
+            setHasUnsavedChanges(true);
+        }
+    }, [historyIndex, history]);
+
+    // Redo action
+    const redo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            const nextData = JSON.parse(history[historyIndex + 1]);
+            setPageData(nextData);
+            setHistoryIndex(prev => prev + 1);
+            setHasUnsavedChanges(true);
+        }
+    }, [historyIndex, history]);
+
+    // Auto-save function
+    const autoSave = useCallback(async () => {
+        if (!pageData || !hasUnsavedChanges || saving) return;
+        setSaving(true);
+        try {
+            await setDoc(doc(db, 'pages', activePageId), pageData);
+            setHasUnsavedChanges(false);
+            setLastSaved(new Date());
+        } catch (err) {
+            console.error('Auto-save failed:', err);
+        }
+        setSaving(false);
+    }, [pageData, hasUnsavedChanges, saving, activePageId]);
+
+    // Set up auto-save timer
+    useEffect(() => {
+        if (hasUnsavedChanges && pageData) {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+            autoSaveTimeoutRef.current = setTimeout(autoSave, AUTO_SAVE_DELAY);
+        }
+        return () => {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+        };
+    }, [hasUnsavedChanges, autoSave, pageData]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ctrl+S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                handleSave();
+            }
+            // Ctrl+Z to undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undo();
+            }
+            // Ctrl+Y or Ctrl+Shift+Z to redo
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                redo();
+            }
+            // Delete to remove selected section
+            if (e.key === 'Delete' && selectedId) {
+                e.preventDefault();
+                deleteSection(selectedId);
+            }
+            // Escape to deselect
+            if (e.key === 'Escape') {
+                setSelectedId(null);
+            }
+            // Arrow keys for reordering
+            if (e.key === 'ArrowUp' && selectedId) {
+                e.preventDefault();
+                moveSection('up');
+            }
+            if (e.key === 'ArrowDown' && selectedId) {
+                e.preventDefault();
+                moveSection('down');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [undo, redo, selectedId]);
 
     // Fetch page data when activePageId changes
     useEffect(() => {
         const fetchPageData = async () => {
             setLoading(true);
             setSelectedId(null);
+            setHistory([]);
+            setHistoryIndex(-1);
+            setHasUnsavedChanges(false);
             try {
                 const docRef = doc(db, 'pages', activePageId);
                 const snapshot = await getDoc(docRef);
+                let data;
                 if (snapshot.exists()) {
-                    setPageData(snapshot.data());
+                    data = snapshot.data();
+                    setPageData(data);
+                    originalPageDataRef.current = JSON.stringify(data);
                 } else {
-                    setPageData(getDefaultPageData(activePageId));
+                    data = getDefaultPageData(activePageId);
+                    setPageData(data);
+                    originalPageDataRef.current = JSON.stringify(data);
                 }
+                // Initialize history with current state
+                setHistory([JSON.stringify(data)]);
+                setHistoryIndex(0);
             } catch (err) {
                 console.error('Editor: Error loading page data', err);
-                setPageData(getDefaultPageData(activePageId));
+                const data = getDefaultPageData(activePageId);
+                setPageData(data);
+                setHistory([JSON.stringify(data)]);
+                setHistoryIndex(0);
             }
             setLoading(false);
         };
@@ -60,14 +193,16 @@ const Editor = () => {
     // Update a property of the selected section
     const updateSectionProp = (propName, value) => {
         if (!selectedId || !pageData) return;
-        setPageData(prev => ({
-            ...prev,
-            sections: prev.sections.map(s =>
+        const newData = {
+            ...pageData,
+            sections: pageData.sections.map(s =>
                 s.id === selectedId
                     ? { ...s, props: { ...s.props, [propName]: value } }
                     : s
             )
-        }));
+        };
+        setPageData(newData);
+        saveToHistory(newData);
     };
 
     // Add a new section
@@ -88,10 +223,12 @@ const Editor = () => {
             },
         };
 
-        setPageData(prev => ({
-            ...prev,
-            sections: [...(prev.sections || []), newSection],
-        }));
+        const newData = {
+            ...pageData,
+            sections: [...(pageData.sections || []), newSection],
+        };
+        setPageData(newData);
+        saveToHistory(newData);
         setSelectedId(newSection.id);
     };
 
@@ -99,10 +236,12 @@ const Editor = () => {
     const deleteSection = (sectionId = selectedId) => {
         if (!sectionId || !pageData) return;
         if (!window.confirm('Delete this section?')) return;
-        setPageData(prev => ({
-            ...prev,
-            sections: prev.sections.filter(s => s.id !== sectionId),
-        }));
+        const newData = {
+            ...pageData,
+            sections: pageData.sections.filter(s => s.id !== sectionId),
+        };
+        setPageData(newData);
+        saveToHistory(newData);
         if (selectedId === sectionId) setSelectedId(null);
     };
 
@@ -116,18 +255,22 @@ const Editor = () => {
 
         const newSections = [...pageData.sections];
         [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
-        setPageData(prev => ({ ...prev, sections: newSections }));
+        const newData = { ...pageData, sections: newSections };
+        setPageData(newData);
+        saveToHistory(newData);
     };
 
     // Handle layout changes from GridEditorCanvas
     const handleLayoutChange = (layoutMap) => {
-        setPageData(prev => ({
-            ...prev,
-            sections: prev.sections.map(s => ({
+        const newData = {
+            ...pageData,
+            sections: pageData.sections.map(s => ({
                 ...s,
                 layout: layoutMap[s.id] || s.layout,
             })),
-        }));
+        };
+        setPageData(newData);
+        saveToHistory(newData);
     };
 
     // Save to Firestore
@@ -136,7 +279,10 @@ const Editor = () => {
         setSaving(true);
         try {
             await setDoc(doc(db, 'pages', activePageId), pageData);
-            alert(`${currentPage?.label || activePageId} saved successfully!`);
+            setHasUnsavedChanges(false);
+            setLastSaved(new Date());
+            // Update original data reference
+            originalPageDataRef.current = JSON.stringify(pageData);
         } catch (err) {
             console.error('Editor: Error saving page', err);
             alert('Failed to save page.');
@@ -190,6 +336,9 @@ const Editor = () => {
                 addSection={addSection}
                 deleteSection={() => deleteSection(selectedId)}
                 moveSection={moveSection}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onSave={handleSave}
+                saving={saving}
             />
 
             <GridEditorCanvas
@@ -205,6 +354,8 @@ const Editor = () => {
                 saving={saving}
                 previewRoute={currentPage?.route}
                 previewLabel={currentPage?.label}
+                hasUnsavedChanges={hasUnsavedChanges}
+                lastSaved={lastSaved}
             />
         </div>
     );

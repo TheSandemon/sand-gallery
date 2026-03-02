@@ -4,8 +4,9 @@ import { componentRegistry, getAvailableComponents } from '../../cms/registry';
 import { pageRegistry } from '../../cms/pageRegistry';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { seedMediaLibrary } from '../../cms/seedMediaLibrary';
+import { seedMediaLibrary, previewMigration } from '../../cms/seedMediaLibrary';
 import useSiteSettings from '../../hooks/useSiteSettings';
+import { X, Loader2, AlertTriangle, Check, ChevronDown, ChevronUp, Settings, Plus, Search, RotateCcw, Undo, Redo } from 'lucide-react';
 
 const EditorSidebar = ({
     activePageId,
@@ -15,11 +16,59 @@ const EditorSidebar = ({
     addSection,
     deleteSection,
     moveSection,
+    hasUnsavedChanges,
+    onSave,
+    saving,
 }) => {
     const [activePanel, setActivePanel] = useState('inspector'); // 'inspector' | 'add' | 'settings'
     const { settings, updateSettings } = useSiteSettings();
     const [localNavLinks, setLocalNavLinks] = useState([]);
     const [showHidden, setShowHidden] = useState(false);
+
+    // Migration modal state
+    const [showMigrationModal, setShowMigrationModal] = useState(false);
+    const [migrationPreview, setMigrationPreview] = useState(null);
+    const [migrationLoading, setMigrationLoading] = useState(false);
+    const [migrationProgress, setMigrationProgress] = useState(0);
+    const [migrationError, setMigrationError] = useState(null);
+
+    // Search state for components
+    const [componentSearch, setComponentSearch] = useState('');
+
+    // Load preview when modal opens
+    useEffect(() => {
+        if (showMigrationModal) {
+            previewMigration().then(setMigrationPreview).catch(err => setMigrationPreview({ error: err.message }));
+        } else {
+            setMigrationPreview(null);
+            setMigrationProgress(0);
+            setMigrationError(null);
+        }
+    }, [showMigrationModal]);
+
+    // Handle migration with options
+    const handleMigration = async (options) => {
+        setMigrationLoading(true);
+        setMigrationProgress(0);
+        setMigrationError(null);
+
+        // Simple progress simulation
+        const progressInterval = setInterval(() => {
+            setMigrationProgress(prev => Math.min(prev + 10, 90));
+        }, 200);
+
+        const result = await seedMediaLibrary(options);
+
+        clearInterval(progressInterval);
+        setMigrationProgress(100);
+        setMigrationLoading(false);
+
+        if (result.success) {
+            setTimeout(() => setShowMigrationModal(false), 1000);
+        } else {
+            setMigrationError(result.error);
+        }
+    };
 
 
     // Sync local state with settings
@@ -351,47 +400,188 @@ const EditorSidebar = ({
                     <>
                         <h3 style={{ margin: '0 0 15px', color: 'var(--neon-green)' }}>Add Component</h3>
 
+                        {/* Search Components */}
+                        <div style={{ position: 'relative', marginBottom: '15px' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                            <input
+                                type="text"
+                                placeholder="Search components..."
+                                value={componentSearch}
+                                onChange={(e) => setComponentSearch(e.target.value)}
+                                style={{
+                                    ...styles.input,
+                                    paddingLeft: '32px',
+                                    fontSize: '0.85rem'
+                                }}
+                            />
+                        </div>
+
                         {/* Standard Components */}
-                        {getAvailableComponents().filter(c => c.type !== 'AppPackage').map(comp => (
-                            <div
-                                key={comp.type}
-                                style={styles.componentCard}
-                                onClick={() => addSection(comp.type)}
-                                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--neon-green)'}
-                                onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
-                            >
-                                <div style={{ fontWeight: '600', color: 'white' }}>{comp.label}</div>
-                                <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>
-                                    Type: {comp.type}
+                        {getAvailableComponents()
+                            .filter(c => c.type !== 'AppPackage')
+                            .filter(comp => !componentSearch || comp.label.toLowerCase().includes(componentSearch.toLowerCase()) || comp.type.toLowerCase().includes(componentSearch.toLowerCase()))
+                            .map(comp => (
+                                <div
+                                    key={comp.type}
+                                    style={styles.componentCard}
+                                    onClick={() => addSection(comp.type)}
+                                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--neon-green)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#333'}
+                                >
+                                    <div style={{ fontWeight: '600', color: 'white' }}>{comp.label}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>
+                                        {comp.description || comp.type}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+
+                        {getAvailableComponents().filter(c => c.type !== 'AppPackage').filter(comp => !componentSearch || comp.label.toLowerCase().includes(componentSearch.toLowerCase())).length === 0 && (
+                            <p style={{ color: '#666', textAlign: 'center', padding: '20px' }}>No components found</p>
+                        )}
 
                         <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #333' }}>
-                            <h4 style={{ color: '#aaa', marginBottom: '10px' }}>🛠️ Admin Tools</h4>
+                            <h4 style={{ color: '#888', marginBottom: '10px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Admin Tools</h4>
+
+                            {/* Migration Button */}
                             <button
-                                onClick={async () => {
-                                    if(window.confirm('Run Gallery 2.0 Migration? This will update the database.')) {
-                                        const result = await seedMediaLibrary();
-                                        if (result && result.success) alert(`Migration complete! ${result.count} items moved.`);
-                                        else alert('Migration failed check console');
-                                    }
-                                }}
+                                onClick={() => setShowMigrationModal(true)}
                                 style={{
                                     ...styles.btn,
-                                    background: '#222',
-                                    border: '1px solid #444', 
-                                    color: '#var(--neon-gold)',
+                                    background: 'linear-gradient(135deg, #1a1a1a 0%, #252525 100%)',
+                                    border: '1px solid #444',
+                                    color: '#e5c07b',
                                     width: '100%',
-                                    fontSize: '0.8rem'
+                                    fontSize: '0.85rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px'
                                 }}
                             >
-                                🚀 Migrate to Gallery 2.0
+                                <RotateCcw size={14} />
+                                Migrate to Gallery 2.0
                             </button>
                         </div>
                     </>
                 )}
             </div>
+
+            {/* Migration Modal */}
+            {showMigrationModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        background: '#1a1a1a',
+                        border: '1px solid #333',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        maxWidth: '480px',
+                        width: '90%'
+                    }}>
+                        {/* Modal Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0, color: '#e5c07b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <RotateCcw size={18} />
+                                Gallery 2.0 Migration
+                            </h3>
+                            {!migrationLoading && (
+                                <button onClick={() => setShowMigrationModal(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}>
+                                    <X size={20} />
+                                </button>
+                            )}
+                        </div>
+
+                        {migrationLoading ? (
+                            /* Loading State */
+                            <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                                <Loader2 size={40} style={{ color: 'var(--neon-green)', animation: 'spin 1s linear infinite' }} />
+                                <p style={{ color: '#888', marginTop: '15px' }}>{migrationProgress < 90 ? 'Migrating data...' : 'Finalizing...'}</p>
+                                <div style={{ background: '#333', borderRadius: '4px', height: '8px', marginTop: '15px', overflow: 'hidden' }}>
+                                    <div style={{
+                                        width: `${migrationProgress}%`,
+                                        height: '100%',
+                                        background: 'var(--neon-green)',
+                                        transition: 'width 0.3s ease'
+                                    }} />
+                                </div>
+                            </div>
+                        ) : migrationError ? (
+                            /* Error State */
+                            <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                                <AlertTriangle size={40} style={{ color: '#ff6b6b' }} />
+                                <p style={{ color: '#ff6b6b', marginTop: '15px' }}>{migrationError}</p>
+                                <button
+                                    onClick={() => setMigrationError(null)}
+                                    style={{ ...styles.btn, ...styles.btnSecondary, marginTop: '15px' }}
+                                >
+                                    Try Again
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Preview Info */}
+                                {migrationPreview?.error ? (
+                                    <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid #ff6b6b', borderRadius: '8px', padding: '15px', marginBottom: '20px' }}>
+                                        <p style={{ color: '#ff6b6b', margin: 0 }}>Error loading preview: {migrationPreview.error}</p>
+                                    </div>
+                                ) : (
+                                    <div style={{ background: '#222', borderRadius: '8px', padding: '15px', marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ color: '#888' }}>Existing Gallery Items</span>
+                                            <span style={{ color: 'white', fontWeight: '600' }}>{migrationPreview?.itemCount || 0}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: '#888' }}>Backup Created</span>
+                                            <span style={{ color: 'var(--neon-green)' }}>Auto</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Warning */}
+                                <div style={{ background: 'rgba(229,192,123,0.1)', border: '1px solid #e5c07b', borderRadius: '8px', padding: '12px', marginBottom: '20px', fontSize: '0.85rem', color: '#e5c07b' }}>
+                                    This will convert your GalleryGrid to the new GalleryExplorer format and create a backup before making changes.
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        onClick={() => setShowMigrationModal(false)}
+                                        style={{ ...styles.btn, ...styles.btnSecondary, flex: 1 }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => handleMigration({ addSamples: true, updateLayout: true })}
+                                        style={{
+                                            ...styles.btn,
+                                            background: 'var(--neon-gold)',
+                                            color: 'black',
+                                            flex: 1,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px'
+                                        }}
+                                    >
+                                        <Check size={16} />
+                                        Migrate
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
