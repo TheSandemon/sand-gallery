@@ -4,14 +4,11 @@ import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
 
-// TODO: Replace with your actual Firebase project configuration
-// You can find this in the Firebase Console under Project Settings > General > Your Apps
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    // explicit fix: force the correct storage bucket url
-    storageBucket: "sand-gallery-lab.firebasestorage.app",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "sand-gallery-lab.firebasestorage.app",
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
