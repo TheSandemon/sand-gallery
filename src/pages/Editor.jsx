@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Move, Image, Type, Square, Video, 
   MousePointer, Layout, Save, Eye, Undo, Redo, Layers
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../context/AuthContext'
 
 const COMPONENT_TYPES = [
   { type: 'HeroSection', icon: Layout, label: 'Hero Section' },

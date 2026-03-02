@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
 const StudioContext = createContext();
 
@@ -20,10 +22,6 @@ export const StudioProvider = ({ children }) => {
     useEffect(() => {
         const checkServices = async () => {
             try {
-                // Determine if we can import firebase/functions dynamically
-                // This prevents crashes if not fully initialized yet
-                const { httpsCallable } = await import('firebase/functions');
-                const { functions } = await import('../firebase');
                 const getStatus = httpsCallable(functions, 'getServiceStatus');
                 const result = await getStatus();
                 setServiceStatus(result.data);

@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import { useState, useEffect } from 'react'
 import { 
   Users, Settings, BarChart3, Database, Crown, Lock, Key, 

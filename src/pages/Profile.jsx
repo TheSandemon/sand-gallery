@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import { User, CreditCard, Settings, LogOut } from 'lucide-react'
 
 export default function Profile() {

@@ -5,7 +5,7 @@ import {
   Palette, Bot, Zap, Layers, Users, ChevronDown,
   ExternalLink, Twitter, Github, Mail
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../context/AuthContext'
 
 const works = [
   {
