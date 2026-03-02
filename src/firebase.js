@@ -1,8 +1,8 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
-import { getStorage } from "firebase/storage";
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/functions';
+import 'firebase/compat/storage';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,17 +14,12 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Create app outside of export to ensure single initialization
-let app;
-if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-} else {
-    app = getApp();
-}
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
 
-// Export services - they will be created on first access
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const functions = getFunctions(app);
-export const storage = getStorage(app);
+// Export services using the compat API
+export const auth = firebase.auth();
+export const db = firebase.firestore();
+export const functions = firebase.functions();
+export const storage = firebase.storage();
 export default app;
