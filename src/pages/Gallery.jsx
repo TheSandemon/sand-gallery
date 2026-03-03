@@ -4,6 +4,7 @@ import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, 
 import { useNavigate } from 'react-router-dom';
 
 // Hardcoded 8 categories - no Firestore dependency
+// Use Admin Media Manager to add items to categories
 const GALLERY_CATEGORIES = [
     {
         id: 'games',
@@ -11,10 +12,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Interactive Experiences',
         icon: 'Gamepad2',
         color: '#00ff88',
-        items: [
-            { id: 'g1', name: 'Neon Racer', description: 'Cyberpunk racing game', link: '/studio' },
-            { id: 'g2', name: 'Puzzle Dimension', description: '3D puzzle adventure', link: '/studio' },
-        ]
+        items: []
     },
     {
         id: 'apps',
@@ -22,9 +20,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Applications',
         icon: 'AppWindow',
         color: '#00d4ff',
-        items: [
-            { id: 'a1', name: 'AI Studio', description: 'Create with AI', link: '/studio' },
-        ]
+        items: []
     },
     {
         id: 'tools',
@@ -32,9 +28,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Utilities & Software',
         icon: 'Wrench',
         color: '#ff6b35',
-        items: [
-            { id: 't1', name: 'Image Generator', description: 'AI image creation', link: '/studio' },
-        ]
+        items: []
     },
     {
         id: 'videos',
@@ -42,9 +36,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Visual Media',
         icon: 'Film',
         color: '#ff00ff',
-        items: [
-            { id: 'v1', name: 'AI Film Showcase', description: 'AI-generated films', link: '/anthem' },
-        ]
+        items: []
     },
     {
         id: '3d',
@@ -52,9 +44,7 @@ const GALLERY_CATEGORIES = [
         subtitle: '3D Models & VR',
         icon: 'Box',
         color: '#c79b37',
-        items: [
-            { id: '3d1', name: 'VR Experiences', description: 'Virtual reality content', link: '/studio' },
-        ]
+        items: []
     },
     {
         id: 'images',
@@ -62,9 +52,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Art & Photography',
         icon: 'Image',
         color: '#00ffff',
-        items: [
-            { id: 'i1', name: 'Digital Art Gallery', description: 'AI-generated artwork', link: '/gallery' },
-        ]
+        items: []
     },
     {
         id: 'audio',
@@ -72,9 +60,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Music & Sound',
         icon: 'Headphones',
         color: '#ff4444',
-        items: [
-            { id: 'au1', name: 'Sound Library', description: 'AI audio compositions', link: '/studio' },
-        ]
+        items: []
     },
     {
         id: 'other',
@@ -82,9 +68,7 @@ const GALLERY_CATEGORIES = [
         subtitle: 'Miscellaneous',
         icon: 'Folder',
         color: '#888888',
-        items: [
-            { id: 'o1', name: 'Experiments', description: 'Work in progress', link: '/studio' },
-        ]
+        items: []
     }
 ];
 
