@@ -46,7 +46,10 @@ const CategoryManager = ({ categories = [], mediaItems = [] }) => {
             id: mediaItem.id,
             name: mediaItem.name,
             description: mediaItem.description || '',
-            link: mediaItem.url || '',
+            link: mediaItem.url || '',           // For navigation
+            url: mediaItem.url || '',            // For inline playback
+            type: mediaItem.type || 'link',     // 'image'|'video'|'audio'|'embed'|'link'
+            thumbnail: mediaItem.thumbnail || '',
         };
 
         const updatedItems = [...categoryItems, newItem];

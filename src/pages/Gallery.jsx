@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, Wrench, Box, Image, Headphones, Folder } from 'lucide-react';
+import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, Wrench, Box, Image, Headphones, Folder, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import MediaViewer from '../components/MediaViewer';
 
 // Hardcoded 8 categories - no Firestore dependency
 // Use Admin Media Manager to add items to categories
@@ -138,11 +139,28 @@ const CategoryCard = ({ category, isActive, onClick, index }) => {
 };
 
 // Expanded category panel
-const CategoryPanel = ({ category, onClose }) => {
+const CategoryPanel = ({ category, onClose, onItemClick }) => {
     const navigate = useNavigate();
     const Icon = ICON_MAP[category.icon] || Sparkles;
 
     if (!category) return null;
+
+    const handleItemClick = (item) => {
+        // For image/video/audio, show inline viewer
+        if (item.type === 'image' || item.type === 'video' || item.type === 'audio') {
+            onItemClick(item);
+        } else {
+            // For games/apps/tools, navigate or show options
+            if (item.link) {
+                if (item.link.startsWith('http')) {
+                    window.open(item.link, '_blank');
+                } else {
+                    // Internal link - navigate to detail page
+                    navigate(`/item/${category.id}/${item.id}`);
+                }
+            }
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-fade-in" onClick={onClose}>
@@ -172,12 +190,7 @@ const CategoryPanel = ({ category, onClose }) => {
                     {category.items?.map((item, idx) => (
                         <div
                             key={item.id || idx}
-                            onClick={() => {
-                                if (item.link) {
-                                    if (item.link.startsWith('http')) window.open(item.link, '_blank');
-                                    else navigate(item.link);
-                                }
-                            }}
+                            onClick={() => handleItemClick(item)}
                             className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer"
                         >
                             <div className="flex items-center justify-between">
@@ -185,7 +198,11 @@ const CategoryPanel = ({ category, onClose }) => {
                                     <h4 className="text-lg font-semibold text-white group-hover:text-neon-green">{item.name}</h4>
                                     <p className="text-sm text-gray-500">{item.description || 'View Details'}</p>
                                 </div>
-                                <ChevronRight className="text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-transform" size={20} />
+                                {item.type === 'image' || item.type === 'video' || item.type === 'audio' ? (
+                                    <span className="text-xs text-gray-500 capitalize">{item.type}</span>
+                                ) : (
+                                    <ExternalLink className="text-gray-600 group-hover:text-white transition-colors" size={20} />
+                                )}
                             </div>
                         </div>
                     ))}
@@ -205,6 +222,7 @@ const Gallery = () => {
     const [viewMode, setViewMode] = useState('grid');
     const [categories, setCategories] = useState(GALLERY_CATEGORIES);
     const [loading, setLoading] = useState(true);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     // Fetch category items from Firestore
     useEffect(() => {
@@ -287,6 +305,22 @@ const Gallery = () => {
                         <CategoryPanel
                             category={activeCategory}
                             onClose={() => setActiveCategory(null)}
+                            onItemClick={setSelectedItem}
+                        />
+                    )}
+                </AnimatePresence>
+
+                {/* Media Viewer Modal */}
+                <AnimatePresence>
+                    {selectedItem && (
+                        <MediaViewer
+                            item={{
+                                ...selectedItem,
+                                type: selectedItem.type,
+                                url: selectedItem.url,
+                                prompt: selectedItem.description
+                            }}
+                            onClose={() => setSelectedItem(null)}
                         />
                     )}
                 </AnimatePresence>
