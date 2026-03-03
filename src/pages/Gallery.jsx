@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, Wrench, Box, Image, Headphones, Folder } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 // Hardcoded 8 categories - no Firestore dependency
 // Use Admin Media Manager to add items to categories
@@ -201,6 +203,33 @@ const CategoryPanel = ({ category, onClose }) => {
 const Gallery = () => {
     const [activeCategory, setActiveCategory] = useState(null);
     const [viewMode, setViewMode] = useState('grid');
+    const [categories, setCategories] = useState(GALLERY_CATEGORIES);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch category items from Firestore
+    useEffect(() => {
+        const fetchCategoryItems = async () => {
+            const updatedCategories = await Promise.all(
+                GALLERY_CATEGORIES.map(async (cat) => {
+                    try {
+                        const docRef = doc(db, 'gallery_categories', cat.id);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists() && docSnap.data().items) {
+                            return { ...cat, items: docSnap.data().items };
+                        }
+                        return { ...cat, items: [] };
+                    } catch (error) {
+                        console.error(`Error fetching category ${cat.id}:`, error);
+                        return { ...cat, items: [] };
+                    }
+                })
+            );
+            setCategories(updatedCategories);
+            setLoading(false);
+        };
+
+        fetchCategoryItems();
+    }, []);
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] pt-20">
@@ -235,8 +264,11 @@ const Gallery = () => {
 
                 {/* Category Grid */}
                 <div className="relative max-w-6xl mx-auto z-10">
+                    {loading ? (
+                        <div className="text-center text-gray-500 py-20">Loading gallery...</div>
+                    ) : (
                     <div className={`grid gap-4 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-                        {GALLERY_CATEGORIES.map((category, index) => (
+                        {categories.map((category, index) => (
                             <CategoryCard
                                 key={category.id}
                                 category={category}
@@ -246,6 +278,7 @@ const Gallery = () => {
                             />
                         ))}
                     </div>
+                    )}
                 </div>
 
                 {/* Expanded Category Panel */}
