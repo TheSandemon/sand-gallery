@@ -42,6 +42,14 @@ const GALLERY_CATEGORIES = [
         items: []
     },
     {
+        id: 'feature_roll',
+        title: 'FEATURE ROLL',
+        subtitle: 'Landing Page Backgrounds',
+        icon: 'Film',
+        color: '#ff3366',
+        items: []
+    },
+    {
         id: '3d',
         title: '3D',
         subtitle: '3D Models & VR',

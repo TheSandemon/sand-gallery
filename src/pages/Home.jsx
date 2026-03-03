@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play, Headphones, Image, Box } from 'lucide-react';
+import FeatureRoll from '../components/FeatureRoll';
 
 const FEATURED_WORK = [
     {
@@ -26,6 +27,9 @@ const FEATURED_WORK = [
 const Home = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
+            {/* Feature Roll Background */}
+            <FeatureRoll />
+
             {/* Hero Section */}
             <section className="relative min-h-[90vh] flex items-center justify-center px-4">
                 <div className="max-w-5xl mx-auto text-center">

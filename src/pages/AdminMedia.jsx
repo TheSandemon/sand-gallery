@@ -11,6 +11,7 @@ const GALLERY_CATEGORIES = [
     { id: 'apps', title: 'APPS', color: '#00d4ff' },
     { id: 'tools', title: 'TOOLS', color: '#ff6b35' },
     { id: 'videos', title: 'VIDEOS', color: '#ff00ff' },
+    { id: 'feature_roll', title: 'FEATURE ROLL', color: '#ff3366' },
     { id: '3d', title: '3D', color: '#c79b37' },
     { id: 'images', title: 'IMAGES', color: '#00ffff' },
     { id: 'audio', title: 'AUDIO', color: '#ff4444' },
