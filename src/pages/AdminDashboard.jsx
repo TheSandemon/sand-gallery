@@ -77,23 +77,42 @@ const AdminDashboard = () => {
             <div style={{ marginBottom: '3rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
                     <h2 style={{ margin: 0 }}>User Management</h2>
-                    <Link to="/crm" style={{
-                        fontSize: '0.9rem',
-                        padding: '0.5rem 1rem',
-                        background: 'rgba(0, 143, 78, 0.2)',
-                        color: 'var(--neon-green)',
-                        border: '1px solid var(--neon-green)',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        fontWeight: 'bold',
-                        letterSpacing: '0.5px',
-                        transition: 'all 0.3s ease'
-                    }}
-                        onMouseOver={(e) => { e.target.style.background = 'var(--neon-green)'; e.target.style.color = 'black'; }}
-                        onMouseOut={(e) => { e.target.style.background = 'rgba(0, 143, 78, 0.2)'; e.target.style.color = 'var(--neon-green)'; }}
-                    >
-                        OPEN CRM TOOL
-                    </Link>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Link to="/admin/media" style={{
+                            fontSize: '0.9rem',
+                            padding: '0.5rem 1rem',
+                            background: 'rgba(0, 143, 78, 0.2)',
+                            color: 'var(--neon-green)',
+                            border: '1px solid var(--neon-green)',
+                            borderRadius: '8px',
+                            textDecoration: 'none',
+                            fontWeight: 'bold',
+                            letterSpacing: '0.5px',
+                            transition: 'all 0.3s ease'
+                        }}
+                            onMouseOver={(e) => { e.target.style.background = 'var(--neon-green)'; e.target.style.color = 'black'; }}
+                            onMouseOut={(e) => { e.target.style.background = 'rgba(0, 143, 78, 0.2)'; e.target.style.color = 'var(--neon-green)'; }}
+                        >
+                            MEDIA MANAGER
+                        </Link>
+                        <Link to="/crm" style={{
+                            fontSize: '0.9rem',
+                            padding: '0.5rem 1rem',
+                            background: 'rgba(0, 143, 78, 0.2)',
+                            color: 'var(--neon-green)',
+                            border: '1px solid var(--neon-green)',
+                            borderRadius: '8px',
+                            textDecoration: 'none',
+                            fontWeight: 'bold',
+                            letterSpacing: '0.5px',
+                            transition: 'all 0.3s ease'
+                        }}
+                            onMouseOver={(e) => { e.target.style.background = 'var(--neon-green)'; e.target.style.color = 'black'; }}
+                            onMouseOut={(e) => { e.target.style.background = 'rgba(0, 143, 78, 0.2)'; e.target.style.color = 'var(--neon-green)'; }}
+                        >
+                            OPEN CRM TOOL
+                        </Link>
+                    </div>
                 </div>
                 {loading ? (
                     <p>Loading users...</p>
