@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS = {
     footerText: '© 2026 SAND.GALLERY',
     showHiddenPages: false,
     navLinks: [
-        { label: 'SAND', path: '/gallery' },
+        { label: 'SAND', path: '/' },
         { label: 'GALLERY', path: '/gallery' },
         { label: 'ABOUT', path: '/about' },
         { label: 'CONTACT', path: '/contact' },
