@@ -9,6 +9,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminMedia from './pages/AdminMedia';
 import Studio from './pages/Studio';
 import Pricing from './pages/Pricing';
 import CRM from './pages/CRM';
@@ -28,12 +29,14 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/work" element={<Work />} />
+            <Route path="/sand" element={<Work />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/anthem" element={<Anthem />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/media" element={<AdminMedia />} />
             <Route path="/studio" element={<Studio />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/pricing" element={<Pricing />} />

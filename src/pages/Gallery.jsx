@@ -1,38 +1,308 @@
-import React, { useEffect } from 'react';
-import usePageContent from '../hooks/usePageContent';
-import DynamicRenderer from '../components/cms/DynamicRenderer';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, Wrench, Box, Image, Headphones, Folder } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const Gallery = () => {
-    const { data, loading, error } = usePageContent('gallery');
-
-    // Set page title
-    useEffect(() => {
-        if (data?.meta?.title) {
-            document.title = data.meta.title;
-        }
-    }, [data]);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen pt-[120px] flex items-center justify-center">
-                <div className="text-neon-green animate-pulse">Loading Gallery...</div>
-            </div>
-        );
+// Hardcoded 8 categories - no Firestore dependency
+const GALLERY_CATEGORIES = [
+    {
+        id: 'games',
+        title: 'GAMES',
+        subtitle: 'Interactive Experiences',
+        icon: 'Gamepad2',
+        color: '#00ff88',
+        items: [
+            { id: 'g1', name: 'Neon Racer', description: 'Cyberpunk racing game', link: '/studio' },
+            { id: 'g2', name: 'Puzzle Dimension', description: '3D puzzle adventure', link: '/studio' },
+        ]
+    },
+    {
+        id: 'apps',
+        title: 'APPS',
+        subtitle: 'Applications',
+        icon: 'AppWindow',
+        color: '#00d4ff',
+        items: [
+            { id: 'a1', name: 'AI Studio', description: 'Create with AI', link: '/studio' },
+        ]
+    },
+    {
+        id: 'tools',
+        title: 'TOOLS',
+        subtitle: 'Utilities & Software',
+        icon: 'Wrench',
+        color: '#ff6b35',
+        items: [
+            { id: 't1', name: 'Image Generator', description: 'AI image creation', link: '/studio' },
+        ]
+    },
+    {
+        id: 'videos',
+        title: 'VIDEOS',
+        subtitle: 'Visual Media',
+        icon: 'Film',
+        color: '#ff00ff',
+        items: [
+            { id: 'v1', name: 'AI Film Showcase', description: 'AI-generated films', link: '/anthem' },
+        ]
+    },
+    {
+        id: '3d',
+        title: '3D',
+        subtitle: '3D Models & VR',
+        icon: 'Box',
+        color: '#c79b37',
+        items: [
+            { id: '3d1', name: 'VR Experiences', description: 'Virtual reality content', link: '/studio' },
+        ]
+    },
+    {
+        id: 'images',
+        title: 'IMAGES',
+        subtitle: 'Art & Photography',
+        icon: 'Image',
+        color: '#00ffff',
+        items: [
+            { id: 'i1', name: 'Digital Art Gallery', description: 'AI-generated artwork', link: '/gallery' },
+        ]
+    },
+    {
+        id: 'audio',
+        title: 'AUDIO',
+        subtitle: 'Music & Sound',
+        icon: 'Headphones',
+        color: '#ff4444',
+        items: [
+            { id: 'au1', name: 'Sound Library', description: 'AI audio compositions', link: '/studio' },
+        ]
+    },
+    {
+        id: 'other',
+        title: 'OTHER',
+        subtitle: 'Miscellaneous',
+        icon: 'Folder',
+        color: '#888888',
+        items: [
+            { id: 'o1', name: 'Experiments', description: 'Work in progress', link: '/studio' },
+        ]
     }
+];
 
-    if (error) {
-        return (
-            <div className="min-h-screen pt-[120px] text-center text-red-500">
-                <p>Error loading gallery data.</p>
-                <p className="text-sm text-gray-500">{error.message}</p>
-            </div>
-        );
-    }
+// Icon mapping
+const ICON_MAP = {
+    Gamepad2,
+    AppWindow,
+    Film,
+    Sparkles,
+    Wrench,
+    Box,
+    Image,
+    Headphones,
+    Folder,
+};
+
+// Grid background
+const GridBackground = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+        <div className="absolute inset-0 bg-radial-gradient" />
+    </div>
+);
+
+// Category card
+const CategoryCard = ({ category, isActive, onClick, index }) => {
+    const Icon = ICON_MAP[category.icon] || Sparkles;
+    const delay = index * 0.08;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a]">
-            {/* Dynamic Rendering of Sections */}
-            <DynamicRenderer sections={data?.sections || []} />
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.3 }}
+            onClick={onClick}
+            className="relative cursor-pointer group gallery-card"
+            style={{ '--glow-color': category.color }}
+        >
+            <div className="gallery-glow" style={{ '--glow-color': category.color }} />
+            <div
+                className={`relative overflow-hidden rounded-2xl p-6 md:p-8 border transition-colors duration-200
+                    ${isActive ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'}`}
+            >
+                <div
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center mb-4 md:mb-6"
+                    style={{
+                        background: `linear-gradient(135deg, ${category.color}20, ${category.color}05)`,
+                        border: `1px solid ${category.color}40`
+                    }}
+                >
+                    <Icon size={32} style={{ color: category.color }} className="relative z-10" />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold tracking-wider mb-1" style={{ color: category.color }}>
+                    {category.title}
+                </h3>
+                <p className="text-sm text-gray-500 tracking-wide">
+                    {category.subtitle}
+                </p>
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-gray-400">
+                    {category.items?.length || 0} items
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+// Expanded category panel
+const CategoryPanel = ({ category, onClose }) => {
+    const navigate = useNavigate();
+    const Icon = ICON_MAP[category.icon] || Sparkles;
+
+    if (!category) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-fade-in" onClick={onClose}>
+            <div className="absolute inset-0 bg-black/95" />
+            <div
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl bg-[#0a0a0a] border border-white/10 p-6 md:p-10 custom-scrollbar animate-slide-up gallery-panel"
+                style={{ '--glow-color': category.color }}
+            >
+                <div className="gallery-panel-glow" style={{ '--glow-color': category.color }} />
+                <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white">
+                    <X size={20} />
+                </button>
+                <div className="relative z-10 flex items-center gap-4 mb-8">
+                    <div
+                        className="w-14 h-14 rounded-xl flex items-center justify-center"
+                        style={{ background: `linear-gradient(135deg, ${category.color}30, ${category.color}10)`, border: `1px solid ${category.color}50` }}
+                    >
+                        <Icon size={28} style={{ color: category.color }} />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-bold" style={{ color: category.color }}>{category.title}</h2>
+                        <p className="text-gray-500">{category.subtitle}</p>
+                    </div>
+                </div>
+                <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {category.items?.map((item, idx) => (
+                        <div
+                            key={item.id || idx}
+                            onClick={() => {
+                                if (item.link) {
+                                    if (item.link.startsWith('http')) window.open(item.link, '_blank');
+                                    else navigate(item.link);
+                                }
+                            }}
+                            className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-lg font-semibold text-white group-hover:text-neon-green">{item.name}</h4>
+                                    <p className="text-sm text-gray-500">{item.description || 'View Details'}</p>
+                                </div>
+                                <ChevronRight className="text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-transform" size={20} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                {(!category.items || category.items.length === 0) && (
+                    <div className="relative z-10 text-center py-12 text-gray-500">
+                        <p>No items in this category yet.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const Gallery = () => {
+    const [activeCategory, setActiveCategory] = useState(null);
+    const [viewMode, setViewMode] = useState('grid');
+
+    return (
+        <div className="min-h-screen bg-[#0a0a0a] pt-20">
+            {/* Header */}
+            <div className="relative z-10 max-w-6xl mx-auto px-4 pt-12 pb-8">
+                <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
+                    THE <span className="text-neon-green">GALLERY</span>
+                </h1>
+                <p className="text-xl text-gray-400">Explore the collection</p>
+            </div>
+
+            <div className="relative min-h-[60vh] py-12 px-4">
+                <GridBackground />
+
+                {/* View mode toggle */}
+                <div className="relative z-10 flex justify-end max-w-6xl mx-auto mb-6">
+                    <div className="flex gap-2 bg-black/40 p-1 rounded-lg border border-white/10">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        >
+                            <Grid3X3 size={18} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+                        >
+                            <Layers size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Category Grid */}
+                <div className="relative max-w-6xl mx-auto z-10">
+                    <div className={`grid gap-4 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                        {GALLERY_CATEGORIES.map((category, index) => (
+                            <CategoryCard
+                                key={category.id}
+                                category={category}
+                                index={index}
+                                isActive={activeCategory?.id === category.id}
+                                onClick={() => setActiveCategory(category)}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Expanded Category Panel */}
+                <AnimatePresence>
+                    {activeCategory && (
+                        <CategoryPanel
+                            category={activeCategory}
+                            onClose={() => setActiveCategory(null)}
+                        />
+                    )}
+                </AnimatePresence>
+
+                {/* Styles */}
+                <style>{`
+                    .bg-grid-pattern {
+                        background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+                        background-size: 40px 40px;
+                    }
+                    .bg-radial-gradient { background: radial-gradient(circle at center, transparent 0%, #0a0a0a 100%); }
+                    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+                    .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+                    @keyframes slide-up { from { transform: translateY(20px) translateZ(0); opacity: 0; } to { transform: translateY(0) translateZ(0); opacity: 1; } }
+                    .animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                    .gallery-card { position: relative; }
+                    .gallery-glow {
+                        position: absolute; inset: -20px;
+                        background: radial-gradient(circle at center, var(--glow-color, #00ff88) 0%, transparent 70%);
+                        opacity: 0; pointer-events: none; z-index: -1;
+                        will-change: opacity; transform: translateZ(0); transition: opacity 0.3s ease;
+                    }
+                    .gallery-card:hover .gallery-glow { opacity: 0.15; }
+                    .gallery-panel { position: relative; overflow: visible; }
+                    .gallery-panel-glow {
+                        position: absolute; inset: -40px;
+                        background: radial-gradient(ellipse at center, var(--glow-color, #00ff88) 0%, transparent 60%);
+                        opacity: 0.1; pointer-events: none; z-index: 0;
+                        will-change: opacity; transform: translateZ(0); filter: blur(40px);
+                    }
+                `}</style>
+            </div>
         </div>
     );
 };

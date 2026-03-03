@@ -66,7 +66,7 @@ const Work = () => {
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-16">
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
-                    HOME
+                    SAND
                 </h1>
                 <p className="text-xl text-gray-400 max-w-2xl">
                     A curated collection of creative projects spanning images, videos, audio, and interactive experiences.
