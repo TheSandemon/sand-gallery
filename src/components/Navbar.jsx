@@ -27,10 +27,12 @@ const Navbar = () => {
     const isActive = (path) => location.pathname === path;
 
     // Build nav links from settings, filtering hidden pages unless showHiddenPages is true
-    // Also filter out /profile from nav (should only be accessible via avatar popup)
+    // Also filter out /profile, /game, and /work from nav (legacy routes)
     const navLinks = [
         ...(settings.navLinks || []).filter(link => !link.hidden || settings.showHiddenPages)
-            .filter(link => link.path !== '/profile'),
+            .filter(link => link.path !== '/profile')
+            .filter(link => link.path !== '/game')
+            .filter(link => link.path !== '/work'),
         ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
     ];
 
