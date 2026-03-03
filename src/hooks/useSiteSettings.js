@@ -11,9 +11,9 @@ const DEFAULT_SETTINGS = {
     showHiddenPages: false,
     navLinks: [
         { label: 'SAND', path: '/gallery' },
+        { label: 'GALLERY', path: '/gallery' },
         { label: 'ABOUT', path: '/about' },
         { label: 'CONTACT', path: '/contact' },
-        { label: 'PRICING', path: '/pricing' },
     ],
 };
 

@@ -26,13 +26,18 @@ const Navbar = () => {
 
     const isActive = (path) => location.pathname === path;
 
-    // Build nav links from settings, filtering hidden pages unless showHiddenPages is true
-    // Also filter out /profile, /game, and /work from nav (legacy routes)
+    // Whitelist of allowed nav links - ignore Firestore settings, use only these
+    // PRICING is NOT in nav - only accessible via credits button
+    const ALLOWED_LINKS = [
+        { label: 'SAND', path: '/gallery' },
+        { label: 'GALLERY', path: '/gallery' },
+        { label: 'ABOUT', path: '/about' },
+        { label: 'CONTACT', path: '/contact' },
+    ];
+
+    // Build nav links: use whitelist + admin for owner
     const navLinks = [
-        ...(settings.navLinks || []).filter(link => !link.hidden || settings.showHiddenPages)
-            .filter(link => link.path !== '/profile')
-            .filter(link => link.path !== '/game')
-            .filter(link => link.path !== '/work'),
+        ...ALLOWED_LINKS,
         ...(user?.role === 'owner' ? [{ path: '/admin', label: 'ADMIN' }] : []),
     ];
 
