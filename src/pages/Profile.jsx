@@ -1,6 +1,20 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import VideoAnalysis from '../components/VideoAnalysis';
+import {
+    ConnectWallet,
+    Wallet,
+    WalletDropdown,
+    WalletDropdownBasename,
+    WalletDropdownDisconnect,
+} from '@coinbase/onchainkit/wallet';
+import {
+    Address,
+    Avatar,
+    Name,
+    Identity,
+    EthBalance,
+} from '@coinbase/onchainkit/identity';
 
 const Profile = () => {
     const { user, logout } = useAuth();
@@ -44,7 +58,7 @@ const Profile = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                     <button
                         onClick={() => {
                             logout();
@@ -64,6 +78,22 @@ const Profile = () => {
                     >
                         LOG OUT
                     </button>
+                    <Wallet>
+                        <ConnectWallet className="bg-neon-green hover:bg-neon-green/80 text-black font-bold py-2 px-4 rounded transition-all duration-300" style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', fontWeight: 'bold' }}>
+                            <Avatar className="h-5 w-5" />
+                            <Name />
+                        </ConnectWallet>
+                        <WalletDropdown className="bg-[#0a0a0a] border border-neon-green/20" style={{ background: '#0a0a0a', border: '1px solid rgba(0, 143, 78, 0.2)', borderRadius: '8px', padding: '0.5rem' }}>
+                            <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick style={{ padding: '0.5rem' }}>
+                                <Avatar />
+                                <Name />
+                                <Address className="text-gray-400" />
+                                <EthBalance className="text-neon-gold" />
+                            </Identity>
+                            <WalletDropdownBasename className="hover:bg-neon-green/10" style={{ padding: '0.5rem', display: 'block' }} />
+                            <WalletDropdownDisconnect className="hover:bg-red-500/10 text-red-500" style={{ padding: '0.5rem', display: 'block', color: '#ff4444' }} />
+                        </WalletDropdown>
+                    </Wallet>
                 </div>
             </div>
 

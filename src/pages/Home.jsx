@@ -30,27 +30,29 @@ const Home = () => {
             <section className="relative min-h-[90vh] flex items-center justify-center px-4">
                 <div className="max-w-5xl mx-auto text-center">
                     <p className="text-neon-green text-sm font-medium tracking-widest mb-6 uppercase">
-                        Creative Portfolio
+                        Creative Technologist
                     </p>
                     <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight">
-                        CRAFTING
-                        <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-neon-gold">
-                            DIGITAL
-                        </span>
-                        <br />
-                        EXPERIENCES
+                        KYLE TOUCHET
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-                        A multidisciplinary creative exploring the boundaries of visual arts,
-                        audio design, and interactive media.
+                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-4">
+                        @Sandemon
+                    </p>
+                    <p className="text-lg text-gray-500 max-w-xl mx-auto mb-4">
+                        Creative Technologist / AI Filmmaker / Post-Labor Futurist
+                    </p>
+                    <p className="text-xl text-neon-gold italic max-w-2xl mx-auto mb-12">
+                        "The biggest limitation of AI is our own imagination"
+                    </p>
+                    <p className="text-sm text-gray-600 max-w-2xl mx-auto mb-8">
+                        - Demmis Hassabis
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
-                            to="/work"
+                            to="/gallery"
                             className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-4 rounded-lg hover:bg-neon-green/90 transition-colors"
                         >
-                            VIEW WORK
+                            EXPLORE GALLERY
                             <ArrowRight size={20} />
                         </Link>
                         <Link
@@ -99,7 +101,7 @@ const Home = () => {
                             <p className="text-gray-400">A selection of recent projects</p>
                         </div>
                         <Link
-                            to="/work"
+                            to="/gallery"
                             className="hidden md:flex items-center gap-2 text-neon-green hover:underline"
                         >
                             View All <ArrowRight size={18} />
@@ -110,7 +112,7 @@ const Home = () => {
                         {FEATURED_WORK.map(item => (
                             <Link
                                 key={item.id}
-                                to="/work"
+                                to="/gallery"
                                 className="group relative aspect-[4/3] bg-[#111] rounded-lg overflow-hidden"
                             >
                                 {item.type === 'image' ? (
@@ -141,7 +143,7 @@ const Home = () => {
 
                     <div className="mt-8 text-center md:hidden">
                         <Link
-                            to="/work"
+                            to="/gallery"
                             className="inline-flex items-center gap-2 text-neon-green hover:underline"
                         >
                             View All Work <ArrowRight size={18} />

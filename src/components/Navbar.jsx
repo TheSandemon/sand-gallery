@@ -3,20 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import UserButton from './UserButton';
 import { useAuth } from '../context/AuthContext';
 import useSiteSettings from '../hooks/useSiteSettings';
-import {
-    ConnectWallet,
-    Wallet,
-    WalletDropdown,
-    WalletDropdownBasename,
-    WalletDropdownDisconnect,
-} from '@coinbase/onchainkit/wallet';
-import {
-    Address,
-    Avatar,
-    Name,
-    Identity,
-    EthBalance,
-} from '@coinbase/onchainkit/identity';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -70,23 +56,7 @@ const Navbar = () => {
                             </Link>
                         </li>
                     ))}
-                    <li className="flex items-center gap-4">
-                        <Wallet>
-                            <ConnectWallet className="bg-neon-green hover:bg-neon-green/80 text-black font-bold py-2 px-4 rounded transition-all duration-300">
-                                <Avatar className="h-6 w-6" />
-                                <Name />
-                            </ConnectWallet>
-                            <WalletDropdown className="bg-[#0a0a0a] border border-neon-green/20">
-                                <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                                    <Avatar />
-                                    <Name />
-                                    <Address className="text-gray-400" />
-                                    <EthBalance className="text-neon-gold" />
-                                </Identity>
-                                <WalletDropdownBasename className="hover:bg-neon-green/10" />
-                                <WalletDropdownDisconnect className="hover:bg-red-500/10 text-red-500" />
-                            </WalletDropdown>
-                        </Wallet>
+                    <li>
                         <UserButton />
                     </li>
                 </ul>
@@ -118,22 +88,6 @@ const Navbar = () => {
                     </Link>
                 ))}
                 <div className="mt-8 flex flex-col items-center gap-6 scale-125">
-                    <Wallet>
-                        <ConnectWallet className="bg-neon-green text-black font-bold py-3 px-6 rounded-lg">
-                            <Avatar />
-                            <Name />
-                        </ConnectWallet>
-                        <WalletDropdown className="bg-[#0a0a0a] border border-neon-green/20">
-                            <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                                <Avatar />
-                                <Name />
-                                <Address className="text-gray-400" />
-                                <EthBalance className="text-neon-gold" />
-                            </Identity>
-                            <WalletDropdownBasename />
-                            <WalletDropdownDisconnect />
-                        </WalletDropdown>
-                    </Wallet>
                     <UserButton />
                 </div>
             </div>
