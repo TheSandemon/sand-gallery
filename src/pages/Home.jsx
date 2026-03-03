@@ -41,11 +41,11 @@ const Home = () => {
                     <p className="text-lg text-gray-500 max-w-xl mx-auto mb-4">
                         Creative Technologist / AI Filmmaker / Post-Labor Futurist
                     </p>
-                    <p className="text-xl text-neon-gold italic max-w-2xl mx-auto mb-12">
+                    <p className="text-xl text-neon-gold italic max-w-2xl mx-auto mb-2">
                         "The biggest limitation of AI is our own imagination"
                     </p>
-                    <p className="text-sm text-gray-600 max-w-2xl mx-auto mb-8">
-                        - Demmis Hassabis
+                    <p className="text-sm text-gray-600 max-w-2xl mx-auto">
+                        — Demis Hassabis
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
