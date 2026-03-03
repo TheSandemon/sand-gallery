@@ -65,7 +65,7 @@ const MediaUploader = ({ categories = [] }) => {
         }
 
         // Validate based on type
-        if (mediaType === 'image' || mediaType === 'audio' || mediaType === 'game') {
+        if (mediaType === 'image' || mediaType === 'audio' || mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') {
             if (!file && !url) {
                 alert('Please select a file to upload');
                 return;
@@ -90,8 +90,11 @@ const MediaUploader = ({ categories = [] }) => {
 
             // Handle file upload
             if (file && !isEmbed) {
-                // Upload games to games/ folder, others to media/
-                const folder = mediaType === 'game' ? 'games' : 'media';
+                // Upload games/apps/tools to respective folders, others to media/
+                let folder = 'media';
+                if (mediaType === 'game') folder = 'games';
+                else if (mediaType === 'app') folder = 'apps';
+                else if (mediaType === 'tool') folder = 'tools';
                 const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 finalUrl = await getDownloadURL(snapshot.ref);
@@ -100,27 +103,35 @@ const MediaUploader = ({ categories = [] }) => {
                 if (mediaType === 'image') {
                     thumbnail = finalUrl;
                 }
-                // For games, use URL as both game file and thumbnail placeholder
-                if (mediaType === 'game') {
+                // For games/apps/tools, use URL as both file and thumbnail
+                if (mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') {
                     thumbnail = finalUrl;
                 }
             }
 
             // Handle embed URL (YouTube/Vimeo)
             if (isEmbed && embedUrl) {
-                // Convert YouTube URL to embed URL
+                // Convert YouTube URL to embed URL and get thumbnail
                 let embed = embedUrl;
+                let videoId = null;
+
                 if (embedUrl.includes('youtube.com/watch')) {
-                    const videoId = new URL(embedUrl).searchParams.get('v');
+                    videoId = new URL(embedUrl).searchParams.get('v');
                     embed = `https://www.youtube.com/embed/${videoId}`;
                 } else if (embedUrl.includes('youtu.be/')) {
-                    const videoId = embedUrl.split('youtu.be/')[1]?.split('?')[0];
+                    videoId = embedUrl.split('youtu.be/')[1]?.split('?')[0];
                     embed = `https://www.youtube.com/embed/${videoId}`;
                 } else if (embedUrl.includes('vimeo.com/')) {
-                    const videoId = embedUrl.split('vimeo.com/')[1]?.split('?')[0];
+                    videoId = embedUrl.split('vimeo.com/')[1]?.split('?')[0];
                     embed = `https://player.vimeo.com/video/${videoId}`;
                 }
+
                 finalUrl = embed;
+
+                // Generate thumbnail for YouTube embeds
+                if (videoId && !thumbnail) {
+                    thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                }
             }
 
             // Save to Firestore
@@ -168,8 +179,10 @@ const MediaUploader = ({ categories = [] }) => {
                         { id: 'video', label: 'Video', icon: '🎬' },
                         { id: 'audio', label: 'Audio', icon: '🎵' },
                         { id: 'game', label: 'Game', icon: '🎮' },
+                        { id: 'app', label: 'App', icon: '📱' },
+                        { id: 'tool', label: 'Tool', icon: '🔧' },
                         { id: 'embed', label: 'Embed (YouTube)', icon: '📺' },
-                        { id: 'link', label: 'Link/App', icon: '🔗' },
+                        { id: 'link', label: 'Link', icon: '🔗' },
                     ].map(type => (
                         <button
                             key={type.id}
@@ -191,7 +204,7 @@ const MediaUploader = ({ categories = [] }) => {
             </div>
 
             {/* Drag & Drop Zone (for uploadable types) */}
-            {(mediaType === 'image' || mediaType === 'audio' || (mediaType === 'video' && !isEmbed)) && (
+            {(mediaType === 'image' || mediaType === 'audio' || mediaType === 'game' || mediaType === 'app' || mediaType === 'tool' || (mediaType === 'video' && !isEmbed)) && (
                 <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -214,7 +227,7 @@ const MediaUploader = ({ categories = [] }) => {
                         accept={
                             mediaType === 'image' ? 'image/*' :
                             mediaType === 'audio' ? 'audio/*' :
-                            mediaType === 'game' ? '.html,.htm' :
+                            mediaType === 'game' || mediaType === 'app' || mediaType === 'tool' ? '.html,.htm' :
                             'video/*'
                         }
                         onChange={handleFileChange}

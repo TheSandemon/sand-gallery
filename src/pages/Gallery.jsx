@@ -147,7 +147,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
 
     const handleItemClick = (item) => {
         // For image/video/audio, show inline viewer
-        if (item.type === 'image' || item.type === 'video' || item.type === 'audio' || item.type === 'game') {
+        if (item.type === 'image' || item.type === 'video' || item.type === 'audio' || item.type === 'game' || item.type === 'app' || item.type === 'tool') {
             onItemClick(item);
         } else {
             // For games/apps/tools, navigate or show options
@@ -204,7 +204,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-600">
-                                        {item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : item.type === 'game' ? '🎮' : item.type === 'image' ? '🖼️' : '🔗'}
+                                        {item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : item.type === 'game' ? '🎮' : item.type === 'app' ? '📱' : item.type === 'tool' ? '🔧' : item.type === 'image' ? '🖼️' : '🔗'}
                                     </div>
                                 )}
                             </div>
@@ -213,7 +213,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                                 <p className="text-sm text-gray-500 truncate">{item.description || 'View Details'}</p>
                             </div>
                             <div className="flex-shrink-0">
-                                {item.type === 'image' || item.type === 'video' || item.type === 'audio' || item.type === 'game' ? (
+                                {item.type === 'image' || item.type === 'video' || item.type === 'audio' || item.type === 'game' || item.type === 'app' || item.type === 'tool' ? (
                                     <span className="text-xs text-gray-500 capitalize">{item.type}</span>
                                 ) : (
                                     <ExternalLink className="text-gray-600 group-hover:text-white transition-colors" size={20} />

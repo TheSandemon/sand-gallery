@@ -48,7 +48,7 @@ const CategoryManager = ({ categories = [], mediaItems = [] }) => {
             description: mediaItem.description || '',
             link: mediaItem.url || '',           // For navigation
             url: mediaItem.url || '',            // For inline playback
-            type: mediaItem.type || 'link',     // 'image'|'video'|'audio'|'game'|'embed'|'link'
+            type: mediaItem.type || 'link',     // 'image'|'video'|'audio'|'game'|'app'|'tool'|'embed'|'link'
             thumbnail: mediaItem.thumbnail || '',
         };
 

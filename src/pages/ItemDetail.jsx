@@ -134,7 +134,7 @@ const ItemDetail = () => {
                     {item.type === 'video' && item.url && (
                         <video src={item.url} controls autoPlay className="w-full max-h-[60vh]" />
                     )}
-                    {item.type === 'game' && item.url && (
+                    {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.url && (
                         <div className="w-full h-[60vh]">
                             <iframe
                                 src={item.url}
