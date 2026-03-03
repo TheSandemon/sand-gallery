@@ -133,9 +133,17 @@ export const getDefaultPageData = (pageId) => {
                                 {
                                     id: 'apps',
                                     title: 'APPS',
-                                    subtitle: 'Tools & Utilities',
+                                    subtitle: 'Applications',
                                     icon: 'AppWindow',
                                     color: '#00d4ff',
+                                    items: []
+                                },
+                                {
+                                    id: 'tools',
+                                    title: 'TOOLS',
+                                    subtitle: 'Utilities & Software',
+                                    icon: 'Wrench',
+                                    color: '#ff6b35',
                                     items: []
                                 },
                                 {
@@ -143,15 +151,39 @@ export const getDefaultPageData = (pageId) => {
                                     title: 'VIDEOS',
                                     subtitle: 'Visual Media',
                                     icon: 'Film',
-                                    color: '#ff6b35',
+                                    color: '#ff00ff',
                                     items: []
                                 },
                                 {
-                                    id: 'experiences',
-                                    title: 'EXPERIENCES',
-                                    subtitle: 'Immersive Worlds',
-                                    icon: 'Sparkles',
+                                    id: '3d',
+                                    title: '3D',
+                                    subtitle: '3D Models & VR',
+                                    icon: 'Box',
                                     color: '#c79b37',
+                                    items: []
+                                },
+                                {
+                                    id: 'images',
+                                    title: 'IMAGES',
+                                    subtitle: 'Art & Photography',
+                                    icon: 'Image',
+                                    color: '#00ffff',
+                                    items: []
+                                },
+                                {
+                                    id: 'audio',
+                                    title: 'AUDIO',
+                                    subtitle: 'Music & Sound',
+                                    icon: 'Headphones',
+                                    color: '#ff4444',
+                                    items: []
+                                },
+                                {
+                                    id: 'other',
+                                    title: 'OTHER',
+                                    subtitle: 'Miscellaneous',
+                                    icon: 'Folder',
+                                    color: '#888888',
                                     items: []
                                 }
                             ]

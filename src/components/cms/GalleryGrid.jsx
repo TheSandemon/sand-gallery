@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers } from 'lucide-react';
+import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, Wrench, Box, Image, Headphones, Folder } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // Icon mapping for CMS string values
@@ -9,6 +9,11 @@ const ICON_MAP = {
     AppWindow,
     Film,
     Sparkles,
+    Wrench,
+    Box,
+    Image,
+    Headphones,
+    Folder,
 };
 
 // Optimization: Simple CSS Grid Background
