@@ -191,13 +191,28 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                         <div
                             key={item.id || idx}
                             onClick={() => handleItemClick(item)}
-                            className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer"
+                            className="group relative p-3 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/[0.04] cursor-pointer flex items-center gap-4"
                         >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h4 className="text-lg font-semibold text-white group-hover:text-neon-green">{item.name}</h4>
-                                    <p className="text-sm text-gray-500">{item.description || 'View Details'}</p>
-                                </div>
+                            {/* Thumbnail */}
+                            <div className="w-16 h-16 rounded-lg bg-black overflow-hidden flex-shrink-0">
+                                {item.thumbnail || item.url ? (
+                                    <img
+                                        src={item.thumbnail || item.url}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-600">
+                                        {item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : item.type === 'image' ? '🖼️' : '🔗'}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-lg font-semibold text-white group-hover:text-neon-green truncate">{item.name}</h4>
+                                <p className="text-sm text-gray-500 truncate">{item.description || 'View Details'}</p>
+                            </div>
+                            <div className="flex-shrink-0">
                                 {item.type === 'image' || item.type === 'video' || item.type === 'audio' ? (
                                     <span className="text-xs text-gray-500 capitalize">{item.type}</span>
                                 ) : (
