@@ -14,6 +14,7 @@ import Pricing from './pages/Pricing';
 import CRM from './pages/CRM';
 import Gallery from './pages/Gallery';
 import Anthem from './pages/Anthem';
+import ItemDetail from './pages/ItemDetail';
 import { AuthProvider } from './context/AuthContext';
 import { Web3Provider } from './context/Web3Provider';
 import './App.css';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/studio" element={<Studio />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/item/:category/:id" element={<ItemDetail />} />
           </Routes>
           <Footer />
         </Router>
