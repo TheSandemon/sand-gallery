@@ -65,7 +65,7 @@ const MediaUploader = ({ categories = [] }) => {
         }
 
         // Validate based on type
-        if (mediaType === 'image' || mediaType === 'audio') {
+        if (mediaType === 'image' || mediaType === 'audio' || mediaType === 'game') {
             if (!file && !url) {
                 alert('Please select a file to upload');
                 return;
@@ -90,12 +90,18 @@ const MediaUploader = ({ categories = [] }) => {
 
             // Handle file upload
             if (file && !isEmbed) {
-                const storageRef = ref(storage, `media/${Date.now()}_${file.name}`);
+                // Upload games to games/ folder, others to media/
+                const folder = mediaType === 'game' ? 'games' : 'media';
+                const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 finalUrl = await getDownloadURL(snapshot.ref);
 
                 // For images, use the URL as thumbnail
                 if (mediaType === 'image') {
+                    thumbnail = finalUrl;
+                }
+                // For games, use URL as both game file and thumbnail placeholder
+                if (mediaType === 'game') {
                     thumbnail = finalUrl;
                 }
             }
@@ -161,6 +167,7 @@ const MediaUploader = ({ categories = [] }) => {
                         { id: 'image', label: 'Image', icon: '🖼️' },
                         { id: 'video', label: 'Video', icon: '🎬' },
                         { id: 'audio', label: 'Audio', icon: '🎵' },
+                        { id: 'game', label: 'Game', icon: '🎮' },
                         { id: 'embed', label: 'Embed (YouTube)', icon: '📺' },
                         { id: 'link', label: 'Link/App', icon: '🔗' },
                     ].map(type => (
@@ -207,6 +214,7 @@ const MediaUploader = ({ categories = [] }) => {
                         accept={
                             mediaType === 'image' ? 'image/*' :
                             mediaType === 'audio' ? 'audio/*' :
+                            mediaType === 'game' ? '.html,.htm' :
                             'video/*'
                         }
                         onChange={handleFileChange}
