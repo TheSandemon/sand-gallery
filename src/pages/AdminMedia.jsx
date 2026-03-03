@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, orderBy, limit, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-import MediaUploader from './admin/MediaUploader';
-import CategoryManager from './admin/CategoryManager';
+import MediaUploader from '../components/admin/MediaUploader';
+import CategoryManager from '../components/admin/CategoryManager';
 
 // Gallery categories configuration
 const GALLERY_CATEGORIES = [
