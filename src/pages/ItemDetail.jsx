@@ -65,38 +65,16 @@ const ItemDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [embedUrl, setEmbedUrl] = useState(null);
-    const [urlValidating, setUrlValidating] = useState(false);
 
     const categoryInfo = GALLERY_CATEGORIES[category] || { title: category.toUpperCase(), color: '#888888', icon: 'Box' };
     const Icon = ICON_MAP[categoryInfo.icon] || Box;
 
-    // Validate embed URL when item is loaded
+    // Set embed URL when item is loaded
     useEffect(() => {
         if (!item) return;
 
         const url = getEmbedUrl(item);
-        if (!url) {
-            setEmbedUrl(null);
-            return;
-        }
-
-        // If it's a GitHub Pages URL, validate it exists
-        if (url.includes('github.io')) {
-            setUrlValidating(true);
-            fetch(url, { method: 'HEAD', mode: 'no-cors' })
-                .then(() => {
-                    setEmbedUrl(url);
-                })
-                .catch(() => {
-                    setEmbedUrl(null);
-                })
-                .finally(() => {
-                    setUrlValidating(false);
-                });
-        } else {
-            // For other URLs (direct URLs), use them directly
-            setEmbedUrl(url);
-        }
+        setEmbedUrl(url);
     }, [item]);
 
     useEffect(() => {
@@ -200,11 +178,7 @@ const ItemDetail = () => {
                     )}
                     {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && (item.url || item.githubRepo) && (
                         <div className="w-full h-[60vh]">
-                            {urlValidating ? (
-                                <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                    <div className="text-gray-400">Validating...</div>
-                                </div>
-                            ) : embedUrl ? (
+                            {embedUrl ? (
                                 <iframe
                                     src={embedUrl}
                                     title={item.name}

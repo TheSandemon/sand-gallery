@@ -366,7 +366,8 @@ const Gallery = () => {
                             item={{
                                 ...selectedItem,
                                 type: selectedItem.type,
-                                url: selectedItem.url,
+                                url: selectedItem.url || selectedItem.githubRepo,
+                                githubRepo: selectedItem.githubRepo,
                                 prompt: selectedItem.description
                             }}
                             onClose={() => setSelectedItem(null)}
