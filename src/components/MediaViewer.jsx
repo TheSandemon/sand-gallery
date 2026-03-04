@@ -1,7 +1,9 @@
 import React from 'react';
-import { X, Download, Play, Pause, Film, Music, Sparkles, Clock } from 'lucide-react';
+import { X, Download, Play, Pause, Film, Music, Sparkles, Clock, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const MediaViewer = ({ item, onClose }) => {
+const MediaViewer = ({ item, onClose, navigate: navigateProp }) => {
+    const navigate = navigateProp || useNavigate();
     if (!item) return null;
 
     const formatDate = (timestamp) => {
@@ -82,15 +84,39 @@ const MediaViewer = ({ item, onClose }) => {
 
                 {/* Footer / Metadata */}
                 <div className="p-4 border-t border-white/10 bg-[#0a0a0a]">
-                    <p className="text-gray-300 text-sm line-clamp-2 mb-2">{item.prompt || 'No prompt recorded'}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                        {item.createdAt && (
-                            <span className="flex items-center gap-1">
-                                <Clock size={12} />
-                                {formatDate(item.createdAt)}
-                            </span>
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <p className="text-gray-300 text-sm line-clamp-2 mb-2">{item.prompt || 'No prompt recorded'}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                                {item.createdAt && (
+                                    <span className="flex items-center gap-1">
+                                        <Clock size={12} />
+                                        {formatDate(item.createdAt)}
+                                    </span>
+                                )}
+                                {item.cost && <span>{item.cost}¢</span>}
+                            </div>
+                        </div>
+
+                        {/* Open Full Page button for games/apps/tools */}
+                        {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.id && (
+                            <button
+                                onClick={() => {
+                                    const categoryMap = {
+                                        game: 'games',
+                                        app: 'apps',
+                                        tool: 'tools'
+                                    };
+                                    const category = categoryMap[item.type] || 'other';
+                                    navigate(`/gallery/${category}/${item.id}`);
+                                    onClose();
+                                }}
+                                className="ml-4 flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-bold rounded-lg hover:opacity-80 transition-opacity"
+                            >
+                                <ExternalLink size={16} />
+                                Open Full Page
+                            </button>
                         )}
-                        {item.cost && <span>{item.cost}¢</span>}
                     </div>
                 </div>
             </div>

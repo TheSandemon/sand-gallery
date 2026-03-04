@@ -266,6 +266,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
 };
 
 const Gallery = () => {
+    const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState(null);
     const [viewMode, setViewMode] = useState('grid');
     const [categories, setCategories] = useState(GALLERY_CATEGORIES);
@@ -369,6 +370,7 @@ const Gallery = () => {
                                 prompt: selectedItem.description
                             }}
                             onClose={() => setSelectedItem(null)}
+                            navigate={navigate}
                         />
                     )}
                 </AnimatePresence>
