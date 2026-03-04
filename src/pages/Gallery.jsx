@@ -208,7 +208,15 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                                         src={item.thumbnail || item.url}
                                         alt={item.name}
                                         className="w-full h-full object-cover"
-                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                        onError={(e) => {
+                                            // Try fallback thumbnail for YouTube
+                                            const src = e.target.src;
+                                            if (src.includes('maxresdefault.jpg')) {
+                                                e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+                                            } else {
+                                                e.target.style.display = 'none';
+                                            }
+                                        }}
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-600">
