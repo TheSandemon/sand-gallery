@@ -86,9 +86,9 @@ const CircuitEffect = () => {
 
             lastClickTime = now;
 
-            const colors = ['#008f4e', '#c79b37', '#ffffff'];
+            const colors = ['#c79b37', '#d4af37', '#ffd700']; // Gold variants
             // Create a batch of sparks at click position
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 6; i++) {
                 sparks.current.push(new Spark(
                     e.clientX,
                     e.clientY,

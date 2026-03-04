@@ -1,30 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play, Headphones, Image, Box } from 'lucide-react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import FeatureRoll from '../components/FeatureRoll';
 
-const FEATURED_WORK = [
-    {
-        id: 1,
-        title: 'Neon Dreams',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1515630278258-407f66498911?w=800',
-    },
-    {
-        id: 2,
-        title: 'Abstract Flow',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-abstract-technology-particle-background-2775-large.mp4',
-    },
-    {
-        id: 3,
-        title: 'Forest Rain',
-        type: 'audio',
-        url: 'https://assets.mixkit.co/sfx/preview/mixkit-forest-rain-1234.mp3',
-    },
-];
+// Category IDs for counting
+const CATEGORY_IDS = {
+    images: 'images',
+    videos: 'videos',
+    audio: 'audio',
+    '3d': '3d',
+};
 
 const Home = () => {
+    const [featuredWork, setFeaturedWork] = useState([]);
+    const [mediaCounts, setMediaCounts] = useState({
+        images: 0,
+        videos: 0,
+        audio: 0,
+        '3d': 0,
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch all media from Firestore
+                const mediaSnapshot = await getDocs(collection(db, 'media'));
+                const allMedia = [];
+
+                mediaSnapshot.forEach((doc) => {
+                    allMedia.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Get counts by type
+                const counts = {
+                    images: allMedia.filter(m => m.type === 'image').length,
+                    videos: allMedia.filter(m => m.type === 'video').length,
+                    audio: allMedia.filter(m => m.type === 'audio').length,
+                    '3d': allMedia.filter(m => m.type === '3d' || m.type === 'game' || m.type === 'app' || m.type === 'tool').length,
+                };
+                setMediaCounts(counts);
+
+                // Get featured items - random selection from uploaded media
+                const shuffled = [...allMedia].sort(() => 0.5 - Math.random());
+                const featured = shuffled.slice(0, 3).map(item => ({
+                    id: item.id,
+                    title: item.name,
+                    type: item.type || 'image',
+                    url: item.url || item.thumbnail,
+                    thumbnail: item.thumbnail,
+                }));
+                setFeaturedWork(featured);
+            } catch (error) {
+                console.error('Error fetching home data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const mediaTypes = [
+        { icon: Image, label: 'Images', count: mediaCounts.images, key: 'images' },
+        { icon: Play, label: 'Videos', count: mediaCounts.videos, key: 'videos' },
+        { icon: Headphones, label: 'Audio', count: mediaCounts.audio, key: 'audio' },
+        { icon: Box, label: '3D/Games', count: mediaCounts['3d'], key: '3d' },
+    ];
+
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
             {/* Feature Roll Background */}
@@ -77,18 +122,13 @@ const Home = () => {
             </section>
 
             {/* Media Types Preview */}
-            <section className="py-20 px-4 bg-black/30 backdrop-blur-sm">
+            <section className="py-20 px-4 bg-black/10 backdrop-blur-sm">
                 <div className="max-w-6xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[
-                            { icon: Image, label: 'Images', count: '24+' },
-                            { icon: Play, label: 'Videos', count: '12+' },
-                            { icon: Headphones, label: 'Audio', count: '18+' },
-                            { icon: Box, label: '3D', count: '8+' },
-                        ].map(item => (
-                            <div key={item.label} className="bg-white/5 rounded-lg p-6 text-center hover:bg-white/10 transition-colors backdrop-blur-sm">
+                        {mediaTypes.map(item => (
+                            <div key={item.label} className="bg-white/[0.02] rounded-lg p-6 text-center hover:bg-white/[0.05] transition-colors backdrop-blur-sm border border-white/[0.05]">
                                 <item.icon className="w-8 h-8 mx-auto mb-3 text-neon-green" />
-                                <p className="text-3xl font-bold text-white mb-1">{item.count}</p>
+                                <p className="text-3xl font-bold text-white mb-1">{loading ? '...' : item.count}</p>
                                 <p className="text-gray-400 text-sm">{item.label}</p>
                             </div>
                         ))}
@@ -97,7 +137,7 @@ const Home = () => {
             </section>
 
             {/* Featured Work */}
-            <section className="py-20 px-4 bg-black/20">
+            <section className="py-20 px-4 bg-black/10">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex justify-between items-end mb-12">
                         <div>
@@ -113,36 +153,58 @@ const Home = () => {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-6">
-                        {FEATURED_WORK.map(item => (
-                            <Link
-                                key={item.id}
-                                to="/gallery"
-                                className="group relative aspect-[4/3] bg-white/5 rounded-lg overflow-hidden backdrop-blur-sm"
-                            >
-                                {item.type === 'image' ? (
-                                    <img
-                                        src={item.url}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                ) : (
-                                    <video
-                                        src={item.url}
-                                        muted
-                                        loop
-                                        onMouseEnter={e => e.target.play()}
-                                        onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
-                                        className="w-full h-full object-cover"
-                                    />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                                        <p className="text-neon-green text-xs uppercase mb-1">{item.type}</p>
-                                        <h3 className="text-white text-xl font-bold">{item.title}</h3>
+                        {loading ? (
+                            <div className="col-span-3 text-center text-gray-500 py-12">Loading featured work...</div>
+                        ) : featuredWork.length === 0 ? (
+                            <div className="col-span-3 text-center text-gray-500 py-12">
+                                <p>No media uploaded yet.</p>
+                                <Link to="/gallery" className="text-neon-green hover:underline mt-2 inline-block">Visit Gallery</Link>
+                            </div>
+                        ) : (
+                            featuredWork.map(item => (
+                                <Link
+                                    key={item.id}
+                                    to="/gallery"
+                                    className="group relative aspect-[4/3] bg-white/[0.02] rounded-lg overflow-hidden backdrop-blur-sm"
+                                >
+                                    {item.type === 'image' ? (
+                                        <img
+                                            src={item.url}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
+                                    ) : item.type === 'video' ? (
+                                        <video
+                                            src={item.url}
+                                            muted
+                                            loop
+                                            onMouseEnter={e => e.target.play()}
+                                            onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
+                                    ) : item.thumbnail ? (
+                                        <img
+                                            src={item.thumbnail}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
+                                            <span className="text-4xl">{item.type === 'audio' ? '🎵' : item.type === 'video' ? '🎬' : item.type === 'game' ? '🎮' : '🖼️'}</span>
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                                            <p className="text-neon-green text-xs uppercase mb-1">{item.type}</p>
+                                            <h3 className="text-white text-xl font-bold">{item.title}</h3>
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            ))
+                        )}
                     </div>
 
                     <div className="mt-8 text-center md:hidden">
@@ -157,7 +219,7 @@ const Home = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-4 bg-black/30 backdrop-blur-sm">
+            <section className="py-20 px-4 bg-black/10 backdrop-blur-sm">
                 <div className="max-w-3xl mx-auto text-center">
                     <h2 className="text-4xl font-bold text-white mb-6">READY TO COLLABORATE?</h2>
                     <p className="text-gray-400 text-lg mb-8">

@@ -76,13 +76,13 @@ const FeatureRoll = () => {
             )}
 
             {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/70" />
+            <div className="absolute inset-0 bg-black/50" />
 
             {/* Vignette */}
             <div
                 className="absolute inset-0"
                 style={{
-                    background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.6) 100%)',
+                    background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%)',
                 }}
             />
 
