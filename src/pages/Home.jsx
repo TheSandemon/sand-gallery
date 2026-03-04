@@ -10,11 +10,20 @@ const getThumbnail = (item) => {
     // If it has a thumbnail, use it
     if (item.thumbnail) return item.thumbnail;
 
-    // For embed URLs (YouTube), extract video ID and generate thumbnail
-    if (item.type === 'embed' && item.url) {
-        const youtubeMatch = item.url.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-        if (youtubeMatch) {
-            return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`;
+    // For embed or video types with YouTube URLs, extract video ID and generate thumbnail
+    if ((item.type === 'embed' || item.type === 'video') && item.url) {
+        // Try various YouTube URL patterns
+        const youtubePatterns = [
+            /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+            /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+            /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+            /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+        ];
+        for (const pattern of youtubePatterns) {
+            const match = item.url.match(pattern);
+            if (match) {
+                return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+            }
         }
     }
 
@@ -106,20 +115,21 @@ const Home = () => {
                 </h1>
 
                 {/* Minimal tagline */}
-                <p className="text-2xl text-gray-300 mt-4 text-shadow-md">
+                <p className="text-2xl text-gray-300 mt-4 text-shadow-lg">
                     @Sandemon
                 </p>
 
-                {/* Quote - on one line */}
-                <p className="text-xl text-neon-gold italic mt-4 text-shadow-sm retro-glow max-w-xl text-center">
+                {/* Quote - on one line with subtle glow and dark text */}
+                <p className="text-xl text-[#b87820] italic mt-4 text-shadow-md max-w-xl text-center" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(240,176,48,0.3)' }}>
                     "The biggest limitation of AI is our own imagination" — Demis Hassabis
                 </p>
 
-                {/* CTA Buttons - improved styling */}
+                {/* CTA Buttons - improved styling with shadows */}
                 <div className="flex gap-6 mt-8">
                     <Link
                         to="/gallery"
                         className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-3 rounded hover:bg-neon-green/80 transition-all"
+                        style={{ boxShadow: '3px 3px 0px rgba(0,0,0,0.5)' }}
                     >
                         EXPLORE
                         <ArrowRight size={18} />
@@ -127,6 +137,7 @@ const Home = () => {
                     <Link
                         to="/contact"
                         className="inline-flex items-center gap-2 bg-transparent text-neon-green font-bold px-8 py-3 rounded border-2 border-neon-green hover:bg-neon-green/20 transition-all"
+                        style={{ boxShadow: '3px 3px 0px rgba(0,0,0,0.5)' }}
                     >
                         CONTACT
                     </Link>
@@ -141,13 +152,12 @@ const Home = () => {
                             const Icon = cat.icon;
                             return (
                                 <div key={cat.id} className="flex flex-col items-center group cursor-pointer flex-shrink-0">
-                                    <Icon className="w-5 h-5 text-neon-green retro-glow mb-1" />
+                                    <Icon className="w-5 h-5 text-neon-green mb-1" style={{ filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0.8))' }} />
                                     <p className="text-2xl font-bold text-white text-shadow-md">{loading ? '...' : mediaCounts[cat.id] || 0}</p>
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider">{cat.label}</p>
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider text-shadow-sm">{cat.label}</p>
                                 </div>
                             );
                         })}
-                        ))}
                     </div>
                 </div>
             </section>
@@ -180,7 +190,7 @@ const Home = () => {
                                     className="flex-shrink-0 w-72 md:w-80 group relative"
                                 >
                                     {/* Card with video peek effect */}
-                                    <div className="aspect-video rounded-lg overflow-hidden border-2 border-white/20 group-hover:border-neon-green transition-colors">
+                                    <div className="aspect-video rounded-lg overflow-hidden border-2 border-white/20 group-hover:border-neon-green transition-colors" style={{ boxShadow: '4px 4px 8px rgba(0,0,0,0.5)' }}>
                                         {item.type === 'image' ? (
                                             <img
                                                 src={item.url}
@@ -228,7 +238,7 @@ const Home = () => {
                             to="/gallery"
                             className="flex-shrink-0 w-72 md:w-80 flex items-center justify-center"
                         >
-                            <div className="aspect-video rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 group hover:border-neon-green transition-colors">
+                            <div className="aspect-video rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 group hover:border-neon-green transition-colors" style={{ boxShadow: '4px 4px 8px rgba(0,0,0,0.5)' }}>
                                 <ArrowRight className="text-gray-400 group-hover:text-neon-green transition-colors" size={24} />
                                 <span className="text-gray-400 group-hover:text-neon-green text-shadow-sm">VIEW ALL</span>
                             </div>
@@ -243,6 +253,7 @@ const Home = () => {
                     <Link
                         to="/contact"
                         className="inline-flex items-center gap-3 bg-neon-green text-black font-bold px-10 py-4 rounded-lg hover:bg-neon-green/80 transition-all animate-breathe"
+                        style={{ boxShadow: '4px 4px 0px rgba(0,0,0,0.5)' }}
                     >
                         LET'S COLLABORATE
                         <ArrowRight size={20} />
