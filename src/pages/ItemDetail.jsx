@@ -38,15 +38,66 @@ const getGithubPagesUrl = (githubRepo) => {
     return null;
 };
 
+// Helper to get embed URL from item
+const getEmbedUrl = (item) => {
+    // Use direct URL if provided
+    if (item.url) {
+        return item.url;
+    }
+
+    // If githubRepo is provided, try to convert
+    if (item.githubRepo) {
+        // Check if it's already a GitHub Pages URL
+        if (item.githubRepo.includes('github.io')) {
+            return item.githubRepo;
+        }
+        // Try to convert - only works for GitHub Pages repos
+        return getGithubPagesUrl(item.githubRepo);
+    }
+
+    return null;
+};
+
 const ItemDetail = () => {
     const { category, id } = useParams();
     const navigate = useNavigate();
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [embedUrl, setEmbedUrl] = useState(null);
+    const [urlValidating, setUrlValidating] = useState(false);
 
     const categoryInfo = GALLERY_CATEGORIES[category] || { title: category.toUpperCase(), color: '#888888', icon: 'Box' };
     const Icon = ICON_MAP[categoryInfo.icon] || Box;
+
+    // Validate embed URL when item is loaded
+    useEffect(() => {
+        if (!item) return;
+
+        const url = getEmbedUrl(item);
+        if (!url) {
+            setEmbedUrl(null);
+            return;
+        }
+
+        // If it's a GitHub Pages URL, validate it exists
+        if (url.includes('github.io')) {
+            setUrlValidating(true);
+            fetch(url, { method: 'HEAD', mode: 'no-cors' })
+                .then(() => {
+                    setEmbedUrl(url);
+                })
+                .catch(() => {
+                    setEmbedUrl(null);
+                })
+                .finally(() => {
+                    setUrlValidating(false);
+                });
+        } else {
+            // For other URLs (direct URLs), use them directly
+            setEmbedUrl(url);
+        }
+    }, [item]);
 
     useEffect(() => {
         const fetchItem = async () => {
@@ -149,13 +200,50 @@ const ItemDetail = () => {
                     )}
                     {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && (item.url || item.githubRepo) && (
                         <div className="w-full h-[60vh]">
-                            <iframe
-                                src={item.url || getGithubPagesUrl(item.githubRepo)}
-                                title={item.name}
-                                className="w-full h-full border-0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
+                            {urlValidating ? (
+                                <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                    <div className="text-gray-400">Validating...</div>
+                                </div>
+                            ) : embedUrl ? (
+                                <iframe
+                                    src={embedUrl}
+                                    title={item.name}
+                                    className="w-full h-full border-0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 text-center p-8">
+                                    <div className="text-gray-400 mb-4 text-lg">
+                                        This game/tool requires GitHub Pages to be enabled
+                                    </div>
+                                    <p className="text-gray-500 mb-6">
+                                        The repository doesn't have GitHub Pages deployed, or the URL is invalid.
+                                    </p>
+                                    {item.githubRepo && (
+                                        <a
+                                            href={item.githubRepo}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+                                        >
+                                            <ExternalLink size={16} />
+                                            View on GitHub
+                                        </a>
+                                    )}
+                                    {item.url && (
+                                        <a
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+                                        >
+                                            <ExternalLink size={16} />
+                                            Open External Link
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                     {item.type === 'audio' && item.url && (

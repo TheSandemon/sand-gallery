@@ -203,26 +203,43 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                         >
                             {/* Thumbnail */}
                             <div className="w-16 h-16 rounded-lg bg-black overflow-hidden flex-shrink-0">
-                                {item.thumbnail || item.url ? (
-                                    <img
-                                        src={item.thumbnail || item.url}
-                                        alt={item.name}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            // Try fallback thumbnail for YouTube
-                                            const src = e.target.src;
-                                            if (src.includes('maxresdefault.jpg')) {
-                                                e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
-                                            } else {
-                                                e.target.style.display = 'none';
-                                            }
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-600">
-                                        {item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : item.type === 'game' ? '🎮' : item.type === 'app' ? '📱' : item.type === 'tool' ? '🔧' : item.type === 'image' ? '🖼️' : '🔗'}
-                                    </div>
-                                )}
+                                {(() => {
+                                    // Try to get thumbnail from various sources
+                                    let thumbnail = item.thumbnail || item.url;
+
+                                    // For games/apps/tools with GitHub repo but no thumbnail, try GitHub OG image
+                                    if (!thumbnail && (item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.githubRepo) {
+                                        const repoMatch = item.githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
+                                        if (repoMatch) {
+                                            const [, owner, repo] = repoMatch;
+                                            thumbnail = `https://opengraph.githubassets.com/default/${owner}/${repo.replace(/\.git$/, '')}`;
+                                        }
+                                    }
+
+                                    if (thumbnail) {
+                                        return (
+                                            <img
+                                                src={thumbnail}
+                                                alt={item.name}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    // Try fallback thumbnail for YouTube
+                                                    const src = e.target.src;
+                                                    if (src.includes('maxresdefault.jpg')) {
+                                                        e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+                                                    } else {
+                                                        e.target.style.display = 'none';
+                                                    }
+                                                }}
+                                            />
+                                        );
+                                    }
+                                    return (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-600">
+                                            {item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : item.type === 'game' ? '🎮' : item.type === 'app' ? '📱' : item.type === 'tool' ? '🔧' : item.type === 'image' ? '🖼️' : '🔗'}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h4 className="text-lg font-semibold text-white group-hover:text-neon-green truncate">{item.name}</h4>
