@@ -149,3 +149,63 @@ button {
 .animate-spin {
     animation: spin 1s linear infinite;
 }
+
+/* Floating animation */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Breathing animation for CTA */
+@keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 0.9; }
+}
+
+.animate-breathe {
+    animation: breathe 2s ease-in-out infinite;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+}
+
+/* Glow pulse */
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+    50% { box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; }
+}
+
+.animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Horizontal scroll snap container */
+.scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-x > * {
+    scroll-snap-align: center;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
