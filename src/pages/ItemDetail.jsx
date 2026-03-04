@@ -169,7 +169,7 @@ const ItemDetail = () => {
                 )}
 
                 {/* Media Content */}
-                <div className="mb-8 rounded-2xl overflow-hidden bg-black border border-white/10">
+                <div className="mb-8 overflow-hidden bg-black border border-white/10">
                     {item.type === 'image' && item.url && (
                         <img src={item.url} alt={item.name} className="w-full max-h-[60vh] object-contain" />
                     )}
@@ -177,15 +177,27 @@ const ItemDetail = () => {
                         <video src={item.url} controls autoPlay className="w-full max-h-[60vh]" />
                     )}
                     {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && (item.url || item.githubRepo) && (
-                        <div className="w-full h-[60vh]">
+                        <div className="w-full" style={{ height: 'calc(100vh - 200px)' }}>
                             {embedUrl ? (
-                                <iframe
-                                    src={embedUrl}
-                                    title={item.name}
-                                    className="w-full h-full border-0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                />
+                                <div className="relative w-full h-full">
+                                    <iframe
+                                        src={embedUrl}
+                                        title={item.name}
+                                        className="w-full h-full border-0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                    {/* Open in new tab button overlay */}
+                                    <a
+                                        href={embedUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-sm rounded-lg hover:bg-black/90 transition-colors"
+                                    >
+                                        <ExternalLink size={14} />
+                                        Open in New Tab
+                                    </a>
+                                </div>
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 text-center p-8">
                                     <div className="text-gray-400 mb-4 text-lg">
