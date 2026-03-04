@@ -1,18 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Headphones, Image, Box } from 'lucide-react';
+import { ArrowRight, Play, Headphones, Image, Box, Gamepad2, AppWindow, Wrench, Folder } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import FeatureRoll from '../components/FeatureRoll';
 
+// Helper to get thumbnail for embed videos
+const getThumbnail = (item) => {
+    // If it has a thumbnail, use it
+    if (item.thumbnail) return item.thumbnail;
+
+    // For embed URLs (YouTube), extract video ID and generate thumbnail
+    if (item.type === 'embed' && item.url) {
+        const youtubeMatch = item.url.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        if (youtubeMatch) {
+            return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`;
+        }
+    }
+
+    return null;
+};
+
+// All gallery categories
+const ALL_CATEGORIES = [
+    { id: 'images', label: 'IMAGES', icon: Image },
+    { id: 'videos', label: 'VIDEOS', icon: Play },
+    { id: 'audio', label: 'AUDIO', icon: Headphones },
+    { id: '3d', label: '3D', icon: Box },
+    { id: 'games', label: 'GAMES', icon: Gamepad2 },
+    { id: 'apps', label: 'APPS', icon: AppWindow },
+    { id: 'tools', label: 'TOOLS', icon: Wrench },
+    { id: 'other', label: 'OTHER', icon: Folder },
+];
+
 const Home = () => {
     const [featuredWork, setFeaturedWork] = useState([]);
-    const [mediaCounts, setMediaCounts] = useState({
-        images: 0,
-        videos: 0,
-        audio: 0,
-        '3d': 0,
-    });
+    const [mediaCounts, setMediaCounts] = useState({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -25,12 +48,23 @@ const Home = () => {
                     allMedia.push({ id: doc.id, ...doc.data() });
                 });
 
-                const counts = {
-                    images: allMedia.filter(m => m.type === 'image').length,
-                    videos: allMedia.filter(m => m.type === 'video').length,
-                    audio: allMedia.filter(m => m.type === 'audio').length,
-                    '3d': allMedia.filter(m => m.type === '3d' || m.type === 'game' || m.type === 'app' || m.type === 'tool').length,
-                };
+                // Count by each category
+                const counts = {};
+                ALL_CATEGORIES.forEach(cat => {
+                    if (cat.id === 'other') {
+                        // Other = types not in the main list
+                        const mainTypes = ['image', 'video', 'audio', '3d', 'game', 'app', 'tool'];
+                        counts[cat.id] = allMedia.filter(m => !mainTypes.includes(m.type)).length;
+                    } else {
+                        counts[cat.id] = allMedia.filter(m => {
+                            if (cat.id === 'videos') return m.type === 'video';
+                            if (cat.id === 'games') return m.type === 'game';
+                            if (cat.id === 'apps') return m.type === 'app';
+                            if (cat.id === 'tools') return m.type === 'tool';
+                            return m.type === cat.id;
+                        }).length;
+                    }
+                });
                 setMediaCounts(counts);
 
                 const shuffled = [...allMedia].sort(() => 0.5 - Math.random());
@@ -51,13 +85,6 @@ const Home = () => {
 
         fetchData();
     }, []);
-
-    const mediaTypes = [
-        { icon: Image, label: 'Images', count: mediaCounts.images, key: 'images' },
-        { icon: Play, label: 'Videos', count: mediaCounts.videos, key: 'videos' },
-        { icon: Headphones, label: 'Audio', count: mediaCounts.audio, key: 'audio' },
-        { icon: Box, label: '3D/Games', count: mediaCounts['3d'], key: '3d' },
-    ];
 
     return (
         <div className="min-h-screen font-pixel">
@@ -83,42 +110,43 @@ const Home = () => {
                     @Sandemon
                 </p>
 
-                {/* Quote - smaller, subtle */}
+                {/* Quote - on one line */}
                 <p className="text-xl text-neon-gold italic mt-4 text-shadow-sm retro-glow max-w-xl text-center">
-                    "The biggest limitation of AI is our own imagination"
-                </p>
-                <p className="text-lg text-gray-500 text-shadow-sm">
-                    — Demis Hassabis
+                    "The biggest limitation of AI is our own imagination" — Demis Hassabis
                 </p>
 
-                {/* CTA Buttons */}
+                {/* CTA Buttons - improved styling */}
                 <div className="flex gap-6 mt-8">
                     <Link
                         to="/gallery"
-                        className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-3 rounded border-2 border-black hover:bg-neon-green/80 transition-all text-shadow-sm"
+                        className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-3 rounded hover:bg-neon-green/80 transition-all"
                     >
                         EXPLORE
                         <ArrowRight size={18} />
                     </Link>
                     <Link
                         to="/contact"
-                        className="inline-flex items-center gap-2 bg-transparent text-white font-bold px-8 py-3 rounded border-2 border-white/30 hover:border-neon-green hover:text-neon-green transition-all text-shadow-sm"
+                        className="inline-flex items-center gap-2 bg-transparent text-neon-green font-bold px-8 py-3 rounded border-2 border-neon-green hover:bg-neon-green/20 transition-all"
                     >
                         CONTACT
                     </Link>
                 </div>
             </section>
 
-            {/* Floating Stats Bar - positioned to show video */}
+            {/* Floating Stats Bar - all gallery categories */}
             <section className="relative py-4 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <div className="flex justify-center items-center gap-8 md:gap-16">
-                        {mediaTypes.map((item, idx) => (
-                            <div key={item.label} className="flex flex-col items-center group cursor-pointer">
-                                <item.icon className="w-6 h-6 text-neon-green retro-glow mb-1" />
-                                <p className="text-3xl font-bold text-white text-shadow-md">{loading ? '...' : item.count}</p>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider">{item.label}</p>
-                            </div>
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex justify-center items-center gap-4 md:gap-8 overflow-x-auto hide-scrollbar py-2">
+                        {ALL_CATEGORIES.map((cat) => {
+                            const Icon = cat.icon;
+                            return (
+                                <div key={cat.id} className="flex flex-col items-center group cursor-pointer flex-shrink-0">
+                                    <Icon className="w-5 h-5 text-neon-green retro-glow mb-1" />
+                                    <p className="text-2xl font-bold text-white text-shadow-md">{loading ? '...' : mediaCounts[cat.id] || 0}</p>
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider">{cat.label}</p>
+                                </div>
+                            );
+                        })}
                         ))}
                     </div>
                 </div>
@@ -170,9 +198,9 @@ const Home = () => {
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                             />
-                                        ) : item.thumbnail ? (
+                                        ) : getThumbnail(item) ? (
                                             <img
-                                                src={item.thumbnail}
+                                                src={getThumbnail(item)}
                                                 alt={item.title}
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                 onError={(e) => { e.target.style.display = 'none'; }}
@@ -214,7 +242,7 @@ const Home = () => {
                 <div className="flex justify-center">
                     <Link
                         to="/contact"
-                        className="inline-flex items-center gap-3 bg-neon-green text-black font-bold px-10 py-4 rounded-lg border-2 border-black hover:bg-neon-green/80 transition-all text-shadow-sm animate-breathe"
+                        className="inline-flex items-center gap-3 bg-neon-green text-black font-bold px-10 py-4 rounded-lg hover:bg-neon-green/80 transition-all animate-breathe"
                     >
                         LET'S COLLABORATE
                         <ArrowRight size={20} />
