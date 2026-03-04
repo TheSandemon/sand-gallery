@@ -73,8 +73,8 @@ const Home = () => {
                     className="w-48 md:w-64 lg:w-80 h-auto animate-float"
                 />
 
-                {/* Name below logo */}
-                <h1 className="text-5xl md:text-7xl font-bold text-white text-shadow-lg tracking-wider mt-4">
+                {/* Name below logo - with floating animation */}
+                <h1 className="text-5xl md:text-7xl font-bold text-white text-shadow-lg tracking-wider mt-4 animate-float">
                     KYLE TOUCHET
                 </h1>
 
