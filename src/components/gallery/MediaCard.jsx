@@ -31,21 +31,58 @@ const MediaCard = ({ item, onClick }) => {
                 {/* Media Content */}
                 <div className="relative w-full overflow-hidden">
                     {/* Aspect Ratio Maintainer if needed, or just img */}
-                    <img
-                        src={item.thumbnail || item.url}
-                        alt={item.title}
-                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                        onError={(e) => {
-                            // Try fallback thumbnail for YouTube
-                            const src = e.target.src;
-                            if (src.includes('maxresdefault.jpg')) {
-                                e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
-                            } else {
-                                e.target.style.display = 'none';
+                    {(() => {
+                        // Try to get thumbnail from various sources
+                        let thumbnail = item.thumbnail || item.url;
+
+                        // For games/apps/tools with GitHub repo but no thumbnail, try GitHub OG image
+                        if (!thumbnail && (item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.githubRepo) {
+                            const repoMatch = item.githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
+                            if (repoMatch) {
+                                const [, owner, repo] = repoMatch;
+                                thumbnail = `https://opengraph.githubassets.com/default/${owner}/${repo.replace(/\.git$/, '')}`;
                             }
-                        }}
-                    />
+                        }
+
+                        if (thumbnail) {
+                            return (
+                                <img
+                                    src={thumbnail}
+                                    alt={item.title}
+                                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                        // Try fallback thumbnail for YouTube
+                                        const src = e.target.src;
+                                        if (src.includes('maxresdefault.jpg')) {
+                                            e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+                                        } else {
+                                            e.target.style.display = 'none';
+                                        }
+                                    }}
+                                />
+                            );
+                        }
+
+                        // Show type-based icon placeholder
+                        const getIcon = () => {
+                            switch (item.type) {
+                                case 'game': return '🎮';
+                                case 'app': return '📱';
+                                case 'tool': return '🔧';
+                                case 'video': return '🎬';
+                                case 'audio': return '🎵';
+                                case 'image': return '🖼️';
+                                default: return '🔗';
+                            }
+                        };
+
+                        return (
+                            <div className="w-full h-40 flex items-center justify-center bg-white/5 text-4xl">
+                                {getIcon()}
+                            </div>
+                        );
+                    })()}
 
                     {/* Overlay Gradient */}
                     <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4`} />

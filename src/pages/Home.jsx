@@ -27,6 +27,17 @@ const getThumbnail = (item) => {
         }
     }
 
+    // For games/apps/tools with GitHub repo, use GitHub's Open Graph image
+    if ((item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.githubRepo) {
+        const repoMatch = item.githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
+        if (repoMatch) {
+            const [, owner, repo] = repoMatch;
+            const cleanRepo = repo.replace(/\.git$/, '');
+            // Use GitHub's Open Graph image endpoint
+            return `https://opengraph.githubassets.com/default/${owner}/${cleanRepo}`;
+        }
+    }
+
     return null;
 };
 
