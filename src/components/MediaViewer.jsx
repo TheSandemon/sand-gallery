@@ -108,7 +108,7 @@ const MediaViewer = ({ item, onClose, navigate: navigateProp }) => {
                                         tool: 'tools'
                                     };
                                     const category = categoryMap[item.type] || 'other';
-                                    navigate(`/gallery/${category}/${item.id}`);
+                                    navigate(`/item/${category}/${item.id}`);
                                     onClose();
                                 }}
                                 className="ml-4 flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-bold rounded-lg hover:opacity-80 transition-opacity"
