@@ -71,7 +71,7 @@ const Home = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a]">
+        <div className="min-h-screen">
             {/* Feature Roll Background */}
             <FeatureRoll />
 
@@ -122,11 +122,11 @@ const Home = () => {
             </section>
 
             {/* Media Types Preview */}
-            <section className="py-20 px-4 bg-black/10 backdrop-blur-sm">
+            <section className="py-20 px-4">
                 <div className="max-w-6xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {mediaTypes.map(item => (
-                            <div key={item.label} className="bg-white/[0.02] rounded-lg p-6 text-center hover:bg-white/[0.05] transition-colors backdrop-blur-sm border border-white/[0.05]">
+                            <div key={item.label} className="rounded-lg p-6 text-center hover:bg-white/[0.03] transition-colors">
                                 <item.icon className="w-8 h-8 mx-auto mb-3 text-neon-green" />
                                 <p className="text-3xl font-bold text-white mb-1">{loading ? '...' : item.count}</p>
                                 <p className="text-gray-400 text-sm">{item.label}</p>
@@ -137,7 +137,7 @@ const Home = () => {
             </section>
 
             {/* Featured Work */}
-            <section className="py-20 px-4 bg-black/10">
+            <section className="py-20 px-4">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex justify-between items-end mb-12">
                         <div>
@@ -165,7 +165,7 @@ const Home = () => {
                                 <Link
                                     key={item.id}
                                     to="/gallery"
-                                    className="group relative aspect-[4/3] bg-white/[0.02] rounded-lg overflow-hidden backdrop-blur-sm"
+                                    className="group relative aspect-[4/3] rounded-lg overflow-hidden"
                                 >
                                     {item.type === 'image' ? (
                                         <img
@@ -219,7 +219,7 @@ const Home = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-4 bg-black/10 backdrop-blur-sm">
+            <section className="py-20 px-4">
                 <div className="max-w-3xl mx-auto text-center">
                     <h2 className="text-4xl font-bold text-white mb-6">READY TO COLLABORATE?</h2>
                     <p className="text-gray-400 text-lg mb-8">
