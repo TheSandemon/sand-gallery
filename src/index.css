@@ -2,13 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import retro pixel font */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 :root {
   --neon-green: #008f4e;
   --neon-gold: #c79b37;
   --bg-dark: #0a0a0a;
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
-  --font-main: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-pixel: 'VT323', monospace;
+  --font-main: 'VT323', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Pixel font utility */
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.05em;
+}
+
+/* Deep 3D text shadows */
+.text-shadow-sm {
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+}
+
+.text-shadow-md {
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-lg {
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 1), 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Retro glow effects */
+.retro-glow {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+/* Outline utility */
+.outline-thin {
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-offset: -1px;
+}
+
+.border-thin {
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 body {
