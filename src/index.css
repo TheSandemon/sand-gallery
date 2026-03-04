@@ -2,13 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import retro pixel font */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 :root {
-  --neon-green: #008f4e;
-  --neon-gold: #c79b37;
+  /* Logo-inspired golden/orange theme */
+  --neon-green: #f0b030;
+  --neon-gold: #e8a020;
+  --neon-orange: #f0b030;
+  --accent-warm: #c48a20;
   --bg-dark: #0a0a0a;
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
-  --font-main: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-pixel: 'VT323', monospace;
+  --font-main: 'VT323', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Override Tailwind colors for consistency */
+.bg-neon-green {
+  background-color: #f0b030 !important;
+}
+
+.text-neon-green {
+  color: #f0b030 !important;
+}
+
+.text-neon-gold {
+  color: #e8a020 !important;
+}
+
+.hover\:bg-neon-green:hover {
+  background-color: #c48a20 !important;
+}
+
+.hover\:border-neon-green:hover {
+  border-color: #f0b030 !important;
+}
+
+.hover\:text-neon-green:hover {
+  color: #f0b030 !important;
+}
+
+/* Pixel font utility */
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.05em;
+}
+
+/* Deep 3D text shadows */
+.text-shadow-sm {
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+}
+
+.text-shadow-md {
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-lg {
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 1), 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Retro glow effects */
+.retro-glow {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+/* Outline utility */
+.outline-thin {
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-offset: -1px;
+}
+
+.border-thin {
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 body {
@@ -110,4 +176,64 @@ button {
 
 .animate-spin {
     animation: spin 1s linear infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Breathing animation for CTA */
+@keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 0.9; }
+}
+
+.animate-breathe {
+    animation: breathe 2s ease-in-out infinite;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+}
+
+/* Glow pulse */
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+    50% { box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; }
+}
+
+.animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Horizontal scroll snap container */
+.scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-x > * {
+    scroll-snap-align: center;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
 }

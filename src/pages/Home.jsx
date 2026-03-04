@@ -1,178 +1,272 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Headphones, Image, Box } from 'lucide-react';
+import { ArrowRight, Play, Headphones, Image, Box, Gamepad2, AppWindow, Wrench, Folder } from 'lucide-react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import FeatureRoll from '../components/FeatureRoll';
 
-const FEATURED_WORK = [
-    {
-        id: 1,
-        title: 'Neon Dreams',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1515630278258-407f66498911?w=800',
-    },
-    {
-        id: 2,
-        title: 'Abstract Flow',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-abstract-technology-particle-background-2775-large.mp4',
-    },
-    {
-        id: 3,
-        title: 'Forest Rain',
-        type: 'audio',
-        url: 'https://assets.mixkit.co/sfx/preview/mixkit-forest-rain-1234.mp3',
-    },
+// Helper to get thumbnail for embed videos
+const getThumbnail = (item) => {
+    // If it has a thumbnail, use it
+    if (item.thumbnail) return item.thumbnail;
+
+    // For embed or video types with YouTube URLs, extract video ID and generate thumbnail
+    if ((item.type === 'embed' || item.type === 'video') && item.url) {
+        // Try various YouTube URL patterns
+        const youtubePatterns = [
+            /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+            /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+            /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+            /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+        ];
+        for (const pattern of youtubePatterns) {
+            const match = item.url.match(pattern);
+            if (match) {
+                return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+            }
+        }
+    }
+
+    return null;
+};
+
+// All gallery categories
+const ALL_CATEGORIES = [
+    { id: 'images', label: 'IMAGES', icon: Image },
+    { id: 'videos', label: 'VIDEOS', icon: Play },
+    { id: 'audio', label: 'AUDIO', icon: Headphones },
+    { id: '3d', label: '3D', icon: Box },
+    { id: 'games', label: 'GAMES', icon: Gamepad2 },
+    { id: 'apps', label: 'APPS', icon: AppWindow },
+    { id: 'tools', label: 'TOOLS', icon: Wrench },
+    { id: 'other', label: 'OTHER', icon: Folder },
 ];
 
 const Home = () => {
+    const [featuredWork, setFeaturedWork] = useState([]);
+    const [mediaCounts, setMediaCounts] = useState({});
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const mediaSnapshot = await getDocs(collection(db, 'media'));
+                const allMedia = [];
+
+                mediaSnapshot.forEach((doc) => {
+                    allMedia.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Count by each category
+                const counts = {};
+                ALL_CATEGORIES.forEach(cat => {
+                    if (cat.id === 'other') {
+                        // Other = types not in the main list
+                        const mainTypes = ['image', 'video', 'audio', '3d', 'game', 'app', 'tool'];
+                        counts[cat.id] = allMedia.filter(m => !mainTypes.includes(m.type)).length;
+                    } else {
+                        counts[cat.id] = allMedia.filter(m => {
+                            if (cat.id === 'videos') return m.type === 'video';
+                            if (cat.id === 'games') return m.type === 'game';
+                            if (cat.id === 'apps') return m.type === 'app';
+                            if (cat.id === 'tools') return m.type === 'tool';
+                            return m.type === cat.id;
+                        }).length;
+                    }
+                });
+                setMediaCounts(counts);
+
+                const shuffled = [...allMedia].sort(() => 0.5 - Math.random());
+                const featured = shuffled.slice(0, 5).map(item => ({
+                    id: item.id,
+                    title: item.name,
+                    type: item.type || 'image',
+                    url: item.url || item.thumbnail,
+                    thumbnail: item.thumbnail,
+                }));
+                setFeaturedWork(featured);
+            } catch (error) {
+                console.error('Error fetching home data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
     return (
-        <div className="min-h-screen bg-[#0a0a0a]">
+        <div className="min-h-screen font-pixel">
             {/* Feature Roll Background */}
             <FeatureRoll />
 
-            {/* Hero Section */}
-            <section className="relative min-h-[90vh] flex items-center justify-center px-4">
-                <div className="max-w-5xl mx-auto text-center">
-                    <p className="text-neon-green text-sm font-medium tracking-widest mb-6 uppercase">
-                        Creative Technologist
-                    </p>
-                    <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight">
-                        KYLE TOUCHET
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-4">
-                        @Sandemon
-                    </p>
-                    <p className="text-lg text-gray-500 max-w-xl mx-auto mb-4">
-                        Creative Technologist / AI Filmmaker / Post-Labor Futurist
-                    </p>
-                    <p className="text-xl text-neon-gold italic max-w-2xl mx-auto mb-2">
-                        "The biggest limitation of AI is our own imagination"
-                    </p>
-                    <p className="text-sm text-gray-600 max-w-2xl mx-auto">
-                        — Demis Hassabis
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link
-                            to="/gallery"
-                            className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-4 rounded-lg hover:bg-neon-green/90 transition-colors"
-                        >
-                            EXPLORE GALLERY
-                            <ArrowRight size={20} />
-                        </Link>
-                        <Link
-                            to="/contact"
-                            className="inline-flex items-center gap-2 bg-white/10 text-white font-bold px-8 py-4 rounded-lg border border-white/20 hover:border-neon-green transition-colors backdrop-blur-sm"
-                        >
-                            GET IN TOUCH
-                        </Link>
-                    </div>
-                </div>
+            {/* Hero Section - Upper screen, video visible below */}
+            <section className="relative min-h-[60vh] flex flex-col items-center justify-start pt-16 px-4">
+                {/* Logo */}
+                <img
+                    src="/Sandemon Logo.png"
+                    alt="Sandemon"
+                    className="w-48 md:w-64 lg:w-80 h-auto animate-float"
+                />
 
-                {/* Scroll indicator */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-                    <div className="w-6 h-10 border-2 border-gray-600 rounded-full flex justify-center pt-2">
-                        <div className="w-1 h-2 bg-gray-600 rounded-full" />
-                    </div>
-                </div>
-            </section>
+                {/* Name below logo - with floating animation */}
+                <h1 className="text-5xl md:text-7xl font-bold text-white text-shadow-lg tracking-wider mt-4 animate-float">
+                    KYLE TOUCHET
+                </h1>
 
-            {/* Media Types Preview */}
-            <section className="py-20 px-4 bg-black/30 backdrop-blur-sm">
-                <div className="max-w-6xl mx-auto">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[
-                            { icon: Image, label: 'Images', count: '24+' },
-                            { icon: Play, label: 'Videos', count: '12+' },
-                            { icon: Headphones, label: 'Audio', count: '18+' },
-                            { icon: Box, label: '3D', count: '8+' },
-                        ].map(item => (
-                            <div key={item.label} className="bg-white/5 rounded-lg p-6 text-center hover:bg-white/10 transition-colors backdrop-blur-sm">
-                                <item.icon className="w-8 h-8 mx-auto mb-3 text-neon-green" />
-                                <p className="text-3xl font-bold text-white mb-1">{item.count}</p>
-                                <p className="text-gray-400 text-sm">{item.label}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                {/* Minimal tagline */}
+                <p className="text-2xl text-gray-300 mt-4 text-shadow-lg">
+                    @Sandemon
+                </p>
 
-            {/* Featured Work */}
-            <section className="py-20 px-4 bg-black/20">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex justify-between items-end mb-12">
-                        <div>
-                            <h2 className="text-4xl font-bold text-white mb-2">FEATURED WORK</h2>
-                            <p className="text-gray-400">A selection of recent projects</p>
-                        </div>
-                        <Link
-                            to="/gallery"
-                            className="hidden md:flex items-center gap-2 text-neon-green hover:underline"
-                        >
-                            View All <ArrowRight size={18} />
-                        </Link>
-                    </div>
+                {/* Quote - on one line with subtle glow and dark text */}
+                <p className="text-xl text-[#b87820] italic mt-4 text-shadow-md max-w-xl text-center" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(240,176,48,0.3)' }}>
+                    "The biggest limitation of AI is our own imagination" — Demis Hassabis
+                </p>
 
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {FEATURED_WORK.map(item => (
-                            <Link
-                                key={item.id}
-                                to="/gallery"
-                                className="group relative aspect-[4/3] bg-white/5 rounded-lg overflow-hidden backdrop-blur-sm"
-                            >
-                                {item.type === 'image' ? (
-                                    <img
-                                        src={item.url}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                ) : (
-                                    <video
-                                        src={item.url}
-                                        muted
-                                        loop
-                                        onMouseEnter={e => e.target.play()}
-                                        onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
-                                        className="w-full h-full object-cover"
-                                    />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                                        <p className="text-neon-green text-xs uppercase mb-1">{item.type}</p>
-                                        <h3 className="text-white text-xl font-bold">{item.title}</h3>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-
-                    <div className="mt-8 text-center md:hidden">
-                        <Link
-                            to="/gallery"
-                            className="inline-flex items-center gap-2 text-neon-green hover:underline"
-                        >
-                            View All Work <ArrowRight size={18} />
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-20 px-4 bg-black/30 backdrop-blur-sm">
-                <div className="max-w-3xl mx-auto text-center">
-                    <h2 className="text-4xl font-bold text-white mb-6">READY TO COLLABORATE?</h2>
-                    <p className="text-gray-400 text-lg mb-8">
-                        I'm always interested in new projects and creative opportunities.
-                        Let's create something extraordinary together.
-                    </p>
+                {/* CTA Buttons - improved styling with shadows */}
+                <div className="flex gap-6 mt-8">
+                    <Link
+                        to="/gallery"
+                        className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-3 rounded hover:bg-neon-green/80 transition-all"
+                        style={{ boxShadow: '3px 3px 0px rgba(0,0,0,0.5)' }}
+                    >
+                        EXPLORE
+                        <ArrowRight size={18} />
+                    </Link>
                     <Link
                         to="/contact"
-                        className="inline-flex items-center gap-2 bg-neon-green text-black font-bold px-8 py-4 rounded-lg hover:bg-neon-green/90 transition-colors"
+                        className="inline-flex items-center gap-2 bg-transparent text-neon-green font-bold px-8 py-3 rounded border-2 border-neon-green hover:bg-neon-green/20 transition-all"
+                        style={{ boxShadow: '3px 3px 0px rgba(0,0,0,0.5)' }}
                     >
-                        LET'S TALK
+                        CONTACT
+                    </Link>
+                </div>
+            </section>
+
+            {/* Floating Stats Bar - all gallery categories */}
+            <section className="relative py-4 px-4">
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex justify-center items-center gap-4 md:gap-8 overflow-x-auto hide-scrollbar py-2">
+                        {ALL_CATEGORIES.map((cat) => {
+                            const Icon = cat.icon;
+                            return (
+                                <div key={cat.id} className="flex flex-col items-center group cursor-pointer flex-shrink-0">
+                                    <Icon className="w-5 h-5 text-neon-green mb-1" style={{ filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0.8))' }} />
+                                    <p className="text-2xl font-bold text-white text-shadow-md">{loading ? '...' : mediaCounts[cat.id] || 0}</p>
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider text-shadow-sm">{cat.label}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* Featured Work - Horizontal Carousel with gaps for video */}
+            <section className="relative py-8 px-4">
+                <div className="max-w-7xl mx-auto">
+                    {/* Section title */}
+                    <h2 className="text-3xl font-bold text-white text-shadow-md mb-6 text-center md:text-left">
+                        FEATURED WORK
+                    </h2>
+
+                    {/* Horizontal scroll container */}
+                    <div className="flex gap-6 overflow-x-auto hide-scrollbar scroll-snap-x pb-4">
+                        {loading ? (
+                            <div className="flex-shrink-0 w-80 h-48 flex items-center justify-center border border-white/10 rounded">
+                                <span className="text-gray-500 text-shadow-sm">Loading...</span>
+                            </div>
+                        ) : featuredWork.length === 0 ? (
+                            <div className="flex-shrink-0 w-80 h-48 flex items-center justify-center border border-white/10 rounded">
+                                <Link to="/gallery" className="text-neon-green text-shadow-sm hover:underline">
+                                    Visit Gallery
+                                </Link>
+                            </div>
+                        ) : (
+                            featuredWork.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    to="/gallery"
+                                    className="flex-shrink-0 w-72 md:w-80 group relative"
+                                >
+                                    {/* Card with video peek effect */}
+                                    <div className="aspect-video rounded-lg overflow-hidden border-2 border-white/20 group-hover:border-neon-green transition-colors" style={{ boxShadow: '4px 4px 8px rgba(0,0,0,0.5)' }}>
+                                        {item.type === 'image' ? (
+                                            <img
+                                                src={item.url}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        ) : item.type === 'video' ? (
+                                            <video
+                                                src={item.url}
+                                                muted
+                                                loop
+                                                onMouseEnter={e => e.target.play()}
+                                                onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        ) : getThumbnail(item) ? (
+                                            <img
+                                                src={getThumbnail(item)}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
+                                                <span className="text-4xl">
+                                                    {item.type === 'audio' ? '🎵' : item.type === 'video' ? '🎬' : item.type === 'game' ? '🎮' : '🖼️'}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Overlay on hover */}
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="text-white text-shadow-md">VIEW</span>
+                                        </div>
+                                    </div>
+                                    {/* Title below */}
+                                    <p className="mt-2 text-white text-shadow-sm text-center truncate">{item.title}</p>
+                                </Link>
+                            ))
+                        )}
+
+                        {/* View All Card */}
+                        <Link
+                            to="/gallery"
+                            className="flex-shrink-0 w-72 md:w-80 flex items-center justify-center"
+                        >
+                            <div className="aspect-video rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 group hover:border-neon-green transition-colors" style={{ boxShadow: '4px 4px 8px rgba(0,0,0,0.5)' }}>
+                                <ArrowRight className="text-gray-400 group-hover:text-neon-green transition-colors" size={24} />
+                                <span className="text-gray-400 group-hover:text-neon-green text-shadow-sm">VIEW ALL</span>
+                            </div>
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* Floating CTA at bottom */}
+            <section className="relative py-12 px-4">
+                <div className="flex justify-center">
+                    <Link
+                        to="/contact"
+                        className="inline-flex items-center gap-3 bg-neon-green text-black font-bold px-10 py-4 rounded-lg hover:bg-neon-green/80 transition-all animate-breathe"
+                        style={{ boxShadow: '4px 4px 0px rgba(0,0,0,0.5)' }}
+                    >
+                        LET'S COLLABORATE
                         <ArrowRight size={20} />
                     </Link>
                 </div>
             </section>
+
+            {/* Scroll indicator */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+                <div className="w-6 h-10 border-2 border-gray-500 rounded-full flex justify-center pt-2">
+                    <div className="w-1 h-2 bg-gray-500 rounded-full" />
+                </div>
+            </div>
         </div>
     );
 };
