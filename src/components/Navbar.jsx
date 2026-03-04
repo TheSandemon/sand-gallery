@@ -47,8 +47,12 @@ const Navbar = () => {
                 ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-md border-b border-neon-green/20 pointer-events-auto' : 'bg-transparent border-b border-transparent'}
             `}>
                 {/* Logo */}
-                <Link to="/" className="text-xl md:text-2xl font-bold tracking-tight text-white z-[1001] relative pointer-events-auto">
-                    SAND<span className="text-neon-green">.GALLERY</span>
+                <Link to="/" className="z-[1001] relative pointer-events-auto">
+                    <img
+                        src="/Sandemon Logo.png"
+                        alt="Sandemon"
+                        className="h-10 md:h-12 w-auto"
+                    />
                 </Link>
 
                 {/* Desktop Menu */}

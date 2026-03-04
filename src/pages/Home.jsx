@@ -65,17 +65,21 @@ const Home = () => {
             <FeatureRoll />
 
             {/* Hero Section - Upper screen, video visible below */}
-            <section className="relative min-h-[60vh] flex flex-col items-center justify-start pt-20 px-4">
-                {/* Name with dramatic shadow */}
-                <h1 className="text-7xl md:text-9xl font-bold text-white text-shadow-lg animate-float tracking-wider">
-                    KYLE
-                </h1>
-                <h1 className="text-7xl md:text-9xl font-bold text-neon-green text-shadow-lg animate-float tracking-wider" style={{ animationDelay: '0.5s' }}>
-                    TOUCHET
+            <section className="relative min-h-[60vh] flex flex-col items-center justify-start pt-16 px-4">
+                {/* Logo */}
+                <img
+                    src="/Sandemon Logo.png"
+                    alt="Sandemon"
+                    className="w-48 md:w-64 lg:w-80 h-auto animate-float"
+                />
+
+                {/* Name below logo */}
+                <h1 className="text-5xl md:text-7xl font-bold text-white text-shadow-lg tracking-wider mt-4">
+                    KYLE TOUCHET
                 </h1>
 
                 {/* Minimal tagline */}
-                <p className="text-2xl text-gray-300 mt-6 text-shadow-md">
+                <p className="text-2xl text-gray-300 mt-4 text-shadow-md">
                     @Sandemon
                 </p>
 
