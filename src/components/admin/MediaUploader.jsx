@@ -18,6 +18,7 @@ const MediaUploader = ({ categories = [] }) => {
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [category, setCategory] = useState('');
+    const [githubRepo, setGithubRepo] = useState('');
 
     // Handle file selection
     const handleFileChange = (e) => {
@@ -66,8 +67,8 @@ const MediaUploader = ({ categories = [] }) => {
 
         // Validate based on type
         if (mediaType === 'image' || mediaType === 'audio' || mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') {
-            if (!file && !url) {
-                alert('Please select a file to upload');
+            if (!file && !url && !githubRepo) {
+                alert('Please select a file, enter a URL, or provide a GitHub repo');
                 return;
             }
         } else if (mediaType === 'video') {
@@ -128,9 +129,27 @@ const MediaUploader = ({ categories = [] }) => {
 
                 finalUrl = embed;
 
-                // Generate thumbnail for YouTube embeds
+                // Generate thumbnail for YouTube embeds with fallback
                 if (videoId && !thumbnail) {
                     thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                }
+
+                // If using a URL for game/app/tool, no thumbnail needed (iframe loads the content)
+                if ((mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') && url && !thumbnail) {
+                    thumbnail = null; // Will use placeholder in UI
+                }
+            }
+
+            // Handle GitHub repo URL for games/apps/tools
+            if ((mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') && githubRepo && !finalUrl) {
+                // Convert GitHub repo URL to embed URL
+                // Format: https://github.com/username/repo or https://github.com/username/repo/
+                const repoMatch = githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
+                if (repoMatch) {
+                    const [, owner, repo] = repoMatch;
+                    // Try GitHub Pages first, then fall back to raw gitcdn or similar
+                    finalUrl = `https://${owner}.github.io/${repo}/`;
+                    // Store the raw repo URL for reference
                 }
             }
 
@@ -142,6 +161,7 @@ const MediaUploader = ({ categories = [] }) => {
                 thumbnail: thumbnail || finalUrl,
                 type: mediaType,
                 category: category,
+                githubRepo: githubRepo.trim() || null,
                 createdBy: user.uid,
                 createdAt: serverTimestamp(),
             });
@@ -153,6 +173,7 @@ const MediaUploader = ({ categories = [] }) => {
             setEmbedUrl('');
             setFile(null);
             setCategory('');
+            setGithubRepo('');
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
@@ -324,6 +345,33 @@ const MediaUploader = ({ categories = [] }) => {
                             fontSize: '1rem'
                         }}
                     />
+                </div>
+            )}
+
+            {/* GitHub Repository URL (for games/apps/tools) */}
+            {(mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                        Or enter a GitHub Repository URL
+                    </label>
+                    <input
+                        type="url"
+                        value={githubRepo}
+                        onChange={(e) => setGithubRepo(e.target.value)}
+                        placeholder="https://github.com/username/repo"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            background: '#0a0a0a',
+                            border: '1px solid #333',
+                            borderRadius: '8px',
+                            color: 'white',
+                            fontSize: '1rem'
+                        }}
+                    />
+                    <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem' }}>
+                        For GitHub Pages: enable it in your repo settings, or use a service like gitcdn to embed directly
+                    </p>
                 </div>
             )}
 

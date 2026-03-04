@@ -36,6 +36,15 @@ const MediaCard = ({ item, onClick }) => {
                         alt={item.title}
                         className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
+                        onError={(e) => {
+                            // Try fallback thumbnail for YouTube
+                            const src = e.target.src;
+                            if (src.includes('maxresdefault.jpg')) {
+                                e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+                            } else {
+                                e.target.style.display = 'none';
+                            }
+                        }}
                     />
 
                     {/* Overlay Gradient */}

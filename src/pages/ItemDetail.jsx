@@ -25,6 +25,19 @@ const ICON_MAP = {
     Headphones,
 };
 
+// Helper to convert GitHub repo URL to embed URL
+const getGithubPagesUrl = (githubRepo) => {
+    if (!githubRepo) return null;
+    const repoMatch = githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
+    if (repoMatch) {
+        const [, owner, repo] = repoMatch;
+        // Remove .git suffix if present
+        const cleanRepo = repo.replace(/\.git$/, '');
+        return `https://${owner}.github.io/${cleanRepo}/`;
+    }
+    return null;
+};
+
 const ItemDetail = () => {
     const { category, id } = useParams();
     const navigate = useNavigate();
@@ -134,10 +147,10 @@ const ItemDetail = () => {
                     {item.type === 'video' && item.url && (
                         <video src={item.url} controls autoPlay className="w-full max-h-[60vh]" />
                     )}
-                    {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.url && (
+                    {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && (item.url || item.githubRepo) && (
                         <div className="w-full h-[60vh]">
                             <iframe
-                                src={item.url}
+                                src={item.url || getGithubPagesUrl(item.githubRepo)}
                                 title={item.name}
                                 className="w-full h-full border-0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
