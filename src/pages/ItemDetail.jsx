@@ -134,6 +134,17 @@ const ItemDetail = () => {
                     {item.type === 'video' && item.url && (
                         <video src={item.url} controls autoPlay className="w-full max-h-[60vh]" />
                     )}
+                    {(item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.url && (
+                        <div className="w-full h-[60vh]">
+                            <iframe
+                                src={item.url}
+                                title={item.name}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                    )}
                     {item.type === 'audio' && item.url && (
                         <div className="p-8 flex flex-col items-center">
                             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-6">

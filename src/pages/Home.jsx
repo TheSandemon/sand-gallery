@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play, Headphones, Image, Box } from 'lucide-react';
+import FeatureRoll from '../components/FeatureRoll';
 
 const FEATURED_WORK = [
     {
@@ -26,6 +27,9 @@ const FEATURED_WORK = [
 const Home = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
+            {/* Feature Roll Background */}
+            <FeatureRoll />
+
             {/* Hero Section */}
             <section className="relative min-h-[90vh] flex items-center justify-center px-4">
                 <div className="max-w-5xl mx-auto text-center">
@@ -57,7 +61,7 @@ const Home = () => {
                         </Link>
                         <Link
                             to="/contact"
-                            className="inline-flex items-center gap-2 bg-[#1a1a1a] text-white font-bold px-8 py-4 rounded-lg border border-[#333] hover:border-neon-green transition-colors"
+                            className="inline-flex items-center gap-2 bg-white/10 text-white font-bold px-8 py-4 rounded-lg border border-white/20 hover:border-neon-green transition-colors backdrop-blur-sm"
                         >
                             GET IN TOUCH
                         </Link>
@@ -73,7 +77,7 @@ const Home = () => {
             </section>
 
             {/* Media Types Preview */}
-            <section className="py-20 px-4 bg-[#0f0f0f]">
+            <section className="py-20 px-4 bg-black/30 backdrop-blur-sm">
                 <div className="max-w-6xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {[
@@ -82,7 +86,7 @@ const Home = () => {
                             { icon: Headphones, label: 'Audio', count: '18+' },
                             { icon: Box, label: '3D', count: '8+' },
                         ].map(item => (
-                            <div key={item.label} className="bg-[#1a1a1a] rounded-lg p-6 text-center hover:bg-[#252525] transition-colors">
+                            <div key={item.label} className="bg-white/5 rounded-lg p-6 text-center hover:bg-white/10 transition-colors backdrop-blur-sm">
                                 <item.icon className="w-8 h-8 mx-auto mb-3 text-neon-green" />
                                 <p className="text-3xl font-bold text-white mb-1">{item.count}</p>
                                 <p className="text-gray-400 text-sm">{item.label}</p>
@@ -93,7 +97,7 @@ const Home = () => {
             </section>
 
             {/* Featured Work */}
-            <section className="py-20 px-4">
+            <section className="py-20 px-4 bg-black/20">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex justify-between items-end mb-12">
                         <div>
@@ -113,7 +117,7 @@ const Home = () => {
                             <Link
                                 key={item.id}
                                 to="/gallery"
-                                className="group relative aspect-[4/3] bg-[#111] rounded-lg overflow-hidden"
+                                className="group relative aspect-[4/3] bg-white/5 rounded-lg overflow-hidden backdrop-blur-sm"
                             >
                                 {item.type === 'image' ? (
                                     <img
@@ -153,7 +157,7 @@ const Home = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-4 bg-gradient-to-b from-[#0a0a0a] to-[#111]">
+            <section className="py-20 px-4 bg-black/30 backdrop-blur-sm">
                 <div className="max-w-3xl mx-auto text-center">
                     <h2 className="text-4xl font-bold text-white mb-6">READY TO COLLABORATE?</h2>
                     <p className="text-gray-400 text-lg mb-8">
