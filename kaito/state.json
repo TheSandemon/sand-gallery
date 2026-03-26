@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "business": {
+    "name": "Kaito Ventures",
+    "type": "micro-saas",
+    "idea": "ProposalForge - AI proposal generation for SMBs"
+  },
+  "current_goal": {
+    "description": "Get ProposalForge to first paying customer",
+    "milestone": "Launch waitlist and get first signups",
+    "task": "Deploy landing page, set up waitlist capture"
+  },
+  "progress": [
+    {
+      "timestamp": "2026-03-26T01:08:00Z",
+      "action": "Built MVP landing page (index.html)",
+      "details": "Created landing page with value prop, features, pricing, and waitlist form"
+    },
+    {
+      "timestamp": "2026-03-26T01:08:00Z",
+      "action": "Created SPEC.md",
+      "details": "Documented product vision, tech stack, and roadmap"
+    }
+  ],
+  "last_active": "2026-03-26T01:08:00Z",
+  "next_goal": "Deploy landing page to public URL (GitHub Pages or Vercel) and set up waitlist form backend"
+}
