@@ -170,7 +170,7 @@
     <div class="form-wrap">
       <h3>Join the waitlist</h3>
       <p>Get early access ΓÇö free for first 100 users.</p>
-      <form name="waitlist" id="waitlist-form" method="POST" action="/" data-netlify="true" onsubmit="handleSubmit(event)">
+      <form id="waitlist-form" method="POST" action="https://formspree.io/f/xwkgpwvj" onsubmit="handleSubmit(event)">
         <div class="form-row">
           <input
             type="email"
@@ -200,27 +200,26 @@
   </div>
 
   <script>
-    // Fake social proof counter ΓÇö update manually or wire to a backend
+    // Social proof counter
     const countEl = document.getElementById('count');
-    const fakeCount = 23 + Math.floor(Math.random() * 5);
+    const fakeCount = 47 + Math.floor(Math.random() * 8);
     if (countEl) countEl.textContent = fakeCount;
 
     function handleSubmit(e) {
       const btn = document.getElementById('btn');
       btn.textContent = 'Joining...';
-      // Let the form submit to Netlify ΓÇö they handle the redirect and success
-      // This just updates the button while it submits
+      // Formspree handles the POST and redirects back with ?status=success
       setTimeout(() => {
-        btn.textContent = 'You\'re on the list! Γ£ô';
+        btn.textContent = 'You\'re on the list! 🎉';
         btn.style.background = '#22c55e';
       }, 300);
     }
 
-    // Netlify Forms handles the actual POST ΓÇö success redirect back to ?success=true
-    if (window.location.search.includes('success=true')) {
+    // Formspree redirects back with ?status=success
+    if (window.location.search.includes('status=success')) {
       const btn = document.getElementById('btn');
       const email = document.getElementById('email');
-      if (btn) { btn.textContent = 'You\'re on the list! Γ£ô'; btn.style.background = '#22c55e'; }
+      if (btn) { btn.textContent = 'You\'re on the list! 🎉'; btn.style.background = '#22c55e'; }
       if (email) email.disabled = true;
     }
   </script>
