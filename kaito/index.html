@@ -150,6 +150,24 @@
     .dot:nth-child(1) { opacity: 1; }
     .dot:nth-child(2) { opacity: 0.7; }
     .dot:nth-child(3) { opacity: 0.5; }
+    .features {
+      margin-top: 48px;
+      text-align: left;
+      display: grid;
+      gap: 20px;
+    }
+    .feat {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .feat span { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .feat strong { font-size: 15px; color: #e2e2e2; display: block; margin-bottom: 4px; }
+    .feat p { font-size: 13px; color: #777; line-height: 1.6; }
     .note {
       margin-top: 40px;
       font-size: 13px;
@@ -190,14 +208,6 @@
     }
   </style>
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXX');
-  </script>
 </head>
 <body>
   <div class="container">
@@ -249,6 +259,13 @@
       No spam. No credit card. Just early access when we launch.<br>
       Questions? <a href="mailto:kaito@proposalforge.ai">kaito@proposalforge.ai</a>
     </p>
+
+    <div class="features">
+      <div class="feat"><span>⚡</span><div><strong>2-minute drafts</strong><p>Describe your project scope in plain English. ProposalForge generates a complete, structured proposal.</p></div></div>
+      <div class="feat"><span>📄</span><div><strong>Polished, send-ready output</strong><p>Professional formatting with sections for scope, timeline, deliverables, and transparent pricing — ready to PDF and send.</p></div></div>
+      <div class="feat"><span>🎯</span><div><strong>Persuasive by design</strong><p>Trained on high-converting proposals. Every section is written to address what clients actually care about.</p></div></div>
+      <div class="feat"><span>🔒</span><div><strong>Your data stays private</strong><p>No storage. No training. Proposals are ephemeral — client scope and pricing never leave your session.</p></div></div>
+    </div>
 
     <div class="faq" id="faq">
       <h2>Common questions</h2>

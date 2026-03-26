@@ -40,8 +40,19 @@
       "timestamp": "2026-03-26T01:38:00Z",
       "action": "Added OG/Twitter Card meta tags + created SOCIAL_COPY.md",
       "details": "Landing page now shares properly on social (title, description, card image). Created ready-to-paste Reddit/IH/Twitter copy templates in SOCIAL_COPY.md. Pushed to live site."
+    },
+    {
+      "timestamp": "2026-03-26T01:50:00Z",
+      "action": "Created og.png and added Google Analytics tag",
+      "details": "Generated 1200x630 OG social card image (og.png) for rich link previews on Reddit/Twitter/LinkedIn. Added gtag.js placeholder (G-XXXXXXX) to index.html for traffic analytics. Pushed to GitHub Pages."
+    },
+    {
+      "timestamp": "2026-03-26T02:05:00Z",
+      "action": "Dropped Google Analytics",
+      "details": "Unnecessary for early validation. Formspree shows emails directly. GA overhead not worth it at this stage."
     }
   ],
-  "last_active": "2026-03-26T01:38:00Z",
-  "next_goal": "Post to Reddit (r/Entrepreneur, r/SideProject, r/freelance) and IndieHackers using SOCIAL_COPY.md; check formspree.io for waitlist emails"
+  "last_active": "2026-03-26T02:05:00Z",
+  "next_goal": "Post to Reddit (r/Entrepreneur, r/SideProject, r/freelance) and IndieHackers using SOCIAL_COPY.md; check formspree.io for waitlist emails",
+  "notes": "Landing page live at https://thesandemon.github.io/proposalforge/. Formspree wired for email capture. No analytics — keeping it lean."
 }
