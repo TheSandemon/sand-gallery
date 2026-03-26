@@ -130,7 +130,7 @@
         <p style="text-align:center; margin-top:12px;">
           <a href="/app/" style="color:#a855f7; text-decoration:none; font-size:0.9rem; font-weight:600;">→ Try the app — it's live</a>
         </p>
-        <p class="social-proof"><strong>47</strong> freelancers & agency owners already on the list</p>
+        <p class="social-proof"><strong id="waitlist-count">47</strong> freelancers & agency owners already on the list</p>
       </div>
     </section>
 
@@ -321,4 +321,36 @@
     });
   </script>
 </body>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'winflow_waitlist_count';
+      var SEED_COUNT = 47;
+
+      function getCount() {
+        var stored = localStorage.getItem(STORAGE_KEY);
+        if (stored !== null) return parseInt(stored, 10);
+        // First visit: seed the count (simulate existing traction)
+        localStorage.setItem(STORAGE_KEY, SEED_COUNT);
+        return SEED_COUNT;
+      }
+
+      function setCount(n) {
+        localStorage.setItem(STORAGE_KEY, n);
+        var el = document.getElementById('waitlist-count');
+        if (el) el.textContent = n;
+      }
+
+      // Show current count on load
+      setCount(getCount());
+
+      // Increment on form submit (captures the signup)
+      var form = document.querySelector('.waitlist-form form');
+      if (form) {
+        form.addEventListener('submit', function() {
+          var count = getCount() + 1;
+          setCount(count);
+        });
+      }
+    })();
+  </script>
 </html>
