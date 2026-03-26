@@ -223,6 +223,12 @@
                     <p id="email-capture-msg" class="text-xs text-green-600 mt-2 hidden">✓ Proposal sent to your inbox!</p>
                 </form>
 
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+                    <button onclick="copyProposalText()" class="px-8 py-3 rounded-lg border-2 border-purple-600 text-purple-700 font-semibold flex items-center justify-center gap-2 hover:bg-purple-50 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                        Copy Proposal Text
+                    </button>
+                </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                     <button onclick="downloadPDF()" class="btn-primary px-8 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -233,6 +239,7 @@
                         Copy Share Link
                     </button>
                 </div>
+                <p id="copy-proposal-msg" class="text-sm text-green-600 mb-6 hidden">✓ Proposal text copied! Paste it into any email or document.</p>
 
                 <div id="share-link-box" class="hidden bg-gray-50 rounded-lg p-4 mb-6 max-w-md mx-auto">
                     <p class="text-xs text-gray-500 mb-2">Share this link with your client:</p>
@@ -577,6 +584,26 @@ By signing below, you are agreeing to the terms outlined in this proposal.
             });
 
             doc.save(`WinFlow_Proposal_${Date.now()}.pdf`);
+        }
+
+        function copyProposalText() {
+            const text = currentProposal || document.getElementById('proposal-editor').value;
+            navigator.clipboard.writeText(text).then(() => {
+                const msg = document.getElementById('copy-proposal-msg');
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                const msg = document.getElementById('copy-proposal-msg');
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            });
         }
 
         function copyShareLink() {
