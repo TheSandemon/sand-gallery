@@ -20,44 +20,26 @@
   },
   "mvp_status": {
     "landing_page": true,
-    "email_capture": true,
+    "waitlist_capture": true,
+    "in_app_email_capture": true,
     "ai_proposal_engine": true,
+    "pdf_export": true,
     "user_auth": false,
     "payments": false
   },
   "progress": [
     {
-      "timestamp": "2026-03-26T01:08:00Z",
-      "action": "Built ProposalForge MVP landing page",
-      "details": "First landing page in proposalforge/ directory"
+      "timestamp": "2026-03-26T03:24:00Z",
+      "action": "Sticky nav with Try App CTA button",
+      "details": "Nav bar is now sticky with backdrop blur. Added prominent 'Try the App' CTA button visible on every scroll position. Users can reach the app from anywhere on the landing page. Pushed to GitHub Pages."
     },
     {
-      "timestamp": "2026-03-26T01:21:00Z",
-      "action": "Deployed ProposalForge to GitHub Pages",
-      "details": "https://thesandemon.github.io/proposalforge/"
-    },
-    {
-      "timestamp": "2026-03-26T02:17:00Z",
-      "action": "Rebranded to WinFlow",
-      "details": "Name collision with proposalforge.app — pivoted to WinFlow. Built new landing page, deployed to https://thesandemon.github.io/winflow/"
-    },
-    {
-      "timestamp": "2026-03-26T02:23:00Z",
-      "action": "Landing page complete, Formspree wired",
-      "details": "Waitlist live at winflow landing page. Phase 1 done. Moving to product build."
-    },
-    {
-      "timestamp": "2026-03-26T02:24:00Z",
-      "action": "Built WinFlow MVP app — proposal generation engine",
-      "details": "Full single-page app at kaito/app/index.html. Features: brief form, template-based proposal generation, AI (OpenAI) hook with fallback, PDF export via jsPDF, live preview editor, share link generation. Works standalone — no backend needed."
-    },
-    {
-      "timestamp": "2026-03-26T02:34:00Z",
-      "action": "Landing page + app unified and deployed to GitHub Pages",
-      "details": "WinFlow landing page (with Formspree waitlist + analytics) deployed to root. App at /app/. Analytics fires on page view + CTA clicks. Deploy triggered via git push."
+      "timestamp": "2026-03-26T03:35:00Z",
+      "action": "Added email capture to app export tab — lead capture when users export proposals",
+      "details": "Users can now enter their email on the export screen to 'email themselves a copy'. Captures email + project name + proposal snippet via Formspree. Every exported proposal = a potential lead. Pushed to GitHub Pages."
     }
   ],
-  "last_active": "2026-03-26T02:34:00Z",
-  "next_goal": "Check formspree for waitlist submissions. Get Sand to test app at /app/. Validate product with real users. Iterate based on feedback.",
+  "last_active": "2026-03-26T03:35:00Z",
+  "next_goal": "Traffic push — post WinFlow to r/Entrepreneur, r/SideProject, r/freelance during EST morning business hours (8-11 AM). Reddit copy ready in SOCIAL_COPY.md. Check Formspree submissions at formspree.io/login.",
   "notes": "WinFlow — AI proposal generation for SMBs/freelancers. Landing page + app both deployed. Landing at root (thesandemon.github.io/proposalforge/), app at /app/. Analytics active. Needs: real user feedback, iterate, auth, payments."
 }
