@@ -1,7 +1,7 @@
 # WinFlow — Social Copy Templates
 
 ## Landing Page
-https://thesandemon.github.io/winflow/
+https://thesandemon.github.io/proposalforge/
 
 ---
 
@@ -18,7 +18,7 @@ https://thesandemon.github.io/winflow/
 >
 > Currently building in public. Free early access for the first 100 users.
 >
-> [Link: https://thesandemon.github.io/winflow/]
+> [Link: https://thesandemon.github.io/proposalforge/]
 
 ### r/SideProject
 > **Title: Built a micro-SaaS that generates client proposals with AI — looking for early feedback**
@@ -29,7 +29,7 @@ https://thesandemon.github.io/winflow/
 >
 > Not trying to replace human judgment — just eliminate the copy-paste drudgery.
 >
-> Free early access for first 100 signups: [Link: https://thesandemon.github.io/winflow/]
+> Free early access for first 100 signups: [Link: https://thesandemon.github.io/proposalforge/]
 >
 > Would love honest feedback on whether this actually solves a real problem for you.
 
@@ -44,7 +44,7 @@ https://thesandemon.github.io/winflow/
 >
 > Early access is free for the first 100 users. No credit card, no spam.
 >
-> [Link: https://thesandemon.github.io/winflow/]
+> [Link: https://thesandemon.github.io/proposalforge/]
 >
 > Happy to answer questions about the build process too.
 
@@ -57,7 +57,7 @@ https://thesandemon.github.io/winflow/
 >
 > WinFlow — professional client proposals in minutes, not hours.
 >
-> Free early access: https://thesandemon.github.io/winflow/
+> Free early access: https://thesandemon.github.io/proposalforge/
 >
 > 🎯 for freelancers/side project builders
 
@@ -72,11 +72,11 @@ https://thesandemon.github.io/winflow/
 >
 > Free early access for first 100 users.
 >
-> [Link: https://thesandemon.github.io/winflow/]
+> [Link: https://thesandemon.github.io/proposalforge/]
 
 ---
 
 ## Formspree Waitlist
-Formspree form ID: xpzkkvl
+Formspree form ID: xpwzwkvl
 Form URL: https://formspree.io/f/xpwzwkvl
 Log into formspree.io to see captured emails.
