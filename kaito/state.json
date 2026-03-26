@@ -6,9 +6,9 @@
     "idea": "AI proposal generation for SMBs and freelancers"
   },
   "current_goal": {
-    "description": "Build actual product MVP — proposal generation engine",
-    "milestone": "Working AI proposal generator that real users can use",
-    "task": "Build MVP: landing page done → now build proposal generation workflow"
+    "description": "Test & validate MVP with real users",
+    "milestone": "First paying customer or waitlist validation",
+    "task": "Get feedback on the app, iterate, push to GitHub Pages"
   },
   "landing_page": {
     "status": "done",
@@ -52,5 +52,5 @@
   ],
   "last_active": "2026-03-26T02:24:00Z",
   "next_goal": "Test the MVP app, get feedback from Sand, wire up email notifications, set up basic analytics",
-  "notes": "WinFlow — AI proposal generation for SMBs/freelancers. $19/mo pricing. Landing page live. Formspree collecting emails. Next: BUILD THE ACTUAL PRODUCT."
+  "notes": "WinFlow — AI proposal generation for SMBs/freelancers. Landing page live (winflow/). MVP app built (app/index.html). AI proposal engine done. Needs: user testing, GitHub Pages deployment of app, analytics, auth, payments."
 }
