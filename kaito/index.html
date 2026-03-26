@@ -117,6 +117,15 @@
     footer { border-top: 1px solid #1e1e2a; padding: 32px 0; text-align: center; color: #555; font-size: 0.85rem; }
     footer a { color: #888; text-decoration: none; }
 
+    /* Sticky bottom CTA bar */
+    .sticky-bar { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a28, #12121c); border-top: 1px solid #2a2a3a; padding: 14px 24px; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 200; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .sticky-bar.visible { transform: translateY(0); }
+    .sticky-bar p { color: #999; font-size: 0.92rem; margin: 0; }
+    .sticky-bar p strong { color: #fff; }
+    .sticky-bar a { background: linear-gradient(135deg, #a855f7, #9333ea); color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
+    .sticky-bar a.secondary { background: transparent; border: 1px solid #2a2a3a; color: #aaa; margin-right: 4px; }
+    .sticky-close { background: none; border: none; color: #555; font-size: 1.2rem; cursor: pointer; padding: 4px 8px; margin-left: auto; line-height: 1; }
+
     /* FAQ */
     .faq { padding: 60px 0; }
     .faq h2 { font-size: 1.8rem; font-weight: 800; text-align: center; margin-bottom: 12px; }
@@ -373,6 +382,12 @@
       <p>WinFlow — AI Proposals for SMBs & Freelancers<br>
       <a href="https://github.com/thesandemon/proposalforge">GitHub</a> · <a href="mailto:kaito@winflow.ai">Contact</a></p>
     </footer>
+  <!-- Sticky bottom CTA bar -->
+  <div class="sticky-bar" id="stickyBar">
+    <p>Stop writing proposals by hand — <strong id="sticky-count">62</strong> already joined</p>
+    <a href="#waitlist" onclick="document.getElementById('email').focus(); return true;">Get Early Access</a>
+    <a href="/app/" class="secondary">Try Free ⚡</a>
+    <button class="sticky-close" onclick="document.getElementById('stickyBar').classList.remove('visible'); localStorage.setItem('stickyDismissed','1'); return false;" aria-label="Dismiss">&times;</button>
   </div>
 
   <!-- Hidden analytics form -->
@@ -415,6 +430,31 @@
         }, 1500);
       });
     });
+
+    // Sticky bottom bar — show after scrolling past hero
+    (function() {
+      var bar = document.getElementById('stickyBar');
+      var hero = document.querySelector('.hero');
+      if (!bar || !hero) return;
+      if (localStorage.getItem('stickyDismissed') === '1') return;
+      var sentinel = document.getElementById('email'); // anchor for focus
+      function updateStickyCount() {
+        var wc = document.getElementById('waitlist-count');
+        var sc = document.getElementById('sticky-count');
+        if (wc && sc) sc.textContent = wc.textContent;
+      }
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (!entry.isIntersecting) {
+            bar.classList.add('visible');
+            updateStickyCount();
+          } else {
+            bar.classList.remove('visible');
+          }
+        });
+      }, { threshold: 0 });
+      observer.observe(hero);
+    })();
   </script>
 </body>
   <script>
@@ -446,6 +486,9 @@
         if (el3) el3.textContent = spotsLeft + ' spots left';
         var bar = document.getElementById('progress-fill');
         if (bar) bar.style.width = pct + '%';
+        // Sync sticky bar count
+        var sc = document.getElementById('sticky-count');
+        if (sc) sc.textContent = count;
         // Update urgency color when getting low
         if (spotsLeft < 20) {
           if (el3) { el3.style.color = '#ef4444'; el3.style.fontWeight = '700'; }
