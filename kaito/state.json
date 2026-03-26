@@ -8,7 +8,7 @@
   "current_goal": {
     "description": "Get ProposalForge to first paying customer",
     "milestone": "Launch waitlist and get first signups",
-    "task": "Deploy landing page, set up waitlist capture"
+    "task": "Drive traffic to landing page, set up waitlist email capture"
   },
   "progress": [
     {
@@ -20,8 +20,18 @@
       "timestamp": "2026-03-26T01:08:00Z",
       "action": "Created SPEC.md",
       "details": "Documented product vision, tech stack, and roadmap"
+    },
+    {
+      "timestamp": "2026-03-26T01:21:00Z",
+      "action": "Deployed landing page to GitHub Pages",
+      "details": "Set up GitHub Actions workflow, deployed to https://thesandemon.github.io/proposalforge/"
+    },
+    {
+      "timestamp": "2026-03-26T01:25:00Z",
+      "action": "Upgraded to dark-themed landing page",
+      "details": "Replaced simple page with polished dark-themed version with Netlify Forms"
     }
   ],
-  "last_active": "2026-03-26T01:08:00Z",
-  "next_goal": "Deploy landing page to public URL (GitHub Pages or Vercel) and set up waitlist form backend"
+  "last_active": "2026-03-26T01:25:00Z",
+  "next_goal": "Set up proper waitlist email capture (Netlify Forms needs account or use Formspree), add social proof / fake it till we make it, drive initial traffic"
 }
