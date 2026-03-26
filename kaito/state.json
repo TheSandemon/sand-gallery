@@ -6,15 +6,17 @@
     "idea": "AI proposal generation for SMBs and freelancers"
   },
   "current_goal": {
-    "description": "Test & validate MVP with real users",
-    "milestone": "First paying customer or waitlist validation",
-    "task": "Get feedback on the app, iterate, push to GitHub Pages"
+    "description": "Validate with real users — collect feedback, iterate",
+    "milestone": "First signups or waitlist traction",
+    "task": "Push deploy, check formspree for submissions, get Sand to test app"
   },
   "landing_page": {
-    "status": "done",
-    "url": "https://thesandemon.github.io/winflow/",
+    "status": "deployed_with_app",
+    "url": "https://thesandemon.github.io/proposalforge/",
+    "app_url": "https://thesandemon.github.io/proposalforge/app/",
     "formspree_id": "xpwzwkvl",
-    "note": "Check formspree.io/login for email submissions"
+    "analytics": "formspree_event_tracking",
+    "note": "Landing page + app deployed together. Analytics fires on page view + CTA clicks via Formspree. Check formspree.io/login for submissions."
   },
   "mvp_status": {
     "landing_page": true,
@@ -48,9 +50,14 @@
       "timestamp": "2026-03-26T02:24:00Z",
       "action": "Built WinFlow MVP app — proposal generation engine",
       "details": "Full single-page app at kaito/app/index.html. Features: brief form, template-based proposal generation, AI (OpenAI) hook with fallback, PDF export via jsPDF, live preview editor, share link generation. Works standalone — no backend needed."
+    },
+    {
+      "timestamp": "2026-03-26T02:34:00Z",
+      "action": "Landing page + app unified and deployed to GitHub Pages",
+      "details": "WinFlow landing page (with Formspree waitlist + analytics) deployed to root. App at /app/. Analytics fires on page view + CTA clicks. Deploy triggered via git push."
     }
   ],
-  "last_active": "2026-03-26T02:24:00Z",
-  "next_goal": "Test the MVP app, get feedback from Sand, wire up email notifications, set up basic analytics",
-  "notes": "WinFlow — AI proposal generation for SMBs/freelancers. Landing page live (winflow/). MVP app built (app/index.html). AI proposal engine done. Needs: user testing, GitHub Pages deployment of app, analytics, auth, payments."
+  "last_active": "2026-03-26T02:34:00Z",
+  "next_goal": "Check formspree for waitlist submissions. Get Sand to test app at /app/. Validate product with real users. Iterate based on feedback.",
+  "notes": "WinFlow — AI proposal generation for SMBs/freelancers. Landing page + app both deployed. Landing at root (thesandemon.github.io/proposalforge/), app at /app/. Analytics active. Needs: real user feedback, iterate, auth, payments."
 }
