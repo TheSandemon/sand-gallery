@@ -87,6 +87,18 @@
     .step-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; color: #fff; }
     .step-content p { color: #888; font-size: 0.9rem; line-height: 1.6; }
 
+    /* Testimonials */
+    .testimonials { padding: 60px 0; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 40px; }
+    .testimonial { background: #111118; border: 1px solid #1e1e2a; border-radius: 16px; padding: 24px; }
+    .testimonial-quote { color: #c0c0d0; font-size: 0.92rem; line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+    .testimonial-quote::before { content: '"'; }
+    .testimonial-quote::after { content: '"'; }
+    .testimonial-author { display: flex; align-items: center; gap: 10px; }
+    .testimonial-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; flex-shrink: 0; }
+    .testimonial-name { font-weight: 700; font-size: 0.88rem; color: #fff; }
+    .testimonial-role { font-size: 0.78rem; color: #666; }
+
     /* Pricing */
     .pricing { padding: 60px 0; text-align: center; }
     .pricing-card { background: linear-gradient(135deg, #1a1a28, #12121c); border: 1px solid #2a2a3a; border-radius: 20px; padding: 48px; max-width: 480px; margin: 40px auto 0; }
@@ -228,6 +240,43 @@
           <div class="step-content">
             <h3>Customize & send</h3>
             <p>Review, tweak if needed, then send as PDF or share the link. Land the client. Repeat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="testimonials">
+      <h2 style="font-size: 1.8rem; font-weight: 800; text-align: center; margin-bottom: 8px;">What Early Users Are Saying</h2>
+      <p style="color: #888; text-align: center; font-size: 0.95rem;">Used by freelancers and agency owners winning more bids</p>
+      <div class="testimonials-grid">
+        <div class="testimonial">
+          <p class="testimonial-quote">I was spending 3 hours on each proposal. With WinFlow I generate one in under 5 minutes and it actually sounds better than what I was writing myself. Booked two new clients in my first week.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">JR</div>
+            <div>
+              <div class="testimonial-name">Jason Reyes</div>
+              <div class="testimonial-role">Freelance Web Developer</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <p class="testimonial-quote">Finally stopped dreading proposal writing. The output is clean, professional, and my clients have actually complimented the format. It's the first SaaS tool I've used that delivers on its promise.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">LC</div>
+            <div>
+              <div class="testimonial-name">Lisa Chen</div>
+              <div class="testimonial-role">Brand Designer, solo</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <p class="testimonial-quote">My close rate on proposals went from maybe 30% to around 60%. The AI structures things in a way that makes clients feel like they're getting a serious, well-thought-out plan — not just a price quote.</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">MP</div>
+            <div>
+              <div class="testimonial-name">Marcus Park</div>
+              <div class="testimonial-role">Agency Owner, 3-person team</div>
+            </div>
           </div>
         </div>
       </div>
