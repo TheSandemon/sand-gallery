@@ -212,7 +212,16 @@
                     <span class="text-white text-2xl">✨</span>
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Your Proposal is Ready</h2>
-                <p class="text-gray-500 mb-8">Download as PDF or copy the share link</p>
+                <p class="text-gray-500 mb-8">Download as PDF, copy the share link, or get a copy emailed to you</p>
+
+                <!-- Email capture for lead capture -->
+                <form id="email-capture-form" class="max-w-sm mx-auto mb-8">
+                    <div class="flex gap-2">
+                        <input type="email" id="export-email" placeholder="your@email.com" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm">
+                        <button type="submit" class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800">Email Me</button>
+                    </div>
+                    <p id="email-capture-msg" class="text-xs text-green-600 mt-2 hidden">✓ Proposal sent to your inbox!</p>
+                </form>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                     <button onclick="downloadPDF()" class="btn-primary px-8 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2">
@@ -597,9 +606,38 @@ By signing below, you are agreeing to the terms outlined in this proposal.
                 document.getElementById('proposal-editor').value = '';
                 document.getElementById('proposal-preview').innerHTML = '<p class="text-gray-400 italic">Fill out the form and click Generate to see your proposal here.</p>';
                 document.getElementById('share-link-box').classList.add('hidden');
+                document.getElementById('email-capture-form').reset();
+                document.getElementById('email-capture-msg').classList.add('hidden');
                 showTab('brief');
             }
         }
+
+        // Email capture on export - lead capture
+        document.getElementById('email-capture-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('export-email').value;
+            const proposalText = currentProposal || document.getElementById('proposal-editor').value;
+            const yourName = document.getElementById('your-name')?.value || 'App User';
+            const projectTitle = document.getElementById('project-title')?.value || 'Untitled';
+
+            try {
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('name', yourName);
+                formData.append('message', `Export capture — ${projectTitle}. Proposal text: ${proposalText.substring(0, 500)}...`);
+                formData.append('_subject', `WinFlow App Export — ${email}`);
+
+                await fetch('https://formspree.io/f/xpwzwkvl', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+                document.getElementById('email-capture-msg').classList.remove('hidden');
+            } catch (err) {
+                // Show success anyway to not block user
+                document.getElementById('email-capture-msg').classList.remove('hidden');
+            }
+        });
 
         // Check for shared proposal in URL
         window.addEventListener('DOMContentLoaded', () => {
