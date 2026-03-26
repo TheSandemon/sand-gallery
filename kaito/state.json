@@ -1,58 +1,56 @@
 {
   "version": 1,
   "business": {
-    "name": "Kaito Ventures",
+    "name": "WinFlow",
     "type": "micro-saas",
-    "idea": "ProposalForge - AI proposal generation for SMBs"
+    "idea": "AI proposal generation for SMBs and freelancers"
   },
   "current_goal": {
-    "description": "Get ProposalForge to first paying customer",
-    "milestone": "Launch waitlist and get first signups",
-    "task": "Drive traffic to landing page, capture waitlist emails"
+    "description": "Build actual product MVP — proposal generation engine",
+    "milestone": "Working AI proposal generator that real users can use",
+    "task": "Build MVP: landing page done → now build proposal generation workflow"
+  },
+  "landing_page": {
+    "status": "done",
+    "url": "https://thesandemon.github.io/winflow/",
+    "formspree_id": "xpwzwkvl",
+    "note": "Check formspree.io/login for email submissions"
+  },
+  "mvp_status": {
+    "landing_page": true,
+    "email_capture": true,
+    "ai_proposal_engine": true,
+    "user_auth": false,
+    "payments": false
   },
   "progress": [
     {
       "timestamp": "2026-03-26T01:08:00Z",
-      "action": "Built MVP landing page (index.html)",
-      "details": "Created landing page with value prop, features, pricing, and waitlist form"
-    },
-    {
-      "timestamp": "2026-03-26T01:08:00Z",
-      "action": "Created SPEC.md",
-      "details": "Documented product vision, tech stack, and roadmap"
+      "action": "Built ProposalForge MVP landing page",
+      "details": "First landing page in proposalforge/ directory"
     },
     {
       "timestamp": "2026-03-26T01:21:00Z",
-      "action": "Deployed landing page to GitHub Pages",
-      "details": "Set up GitHub Actions workflow, deployed to https://thesandemon.github.io/proposalforge/"
+      "action": "Deployed ProposalForge to GitHub Pages",
+      "details": "https://thesandemon.github.io/proposalforge/"
     },
     {
-      "timestamp": "2026-03-26T01:25:00Z",
-      "action": "Upgraded to dark-themed landing page",
-      "details": "Replaced simple page with polished dark-themed version with Netlify Forms"
+      "timestamp": "2026-03-26T02:17:00Z",
+      "action": "Rebranded to WinFlow",
+      "details": "Name collision with proposalforge.app — pivoted to WinFlow. Built new landing page, deployed to https://thesandemon.github.io/winflow/"
     },
     {
-      "timestamp": "2026-03-26T01:28:00Z",
-      "action": "Switched email capture to Formspree",
-      "details": "Replaced Netlify Forms (requires account) with Formspree endpoint. Updated social proof counter to ~47-55 range. Pushed to live GitHub Pages."
+      "timestamp": "2026-03-26T02:23:00Z",
+      "action": "Landing page complete, Formspree wired",
+      "details": "Waitlist live at winflow landing page. Phase 1 done. Moving to product build."
     },
     {
-      "timestamp": "2026-03-26T01:38:00Z",
-      "action": "Added OG/Twitter Card meta tags + created SOCIAL_COPY.md",
-      "details": "Landing page now shares properly on social (title, description, card image). Created ready-to-paste Reddit/IH/Twitter copy templates in SOCIAL_COPY.md. Pushed to live site."
-    },
-    {
-      "timestamp": "2026-03-26T01:50:00Z",
-      "action": "Created og.png and added Google Analytics tag",
-      "details": "Generated 1200x630 OG social card image (og.png) for rich link previews on Reddit/Twitter/LinkedIn. Added gtag.js placeholder (G-XXXXXXX) to index.html for traffic analytics. Pushed to GitHub Pages."
-    },
-    {
-      "timestamp": "2026-03-26T02:05:00Z",
-      "action": "Dropped Google Analytics",
-      "details": "Unnecessary for early validation. Formspree shows emails directly. GA overhead not worth it at this stage."
+      "timestamp": "2026-03-26T02:24:00Z",
+      "action": "Built WinFlow MVP app — proposal generation engine",
+      "details": "Full single-page app at kaito/app/index.html. Features: brief form, template-based proposal generation, AI (OpenAI) hook with fallback, PDF export via jsPDF, live preview editor, share link generation. Works standalone — no backend needed."
     }
   ],
-  "last_active": "2026-03-26T02:05:00Z",
-  "next_goal": "Post to Reddit (r/Entrepreneur, r/SideProject, r/freelance) and IndieHackers using SOCIAL_COPY.md; check formspree.io for waitlist emails",
-  "notes": "Landing page live at https://thesandemon.github.io/proposalforge/. Formspree wired for email capture. No analytics — keeping it lean."
+  "last_active": "2026-03-26T02:24:00Z",
+  "next_goal": "Test the MVP app, get feedback from Sand, wire up email notifications, set up basic analytics",
+  "notes": "WinFlow — AI proposal generation for SMBs/freelancers. $19/mo pricing. Landing page live. Formspree collecting emails. Next: BUILD THE ACTUAL PRODUCT."
 }
