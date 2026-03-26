@@ -116,6 +116,19 @@
     /* Footer */
     footer { border-top: 1px solid #1e1e2a; padding: 32px 0; text-align: center; color: #555; font-size: 0.85rem; }
     footer a { color: #888; text-decoration: none; }
+
+    /* FAQ */
+    .faq { padding: 60px 0; }
+    .faq h2 { font-size: 1.8rem; font-weight: 800; text-align: center; margin-bottom: 12px; }
+    .faq-sub { text-align: center; color: #888; font-size: 0.95rem; margin-bottom: 40px; }
+    .faq-list { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .faq-item { background: #111118; border: 1px solid #1e1e2a; border-radius: 12px; overflow: hidden; }
+    .faq-q { width: 100%; background: none; border: none; color: #fff; padding: 18px 22px; text-align: left; font-size: 0.97rem; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', sans-serif; transition: background 0.15s; }
+    .faq-q:hover { background: #16161f; }
+    .faq-q::after { content: '+'; font-size: 1.3rem; color: #a855f7; transition: transform 0.2s; }
+    .faq-item.open .faq-q::after { transform: rotate(45deg); }
+    .faq-a { display: none; padding: 0 22px 18px; color: #9999aa; font-size: 0.9rem; line-height: 1.7; }
+    .faq-item.open .faq-a { display: block; }
   </style>
 </head>
 <body>
@@ -278,6 +291,37 @@
               <div class="testimonial-role">Agency Owner, 3-person team</div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq">
+      <h2>Frequently Asked Questions</h2>
+      <p class="faq-sub">Honest answers before you decide</p>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Will this actually sound like I wrote it?</button>
+          <div class="faq-a">Yes — WinFlow generates custom prose based on the specifics you provide: client industry, their pain points, your approach, and your pricing. It's not filling in templates. Early users say it sounds more professional than what they were writing themselves.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is this only for web/design projects?</button>
+          <div class="faq-a">Not at all. WinFlow works for any service-based business that sends proposals — consultants, coaches, agencies, photographers, video producers, accountants, coaches, and more. The AI adapts to your industry and project type.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">What if my client wants changes after I export it?</button>
+          <div class="faq-a">WinFlow has a one-click revision feature — regenerate specific sections instantly without starting over. You can also export to PDF or share a link for client review.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my client information private?</button>
+          <div class="faq-a">Yes. We don't store your proposals. The data you enter is used only to generate your proposal in that session and is discarded immediately after.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">How is this different from ChatGPT or templates?</button>
+          <div class="faq-a">Templates give you a skeleton — you still have to fill every section. ChatGPT needs careful prompting to sound polished. WinFlow is built specifically for proposals: it knows the structure that wins (executive summary, scoped deliverables, value framing, urgency) and handles the formatting and persuasion for you.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">What happens after 100 early access signups?</button>
+          <div class="faq-a">Launch price is $19/mo for early adopters. After we hit 100 signups, the price goes up to the regular rate. Your early access rate is locked in for life once you sign up.</div>
         </div>
       </div>
     </section>
