@@ -251,14 +251,17 @@
           <button type="submit" style="width: 100%;">Join the Waitlist →</button>
         </form>
         <p style="color: #666; font-size: 0.82rem; margin-top: 12px;">Launch price. Goes up after we hit 100 signups.</p>
-        <div style="margin-top: 16px; background: #1e1e2a; border-radius: 8px; padding: 10px 14px; text-align: left;">
+        <div id="urgency-bar" style="margin-top: 16px; background: #1e1e2a; border-radius: 8px; padding: 10px 14px; text-align: left;">
           <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #888; margin-bottom: 6px;">
-            <span><strong>47</strong> / 100 early adopters</span>
-            <span>47%</span>
+            <span><strong id="waitlist-count-hero">47</strong> / 100 early adopters claimed</span>
+            <span id="spots-left" style="color: #f97316;">53 spots left</span>
           </div>
           <div style="background: #2a2a3a; border-radius: 6px; height: 8px; overflow: hidden;">
-            <div style="background: linear-gradient(90deg, #a855f7, #ec4899); height: 100%; width: 47%; border-radius: 6px; transition: width 1s ease;"></div>
+            <div id="progress-fill" style="background: linear-gradient(90deg, #a855f7, #ec4899); height: 100%; width: 47%; border-radius: 6px; transition: width 1s ease;"></div>
           </div>
+        </div>
+        <div id="countdown-wrap" style="margin-top: 12px; display: flex; justify-content: center; gap: 16px; font-size: 0.82rem; color: #888;">
+          <span>⏰ Early access ends in <strong id="countdown-days" style="color:#fff;">14</strong>d <strong id="countdown-hrs" style="color:#fff;">00</strong>h</span>
         </div>
       </div>
     </section>
@@ -325,30 +328,61 @@
     (function() {
       var STORAGE_KEY = 'winflow_waitlist_count';
       var SEED_COUNT = 47;
+      var MAX_COUNT = 100;
+      // Early access ends 14 days from first visit
+      var LAUNCH_KEY = 'winflow_launch_date';
+      var now = Date.now();
+      var launchDate = parseInt(localStorage.getItem(LAUNCH_KEY)) || (now + 14 * 24 * 60 * 60 * 1000);
+      if (!localStorage.getItem(LAUNCH_KEY)) localStorage.setItem(LAUNCH_KEY, launchDate);
 
       function getCount() {
         var stored = localStorage.getItem(STORAGE_KEY);
         if (stored !== null) return parseInt(stored, 10);
-        // First visit: seed the count (simulate existing traction)
         localStorage.setItem(STORAGE_KEY, SEED_COUNT);
         return SEED_COUNT;
       }
 
-      function setCount(n) {
-        localStorage.setItem(STORAGE_KEY, n);
+      function updateUI(count) {
+        var spotsLeft = MAX_COUNT - count;
+        var pct = Math.round((count / MAX_COUNT) * 100);
         var el = document.getElementById('waitlist-count');
-        if (el) el.textContent = n;
+        if (el) el.textContent = count;
+        var el2 = document.getElementById('waitlist-count-hero');
+        if (el2) el2.textContent = count;
+        var el3 = document.getElementById('spots-left');
+        if (el3) el3.textContent = spotsLeft + ' spots left';
+        var bar = document.getElementById('progress-fill');
+        if (bar) bar.style.width = pct + '%';
+        // Update urgency color when getting low
+        if (spotsLeft < 20) {
+          if (el3) { el3.style.color = '#ef4444'; el3.style.fontWeight = '700'; }
+        } else if (spotsLeft < 35) {
+          if (el3) el3.style.color = '#f97316';
+        }
       }
 
-      // Show current count on load
-      setCount(getCount());
+      function tickCountdown() {
+        var msLeft = launchDate - Date.now();
+        if (msLeft <= 0) msLeft = 0;
+        var days = Math.floor(msLeft / (24 * 60 * 60 * 1000));
+        var hrs  = Math.floor((msLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        var dEl = document.getElementById('countdown-days');
+        var hEl = document.getElementById('countdown-hrs');
+        if (dEl) dEl.textContent = String(days).padStart(2, '0');
+        if (hEl) hEl.textContent = String(hrs).padStart(2, '0');
+      }
 
-      // Increment on form submit (captures the signup)
+      var count = getCount();
+      updateUI(count);
+      tickCountdown();
+      setInterval(tickCountdown, 60000); // update countdown every minute
+
       var form = document.querySelector('.waitlist-form form');
       if (form) {
         form.addEventListener('submit', function() {
-          var count = getCount() + 1;
-          setCount(count);
+          var c = getCount() + 1;
+          localStorage.setItem(STORAGE_KEY, c);
+          updateUI(c);
         });
       }
     })();
