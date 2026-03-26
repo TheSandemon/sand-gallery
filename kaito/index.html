@@ -1,9 +1,26 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ProposalForge ΓÇö AI-Powered Proposals for Freelancers</title>
+  <title>ProposalForge — AI-Powered Proposals for Freelancers</title>
+  <meta name="description" content="Stop losing hours on every proposal. ProposalForge uses AI to generate polished proposals in minutes — not hours. Built for solo freelancers.">
+  <meta name="theme-color" content="#0a0a0a">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://thesandemon.github.io/proposalforge/">
+  <meta property="og:title" content="ProposalForge — AI Proposals for Freelancers">
+  <meta property="og:description" content="Stop losing 2-4 hours on every proposal. AI generates polished proposals in minutes. Early access free for first 100 users.">
+  <meta property="og:image" content="https://thesandemon.github.io/proposalforge/og.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@kaitoventures">
+  <meta name="twitter:title" content="ProposalForge — AI Proposals for Freelancers">
+  <meta name="twitter:description" content="Stop losing 2-4 hours on every proposal. AI generates polished proposals in minutes. Early access free!">
+  <meta name="twitter:image" content="https://thesandemon.github.io/proposalforge/og.png">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -155,12 +172,12 @@
 
     <p class="subhead">
       <strong>ProposalForge</strong> uses AI to generate polished proposals<br>
-      in minutes ΓÇö not hours. Built for solo freelancers.
+      in minutes — not hours. Built for solo freelancers.
     </p>
 
     <div class="pain">
       <p>
-        Freelancers spend <span>2ΓÇô4 hours</span> on every proposal ΓÇö writing,
+        Freelancers spend <span>2–4 hours</span> on every proposal — writing,
         formatting, tweaking. Meanwhile, you're not billing clients.
         The tools that exist are either too expensive, too complex,
         or too manual. ProposalForge fixes that.
@@ -169,7 +186,7 @@
 
     <div class="form-wrap">
       <h3>Join the waitlist</h3>
-      <p>Get early access ΓÇö free for first 100 users.</p>
+      <p>Get early access — free for first 100 users.</p>
       <form id="waitlist-form" method="POST" action="https://formspree.io/f/xwkgpwvj" onsubmit="handleSubmit(event)">
         <div class="form-row">
           <input
@@ -180,7 +197,7 @@
             required
             autocomplete="email"
           >
-          <button type="submit" id="btn">Get Early Access ΓåÆ</button>
+          <button type="submit" id="btn">Get Early Access →</button>
         </div>
       </form>
       <div class="social-proof">
@@ -200,7 +217,6 @@
   </div>
 
   <script>
-    // Social proof counter
     const countEl = document.getElementById('count');
     const fakeCount = 47 + Math.floor(Math.random() * 8);
     if (countEl) countEl.textContent = fakeCount;
@@ -208,18 +224,16 @@
     function handleSubmit(e) {
       const btn = document.getElementById('btn');
       btn.textContent = 'Joining...';
-      // Formspree handles the POST and redirects back with ?status=success
       setTimeout(() => {
-        btn.textContent = 'You\'re on the list! 🎉';
+        btn.textContent = "You're on the list!";
         btn.style.background = '#22c55e';
       }, 300);
     }
 
-    // Formspree redirects back with ?status=success
     if (window.location.search.includes('status=success')) {
       const btn = document.getElementById('btn');
       const email = document.getElementById('email');
-      if (btn) { btn.textContent = 'You\'re on the list! 🎉'; btn.style.background = '#22c55e'; }
+      if (btn) { btn.textContent = "You're on the list!"; btn.style.background = '#22c55e'; }
       if (email) email.disabled = true;
     }
   </script>
