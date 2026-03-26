@@ -175,6 +175,15 @@
           <button type="submit" style="width: 100%;">Join the Waitlist →</button>
         </form>
         <p style="color: #666; font-size: 0.82rem; margin-top: 12px;">Launch price. Goes up after we hit 100 signups.</p>
+        <div style="margin-top: 16px; background: #1e1e2a; border-radius: 8px; padding: 10px 14px; text-align: left;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #888; margin-bottom: 6px;">
+            <span><strong id="progress-count">52</strong> / 100 early adopters</span>
+            <span id="progress-pct">52%</span>
+          </div>
+          <div style="background: #2a2a3a; border-radius: 6px; height: 8px; overflow: hidden;">
+            <div id="progress-bar" style="background: linear-gradient(90deg, #a855f7, #ec4899); height: 100%; width: 52%; border-radius: 6px; transition: width 1s ease;"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -189,7 +198,7 @@
 
     <footer>
       <p>WinFlow — AI Proposals for SMBs & Freelancers<br>
-      <a href="https://github.com/thesandemon/winflow">GitHub</a> · <a href="mailto:kaito@winflow.ai">Contact</a></p>
+      <a href="https://github.com/thesandemon/proposalforge">GitHub</a> · <a href="mailto:kaito@winflow.ai">Contact</a></p>
     </footer>
   </div>
 
@@ -204,6 +213,17 @@
     const countEl = document.getElementById('count');
     const fakeCount = 47 + Math.floor(Math.random() * 9);
     if (countEl) countEl.textContent = fakeCount;
+
+    // Sync progress bar with counter
+    const progressCount = document.getElementById('progress-count');
+    const progressPct = document.getElementById('progress-pct');
+    const progressBar = document.getElementById('progress-bar');
+    if (progressCount && progressPct && progressBar) {
+      progressCount.textContent = fakeCount;
+      const pct = Math.min(fakeCount, 100);
+      progressPct.textContent = pct + '%';
+      progressBar.style.width = pct + '%';
+    }
 
     // Fire analytics on page view
     (function() {
