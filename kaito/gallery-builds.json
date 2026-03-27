@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "description": "Tracks all sand-gallery builds - new projects and updates to existing ones",
+  "projects": [
+    {
+      "type": "new",
+      "category": "tools",
+      "title": "PIXEL STORM",
+      "description": "Real-time cellular automata playground with Conway's Life, Brian's Brain, HighLife, Day & Night, and 6 other rule sets. Click-and-drag painting, 10 color presets, dying-cell fade effects, and PNG export.",
+      "repo": "TheSandemon/pixel-storm",
+      "pagesUrl": "https://thesandemon.github.io/pixel-storm/",
+      "firestoreId": "apCPHM60ox2U9tkjwv8u",
+      "timestamp": "2026-03-26T06:53:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "Graviton",
+      "description": "Interactive particle gravity simulation with attract, repel, vortex, and chaos modes. Click to spawn particles, drag to influence their motion.",
+      "repo": "TheSandemon/graviton",
+      "pagesUrl": "https://thesandemon.github.io/graviton/",
+      "firestoreId": "12GYL30P0s1nTSMUfAVt",
+      "timestamp": "2026-03-26T06:27:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "Graviton",
+      "repo": "TheSandemon/graviton",
+      "improvement": "Added WAVE mode (sinusoidal particle motion), keyboard shortcuts (1-5 for modes, R for reset), trail-length and glow sliders, touch support for mobile, subtle background grid, improved particle pulsing animation",
+      "pagesUrl": "https://thesandemon.github.io/graviton/",
+      "timestamp": "2026-03-26T06:30:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "Graviton",
+      "repo": "TheSandemon/graviton",
+      "improvement": "Added SINGULARITY mode (deep gravity well with accretion disk, event horizon, velocity-based particle coloring, motion trails), breathing background pulse, CRT scanline overlay, P key to spawn +50 particles, connection lines disabled in singularity for performance, speed stat display, keyboard shortcut 6 for singularity",
+      "pagesUrl": "https://thesandemon.github.io/graviton/",
+      "timestamp": "2026-03-26T06:42:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "apps",
+      "title": "NEON PULSE",
+      "description": "Audio-reactive neon visualizer that maps microphone frequencies to pulsing rings and particle bursts. Gold and neon green on black, with ambient ripple effects.",
+      "repo": "TheSandemon/neon-pulse",
+      "pagesUrl": "https://thesandemon.github.io/neon-pulse/",
+      "firestoreId": "JHOz4EUPKgr9o1AdGGNE",
+      "timestamp": "2026-03-26T06:33:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "tools",
+      "title": "PARTICLE FORGE",
+      "description": "Real-time particle system editor with live controls — adjust emission, physics, color blending, shapes, and behavior modes. Export your creations as JSON configs.",
+      "repo": "TheSandemon/particle-forge",
+      "pagesUrl": "https://thesandemon.github.io/particle-forge/",
+      "firestoreId": "54hzS3DeVfEsP47L3yKs",
+      "timestamp": "2026-03-26T06:40:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "ORBITAL DECAY",
+      "description": "Dark space survival game — absorb asteroids, manage your stellar mass, survive the void. Chain combos for multipliers, drag to shift gravity, avoid going critical.",
+      "repo": "TheSandemon/orbital-decay",
+      "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
+      "firestoreId": "BcGKtub694uA3RzmjGpY",
+      "timestamp": "2026-03-26T06:45:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "ORBITAL DECAY",
+      "repo": "TheSandemon/orbital-decay",
+      "improvement": "Added BLACK HOLES (dangerous vortexes with accretion disks that drain mass and pull debris), SUPERNOVA BLAST (SPACE to push all debris away with shockwave + screen flash), WAVE PROGRESSION (waves advance every 30s with more debris and faster motion), Web Audio sound effects for absorb/explode/supernova/black hole events, wave-based debris motion patterns, and WAVE counter UI.",
+      "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
+      "timestamp": "2026-03-26T06:49:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "ORBITAL DECAY",
+      "repo": "TheSandemon/orbital-decay",
+      "improvement": "Added powerup system with 3 pickup types: SHIELD (absorbs one debris explosion, lasts 10s), NOVA CHARGE (instantly fills supernova meter), SLOW-MO (slows debris to 30% speed for 5s with purple visual tint). Hexagonal glowing powerup pickups spawn periodically and drift toward the star.",
+      "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
+      "validated": true,
+      "timestamp": "2026-03-27T14:52:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "PIXEL STORM",
+      "repo": "TheSandemon/pixel-storm",
+      "improvement": "Added zoom/pan (scroll to zoom, shift+drag to pan), minimap overview with viewport indicator, live density graph tracking population over 200 generations, custom rule editor (B/S format) modal, rainbow age-based color mode, pattern library inject (Glider/LWSS/Pulsar/Gosper/Acorn/Diehard/R-pentomino), keyboard shortcuts (E=rules, F=fit, 1-5=rule sets), density stat in top bar, GitHub Pages rebuild to legacy static mode.",
+      "pagesUrl": "https://thesandemon.github.io/pixel-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T15:05:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "apps",
+      "title": "VOID CANVAS",
+      "description": "Infinite dark canvas for placing text, drawing freehand neon paths, spawning geometric shapes, and triggering particle bursts. Pan with middle-click or Shift+drag, zoom with scroll wheel, export your creation as JSON.",
+      "repo": "TheSandemon/void-canvas",
+      "pagesUrl": "https://thesandemon.github.io/void-canvas/",
+      "firestoreId": "mCn0x8ky5XPgzQpj31m0",
+      "validated": true,
+      "timestamp": "2026-03-27T15:07:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "PHOTON RIFT",
+      "description": "Neon vector endless runner — pilot a glowing triangle through void gates, dodge wireframe obstacles, and charge your rift for a screen-clearing burst. Dark void aesthetic with gold and neon green vector lines.",
+      "repo": "TheSandemon/photon-rift",
+      "pagesUrl": "https://thesandemon.github.io/photon-rift/",
+      "firestoreId": "fHGITmNw1yCbXR5e4JrG",
+      "validated": true,
+      "timestamp": "2026-03-27T15:21:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "NEON PULSE",
+      "repo": "TheSandemon/neon-pulse",
+      "improvement": "Added audio file playback (drag & drop or file picker — MP3, WAV, etc.), 4 visual modes (RINGS, WAVE, BURST, GRID), 4 color themes (NEON, GOLD, CYBER, VOID), beat detection triggering particle bursts, waveform display mode, playback controls (play/pause, seek bar), expanded freq bar from 24 to 32 bands, M key cycles modes, T cycles themes, SPACE pauses, FFT size doubled to 512 for better resolution.",
+      "pagesUrl": "https://thesandemon.github.io/neon-pulse/",
+      "validated": true,
+      "timestamp": "2026-03-27T15:23:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "PHOTON RIFT",
+      "repo": "TheSandemon/photon-rift",
+      "improvement": "Added VOID GUARDIAN boss system — every 50 gates a massive octagonal boss spawns with 4 orbiting magenta segments, HP pips, and targeting reticle. Use rift burst (full charge) to damage the boss and push it back. Boss scales in HP as you progress. Defeating it grants full rift + energy + +10 bonus score. Boss warning alert, HUD bar, defeat explosion with 8-stage particle burst.",
+      "pagesUrl": "https://thesandemon.github.io/photon-rift/",
+      "validated": true,
+      "timestamp": "2026-03-27T15:37:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "apps",
+      "title": "WAVELENGTH",
+      "description": "Audio-reactive mandala engine with 5 visual modes — MANDALA spiral, MANDELBROT fractal, PARTICLE STORM, PRISMO polyhedra, and VOID TUNNEL. Microphone or audio file input with real-time FFT analysis, beat detection, and neon gold/green particle bursts.",
+      "repo": "TheSandemon/wavelength",
+      "pagesUrl": "https://thesandemon.github.io/wavelength/",
+      "firestoreId": "sHzhyjrzHVDdS91MirNd",
+      "validated": true,
+      "timestamp": "2026-03-27T15:42:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "tools",
+      "title": "FRACTAL ENGINE",
+      "description": "Interactive Mandelbrot, Julia, Burning Ship, and Tricorn fractal explorer with smooth zoom, orbit traps, 5 color themes, CRT scanlines, and full keyboard/touch controls. Click to set Julia parameters, scroll to zoom, drag to pan.",
+      "repo": "TheSandemon/fractal-engine",
+      "pagesUrl": "https://thesandemon.github.io/fractal-engine/",
+      "firestoreId": "Rpcz6ihD6isFz998qUGY",
+      "validated": true,
+      "timestamp": "2026-03-27T15:47:00.000Z"
+    }
+  ],
+  "last_updated": "2026-03-27T15:47:00.000Z",
+  "stats": {
+    "total_builds": 17,
+    "new_projects": 9,
+    "updates": 8,
+    "by_category": {
+      "games": 3,
+      "apps": 3,
+      "tools": 3
+    }
+  }
+}
