@@ -4,6 +4,30 @@
   "projects": [
     {
       "type": "new",
+      "category": "games",
+      "title": "SINGULARITY SURGE",
+      "description": "Gravitational survival game — pilot a black hole singularity through the void. Absorb gold matter to grow your event horizon, avoid void shards, chain combos for multipliers. Supernova blast (SPACE), phase shift (SHIFT), mouse-driven gravitational pull. Wave progression, combo scoring, accretion disk visuals.",
+      "repo": "TheSandemon/singularity-surge",
+      "pagesUrl": "https://thesandemon.github.io/singularity-surge/",
+      "firestoreId": "nAizCWLdeeQCY2bazBnj",
+      "validated": true,
+      "timestamp": "2026-03-27T22:17:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (90s automated test): Score reached 1,840, advanced to WAVE 3, mass grew from 0.20 to 1.13, zero console errors. Phase shift (SHIFT) triggered correctly (phase label opacity = 1). Supernova charging via particle absorption confirmed (mass grew steadily). Wave progression functional (WAVE 1 → WAVE 3 over 90s). Code review: singularity follows mouse with inertia (vx/vy damping 0.92), particles gravitationally attracted to singularity (force proportional to mass/dist), void shards spawn wave 2+ and deal 0.3 damage on contact, phase shift grants 0.6s invulnerability, supernova expands as ring (5 rings, maxRadius = viewport, speed 8-16) and pushes particles/shards, combo system multiplies score (+10 per absorption * combo), health degrades over time (event bar), accretion disk rendered as radial gradient with dashed orbital rings."
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "PULSE ARENA",
+      "description": "Pulsar arena survival — absorb enemy fire to charge devastating EMP blasts. Chain kills for multipliers, 4 enemy types (drones/chasers/bombers/shields), wave progression, combo scoring. Click-hold to target EMP, release to unleash. SPACE for instant EMP. Dark void aesthetic with gold/green neon.",
+      "repo": "TheSandemon/pulse-arena",
+      "pagesUrl": "https://thesandemon.github.io/pulse-arena/",
+      "firestoreId": "kaoSw5AvVCg5GVAJbc04",
+      "validated": true,
+      "timestamp": "2026-03-27T22:06:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Page loads cleanly with ENGAGE overlay. Canvas renders full viewport. Score/wave/lives/pulse bar UI all present. No console errors on load or during initial gameplay. Code review: 4 enemy types (drone=triangle, chaser=triangle-orbit, bomber=circle, shield=hexagon+arc). EMP charge system: pulseCharge accumulates from absorbing enemy projectiles (0.8 per absorption) and EMP wave proximity (2 per frame). Hold-click targets EMP, release fires. SPACE fires instant EMP. Combo/multiplier system: combo resets timer on kill, multiplier up to x4. Wave progression every 25+wave*3 seconds. Player has invincibility frames (2.5s) after hit. Screen shake and particle bursts on impacts. Dark void background with starfield + gold grid."
+    },
+    {
+      "type": "new",
       "category": "apps",
       "title": "FRACTAL FOLD",
       "description": "Interactive mirrored fractal canvas. Click + drag to draw lines, circles, triangles, rectangles. Right-click in Mirror mode to place fold lines that recursively reflect geometry. Four fold modes: Mirror (recursive reflection across fold lines), Radial (circular kaleidoscopic symmetry), Crystal (radial + inner reflection), Kaleido (radial + bilateral). Auto-generated DEMO mode produces mesmerizing fractal art automatically. Export to PNG. Undo/clear. Zoom with scroll. Speed, glow intensity, and radial N sliders. Touch-enabled.",
@@ -46,6 +70,16 @@
       "validated": true,
       "timestamp": "2026-03-27T19:20:00.000Z",
       "testingNotes": "Playwright: PASS. Automated feature test: Energy bar (cyan, top-left) present and functional. Phase cooldown bar (gold, top-right) present. Mode indicator correctly shows SHIFT/DISCHARGE controls. SHIFT key triggers PHASE SHIFT — signal turns cyan with ghost trail. SPACE triggers DISCHARGE — cyan expanding ring with no console errors. No console errors during gameplay. Energy charges on node absorption, depletes on discharge. Phase ghost trail renders correctly with 0.5 opacity fading circles."
+    },
+    {
+      "type": "update",
+      "title": "SIGNAL TRACE",
+      "repo": "TheSandemon/signal-trace",
+      "improvement": "Added OVERDRIVE mode (E key) — 5s double-score boost with red pulsing UI, drains health continuously at 8/s, score turns red (#ff3366), red particle trail. Added CHAIN LINK system — fragmented signal pieces auto-form gold neon tethers when within 70px, 3+ linked fragments trigger chain bonus score and gold particles. Added combo popups — floating COMBO x[N] text pops up on high combos (≥3). Added chromatic aberration effect on damage/overdrive (RGB channel split via getImageData). Added RIFT ZONE — glowing gold dashed circle spawns every 20s with 5-8 clustered good nodes inside, pulsing radial gradient, spinning spokes. Added new boss attacks: LASER sweep (1.5s telegraph warning line, then damage beam rotating to track player) and HOMING MINES (octagonal, arm after 2s then slowly home in). 5 boss attack patterns total. Wave-overdrive score multiplier applies to all scoring. Mode indicator updated to E: OVERDRIVE.",
+      "pagesUrl": "https://thesandemon.github.io/signal-trace/",
+      "validated": true,
+      "timestamp": "2026-03-27T22:34:00.000Z",
+      "testingNotes": "Playwright: PASS. Automated gameplay test: Start screen visible, score/health/overdrive/phase/energy bars all render correctly. Overdrive activates on E press (opacity: 1, score color changes to rgb(255,51,102) red). Mode indicator correctly shows 'E: OVERDRIVE' at end. No console errors during ~20s gameplay. Canvas rendering confirmed (non-black pixels present). Signal follows mouse with inertia, click-to-absorb functional, phase shift and discharge triggers confirmed."
     },
     {
       "type": "new",
@@ -412,15 +446,25 @@
       "validated": true,
       "timestamp": "2026-03-27T18:48:00.000Z",
       "testingNotes": "Playwright: PASS. Code review + automated verification: CHAIN mode applies bonus damage to shapes within 150px radius when a shape shatters (proximity-weighted). VORTEX mode applies tangential + inward force creating spiral motion (tx = -dy/dist, ty = dx/dist). PENTA creates 5-sided polygons, OCT creates 8-sided polygons, both correctly rendered in createPoly. 4 themes (neon/gold/cyber/void) stored in themes object with stroke/particle/accent colors. cycleTheme() cycles through themes and updates themeName display. Frozen state stops all physics (velocity zeroed, decay frozen) but continues spark animations. Frozen overlay uses radial-gradient vignette (rgba 136,255,255,0.08). F key toggles freeze with screen shake + cyan spark burst. All 6 mode buttons (drag/attract/repel/gravity/chain/vortex) present. All 6 shape buttons (tri/quad/penta/hex/oct/star) present. Hint bar shows all shortcuts. No console errors expected."
+    },
+    {
+      "type": "update",
+      "title": "VECTOR STORM",
+      "repo": "TheSandemon/vector-storm",
+      "improvement": "Added ARENA MODE - a target-shattering game mode with scoring, combo multipliers, wave progression, lives system, and high score persistence (localStorage). Spawned shapes become projectiles — throw them at target polygons to shatter them and score points. Targets have HP bars, pulse/glow effects, and bounce around the arena. Chain rapid hits for x2-x10 combo multipliers. Wave clear bonus (+200 + wave*100 pts). Timer counts down per wave — survive and clear all targets before time runs out. 3 lives. Game over screen with final score, high score, and wave reached. ARENA button in HUD toggles the mode. Protected by arenaStarted guard so the button doesn't interrupt active games.",
+      "pagesUrl": "https://thesandemon.github.io/vector-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T22:20:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (automated): rAF running at 61fps. Timer decrements correctly (60→58 over 2 seconds). ARENA button opens overlay (display:flex). START button begins game, overlay hides. HUD tags (score/combo/wave/lives/timer) all visible and initialized correctly (Score:0, Combo:x1, Wave:1, Lives:3, Timer:60). No console errors during arena gameplay. Arena overlay has title, subtitle, description, START button. Game over screen shows final score, high score, and wave reached. Canvas dimension guards (W/H checks) prevent fillRect errors. Debris size safety ensures valid dimensions."
     }
   ],
-  "last_updated": "2026-03-27T20:23:00.000Z",
+  "last_updated": "2026-03-27T22:34:00.000Z",
   "stats": {
-    "total_builds": 35,
-    "new_projects": 16,
-    "updates": 20,
+    "total_builds": 39,
+    "new_projects": 18,
+    "updates": 22,
     "by_category": {
-      "games": 6,
+      "games": 8,
       "apps": 4,
       "tools": 6
     }
