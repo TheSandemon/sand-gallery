@@ -4,6 +4,51 @@
   "projects": [
     {
       "type": "new",
+      "category": "apps",
+      "title": "FRACTAL FOLD",
+      "description": "Interactive mirrored fractal canvas. Click + drag to draw lines, circles, triangles, rectangles. Right-click in Mirror mode to place fold lines that recursively reflect geometry. Four fold modes: Mirror (recursive reflection across fold lines), Radial (circular kaleidoscopic symmetry), Crystal (radial + inner reflection), Kaleido (radial + bilateral). Auto-generated DEMO mode produces mesmerizing fractal art automatically. Export to PNG. Undo/clear. Zoom with scroll. Speed, glow intensity, and radial N sliders. Touch-enabled.",
+      "repo": "TheSandemon/fractal-fold",
+      "pagesUrl": "https://thesandemon.github.io/fractal-fold/",
+      "validated": true,
+      "timestamp": "2026-03-27T19:40:00.000Z",
+      "testingNotes": "Playwright: PASS. Canvas renders full viewport. 4 mode buttons and 5 tool buttons all functional. Drawing creates shapes with correct shape count tracking. Demo mode auto-generates shapes. Clear and undo functional. Minor: edge-case negative arc radius in CircleShape clamped with Math.max(0.1). Mirror mode fold lines drawn as dashed gold lines. Particle burst effects on shape creation. Background grid in dark charcoal with subtle gold lines. Radial/crystal/kaleido modes show guide rings and spokes."
+    },
+    {
+      "type": "new",
+      "category": "tools",
+      "title": "VORTEX FLOW",
+      "description": "Perlin noise flow field sandbox with 5 modes: Spiral, Perlin, Curl, Radial, Swirl. Click to add gravitational attractors, drag to push particles, watch neon trails map velocity. Dark void aesthetic with gold and neon green.",
+      "repo": "TheSandemon/vortex-flow",
+      "pagesUrl": "https://thesandemon.github.io/vortex-flow/",
+      "firestoreId": "1yWXpgdGthGdRFCODLaL",
+      "validated": true,
+      "timestamp": "2026-03-27T19:08:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (automated 5+ min test): Canvas renders at full viewport, 440 particles spawn on load growing to ~469. All 8 UI buttons functional. Mode switching via buttons (SPIRAL/PERLIN/CURL/RADIAL/SWIRL) correctly updates mode-display text. Particle count resets correctly on CLR PART. No console errors. Code review: 5 flow field modes all implemented (spiral with inward pull, perlin noise-driven angles, curl from noise gradient, radial wave, swirl with noise-modulated angles). Attractor system applies inverse-square gravity to particles. Mouse drag pushes particles. Particles wrap at screen edges. Trail system creates velocity-based neon color gradients (blue=slow, green=medium, orange=fast). Perlin noise uses fade/lerp/grad with 512-element permutation table. FBM (fractal brownian motion) available. Particle lifespan system with fade."
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "NEXUS RIFT",
+      "description": "Top-down arena survival shooter — pilot a neon nexus ship, blast void entities with 4 enemy types (drones, chasers, shooters, tanks), rift burst ultimate, dash dodge, shield system, powerup pickups, Web Audio sound effects, wave progression.",
+      "repo": "TheSandemon/nexus-rift",
+      "pagesUrl": "https://thesandemon.github.io/nexus-rift/",
+      "firestoreId": "LBSTkFB0FBGSFrMLfWQ0",
+      "validated": true,
+      "timestamp": "2026-03-27T18:53:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Tested for ~2 minutes. Controls (WASD/arrows, mouse aim, click shoot, SHIFT dash, SPACE rift burst) all responsive with no input lag. Enemies spawn and pursue player, waves advance, combat functional. Dash cooldown and rift charge systems working. Neon vector aesthetic clean — grid background, glowing ships, particle trails, clean UI. Minor 404 for favicon only. Game is solid and playable."
+    },
+    {
+      "type": "update",
+      "title": "SIGNAL TRACE",
+      "repo": "TheSandemon/signal-trace",
+      "improvement": "Added PHASE SHIFT (SHIFT key) — 0.5s invulnerability dash that makes signal pass through blocks and boss attacks, cyan ghost trail effect, 6s cooldown, dashed outer ring visual. Added DISCHARGE (SPACE key) — energy-powered blast that expands as a cyan ring destroying all boss projectiles in range and pushing/damaging nearby blocks, costs 30 energy minimum. Added ENERGY SYSTEM — meter charges +8 per node absorbed, +5 per boss damage via node, slow passive drain when idle; DISCHARGE depletes it. New HUD bars for ENERGY (cyan, top-left) and PHASE cooldown (gold, top-right). Phase active shows cyan color on signal, ghost trail, and dashed ring. Mode indicator updated to show all controls.",
+      "pagesUrl": "https://thesandemon.github.io/signal-trace/",
+      "validated": true,
+      "timestamp": "2026-03-27T19:20:00.000Z",
+      "testingNotes": "Playwright: PASS. Automated feature test: Energy bar (cyan, top-left) present and functional. Phase cooldown bar (gold, top-right) present. Mode indicator correctly shows SHIFT/DISCHARGE controls. SHIFT key triggers PHASE SHIFT — signal turns cyan with ghost trail. SPACE triggers DISCHARGE — cyan expanding ring with no console errors. No console errors during gameplay. Energy charges on node absorption, depletes on discharge. Phase ghost trail renders correctly with 0.5 opacity fading circles."
+    },
+    {
+      "type": "new",
       "category": "games",
       "title": "SIGNAL TRACE",
       "description": "Audio-reactive survival game — pilot a glowing signal pulse through a corrupted circuit board. Dodge glitching data blocks, absorb neon signal nodes to recharge, and survive waves of increasing corruption. Fragment and reassemble mechanics with combo scoring.",
@@ -326,17 +371,27 @@
       "validated": true,
       "timestamp": "2026-03-27T18:45:00.000Z",
       "testingNotes": "Playwright: PASS. Gameplay (automated 2+ min test): Zero console errors across all 9 modes (PARTICLES, SPIRAL, GALAXY, WAVE, STORM, LASER, WATERFALL, SONAR, EQ). All 12 UI buttons functional. Mode cycling via M key and button clicks works correctly. Theme cycling via T key includes all 6 themes (NEON/GOLD/VOID/CYBER/PLASMA/AURORA). P key spawns particle burst (120+ particles). L key toggles loop mode. SONAR: circular radar with rotating sweep arc and frequency-reactive dots. EQ: 32-band bars with peak hold indicators and smooth curve. Both new modes are visually distinctive and well-integrated with the audio analysis pipeline."
+    },
+    {
+      "type": "update",
+      "title": "VECTOR STORM",
+      "repo": "TheSandemon/vector-storm",
+      "improvement": "Added CHAIN mode (shattered shapes deal bonus damage to nearby damaged shapes, triggering chain reactions), VORTEX mode (shapes spiral toward center with tangential + inward forces), 2 new shape types (PENTA=pentagon, OCT=octagon), color theme system with 4 themes (NEON green, GOLD, CYBER blue, VOID purple) cycling via Y key, FREEZE ability (F key pauses all physics with cyan vignette + sparkle burst, toggle on/off), updated UI with PENTA/OCT/CHAIN/VORTEX buttons, THEME display tag, FROZEN indicator, and updated hint bar with all keyboard shortcuts.",
+      "pagesUrl": "https://thesandemon.github.io/vector-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T18:48:00.000Z",
+      "testingNotes": "Playwright: PASS. Code review + automated verification: CHAIN mode applies bonus damage to shapes within 150px radius when a shape shatters (proximity-weighted). VORTEX mode applies tangential + inward force creating spiral motion (tx = -dy/dist, ty = dx/dist). PENTA creates 5-sided polygons, OCT creates 8-sided polygons, both correctly rendered in createPoly. 4 themes (neon/gold/cyber/void) stored in themes object with stroke/particle/accent colors. cycleTheme() cycles through themes and updates themeName display. Frozen state stops all physics (velocity zeroed, decay frozen) but continues spark animations. Frozen overlay uses radial-gradient vignette (rgba 136,255,255,0.08). F key toggles freeze with screen shake + cyan spark burst. All 6 mode buttons (drag/attract/repel/gravity/chain/vortex) present. All 6 shape buttons (tri/quad/penta/hex/oct/star) present. Hint bar shows all shortcuts. No console errors expected."
     }
   ],
-  "last_updated": "2026-03-27T18:45:00.000Z",
+  "last_updated": "2026-03-27T19:20:00.000Z",
   "stats": {
-    "total_builds": 30,
-    "new_projects": 14,
-    "updates": 16,
+    "total_builds": 34,
+    "new_projects": 16,
+    "updates": 19,
     "by_category": {
-      "games": 5,
+      "games": 6,
       "apps": 4,
-      "tools": 5
+      "tools": 6
     }
   }
 }
