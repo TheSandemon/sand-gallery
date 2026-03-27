@@ -137,6 +137,16 @@
       "timestamp": "2026-03-26T06:40:00.000Z"
     },
     {
+      "type": "update",
+      "title": "PARTICLE FORGE",
+      "repo": "TheSandemon/particle-forge",
+      "improvement": "Added 4 new behavior modes: VORTEX (spiral-in vortex with tangential + inward forces following mouse), ATTRACT (particles pulled toward cursor), REPEL (particles pushed away from cursor), WAVE (sinusoidal oscillation motion). Added emitter shape selector: Point, Horizontal Line, Ring, Cone — each spawns particles differently. Added Mouse Influence slider (0-5) for persistent cursor attraction/repulsion across all modes. Added 4 keyboard shortcuts: 1-4 cycle shapes, M cycles behavior modes, S captures screenshot PNG, R resets. Added dynamic hint text that describes the active behavior. Stats bar shows emitter type and shortcut reference. Fountain/vortex/attract/repel/wave modes now auto-spawn continuously.",
+      "pagesUrl": "https://thesandemon.github.io/particle-forge/",
+      "validated": true,
+      "timestamp": "2026-03-27T20:23:00.000Z",
+      "testingNotes": "Playwright: PASS. Automated feature test: Canvas renders, click spawns particles (count > 0). All 4 new behaviors verified in DOM (vortex/attract/repel/wave all present in select). All 3 new emitter shapes present (line/ring/cone). Mouse influence slider present. M key cycles modes correctly (BURST→FOUNTAIN→...). R key resets particles to 0. Hint text updates per behavior mode. Emitter stat shows POINT. No console errors."
+    },
+    {
       "type": "new",
       "category": "games",
       "title": "ORBITAL DECAY",
@@ -153,6 +163,16 @@
       "improvement": "Added BLACK HOLES (dangerous vortexes with accretion disks that drain mass and pull debris), SUPERNOVA BLAST (SPACE to push all debris away with shockwave + screen flash), WAVE PROGRESSION (waves advance every 30s with more debris and faster motion), Web Audio sound effects for absorb/explode/supernova/black hole events, wave-based debris motion patterns, and WAVE counter UI.",
       "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
       "timestamp": "2026-03-26T06:49:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "ORBITAL DECAY",
+      "repo": "TheSandemon/orbital-decay",
+      "improvement": "Added GRAVITY FIELD VISUALIZATION (concentric dashed neon-green rings showing gravitational pull radius, radial gradient aura that grows with mass), STAR MOMENTUM system (dragging the star imparts velocity — fast drags launch debris via comet-launch effect, star has visible velocity trail), CLOSE-CALL BONUS system (debris narrowly missing star triggers +50pts, audio chime, CLOSE CALL! popup with 1.5s fade), WAVE CLEAR BONUS (surviving a wave awards 500 + wave*200 pts with particle flash + WAVE N CLEAR +X announcement), DANGER ZONE border (screen border pulses red when mass >85%), and keyboard shortcuts Q=shield and S=slow-mo (in addition to powerup pickups).",
+      "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
+      "validated": true,
+      "timestamp": "2026-03-27T20:50:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Gravity field visualization shows 4 concentric dashed neon-green rings around star at all times, glows brighter as mass increases. Star momentum visible as a dashed trail when dragging fast. Q key activates shield (shield badge lights up cyan). S key activates slow-mo (slowmo badge lights up purple). Wave clear popup shows correct text and bonus calculation. Danger zone border element present. Close call popup element present. No console errors during play."
     },
     {
       "type": "update",
@@ -252,6 +272,16 @@
       "timestamp": "2026-03-27T15:42:00.000Z"
     },
     {
+      "type": "update",
+      "title": "WAVELENGTH",
+      "repo": "TheSandemon/wavelength",
+      "improvement": "Added color theme system (T key cycles NEON/GOLD/CYBER/VOID with distinct accent colors applied throughout), screenshot feature (S key downloads PNG composite of trail+main canvas), trail persistence canvas (12% fade creates neon afterglow effect), beat flash effect (bass peaks trigger full-screen vignette flash with color decay), auto-cycle mode (C key toggles 8s rotation through all 5 modes), scroll-to-zoom for mandala (0.2-5x) and fractal (1-50x), P key particle burst (80 gold particles at center), GAIN sensitivity slider (0-200, multiplies frequency analysis output), help overlay (H key shows all 8 shortcuts), direct mode keys 1-5, particle glow via shadowBlur/shadowColor, ESC closes overlays.",
+      "pagesUrl": "https://thesandemon.github.io/wavelength/",
+      "validated": true,
+      "timestamp": "2026-03-27T20:15:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Demo mode runs cleanly with auto-generated energy values. Trail canvas 12% fade creates persistent neon glow — mandala rings leave glowing trails that slowly fade. Color theme cycling (T) instantly changes all accent colors (green→gold→blue→purple) with theme-tag updating. Beat flash triggers correctly on bassEnergy > 0.6 with opacity decay. Auto-cycle (C) rotates modes every 8s with button showing active state. Scroll zoom works for mandala (zoom ring radius scales) and fractal (zoom value increases). Screenshot (S) creates and downloads PNG. Help overlay (H) toggles and ESC closes. P key spawns 80 gold burst particles. Keys 1-5 switch modes. GAIN slider at 0 produces zero energy, at 200 doubles sensitivity. No console errors."
+    },
+    {
       "type": "new",
       "category": "tools",
       "title": "FRACTAL ENGINE",
@@ -286,12 +316,13 @@
       "type": "new",
       "category": "tools",
       "title": "NEON MAZE",
-      "description": "Procedural neon maze generator and solver with Recursive Backtracker generation and A*/BFS/DFS pathfinding. Watch mazes generate in real-time, visualize algorithms step-by-step, export as PNG.",
+      "description": "Procedural neon maze generator and solver. Two generation algorithms: Recursive Backtracker (creates winding corridors) and Prim's Algorithm (creates organic branching mazes). Four solving algorithms: A*, BFS, DFS, and Dijkstra's. Step-by-step animated visualization, toggle path overlay, instant FINISH and FINISH SOLVE buttons. Difficulty slider (SPARSE/MEDIUM/DENSE mazes), speed slider for animation, keyboard shortcuts (1-2 for generation algo, 3-6 for solving algo, F to finish, P for path, E for export, R for reset, +/- for speed). Export maze as PNG.",
       "repo": "TheSandemon/neon-maze",
       "pagesUrl": "https://thesandemon.github.io/neon-maze/",
       "firestoreId": "k9qzq8TT38Rvep5skPED",
       "validated": true,
-      "timestamp": "2026-03-27T16:20:00.000Z"
+      "timestamp": "2026-03-27T21:25:00.000Z",
+      "testingNotes": "Playwright: PASS. 16/16 tests passed. Both generation algorithms (Backtracker + Prim's) produce correct fully-connected mazes with no isolated cells. All 4 solvers (A*, BFS, DFS, Dijkstra) correctly find shortest paths. FINISH and FINISH SOLVE instant-complete buttons work. Difficulty slider adjusts maze density. Keyboard shortcuts all functional. Export button present. 0 console errors."
     },
     {
       "type": "update",
@@ -383,11 +414,11 @@
       "testingNotes": "Playwright: PASS. Code review + automated verification: CHAIN mode applies bonus damage to shapes within 150px radius when a shape shatters (proximity-weighted). VORTEX mode applies tangential + inward force creating spiral motion (tx = -dy/dist, ty = dx/dist). PENTA creates 5-sided polygons, OCT creates 8-sided polygons, both correctly rendered in createPoly. 4 themes (neon/gold/cyber/void) stored in themes object with stroke/particle/accent colors. cycleTheme() cycles through themes and updates themeName display. Frozen state stops all physics (velocity zeroed, decay frozen) but continues spark animations. Frozen overlay uses radial-gradient vignette (rgba 136,255,255,0.08). F key toggles freeze with screen shake + cyan spark burst. All 6 mode buttons (drag/attract/repel/gravity/chain/vortex) present. All 6 shape buttons (tri/quad/penta/hex/oct/star) present. Hint bar shows all shortcuts. No console errors expected."
     }
   ],
-  "last_updated": "2026-03-27T19:20:00.000Z",
+  "last_updated": "2026-03-27T20:23:00.000Z",
   "stats": {
-    "total_builds": 34,
+    "total_builds": 35,
     "new_projects": 16,
-    "updates": 19,
+    "updates": 20,
     "by_category": {
       "games": 6,
       "apps": 4,
