@@ -186,6 +186,7 @@ const ItemDetail = () => {
                                         className="w-full h-full border-0"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
+                                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
                                     />
                                     {/* Open in new tab button overlay */}
                                     <a
