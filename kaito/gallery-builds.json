@@ -4,6 +4,29 @@
   "projects": [
     {
       "type": "new",
+      "category": "games",
+      "title": "SIGNAL TRACE",
+      "description": "Audio-reactive survival game — pilot a glowing signal pulse through a corrupted circuit board. Dodge glitching data blocks, absorb neon signal nodes to recharge, and survive waves of increasing corruption. Fragment and reassemble mechanics with combo scoring.",
+      "repo": "TheSandemon/signal-trace",
+      "pagesUrl": "https://thesandemon.github.io/signal-trace/",
+      "firestoreId": "sAlEMqntQW0dqCMGg1IY",
+      "validated": true,
+      "timestamp": "2026-03-27T18:04:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (automated headless test): Page loaded correctly, start button functional, game initialized with score=0, no console errors. Code review confirmed: signal follows mouse with inertia-based movement, nodes spawn and pulse, blocks move from edges, fragmentation on block hit works (signal splits into 5-8 fragments that can auto-absorb nearby nodes), health drains over time, combo system rewards rapid absorptions, wave progression every 500 points, circuit board background with neon traces, audio-reactive via mic input, glitch slice effects on low health. Game mechanics fully implemented."
+    },
+    {
+      "type": "new",
+      "category": "apps",
+      "title": "SYNTH STORM",
+      "description": "Audio-reactive neon visualizer with 5 modes — particles, spiral galaxy, concentric wave rings, vortex storm, and lightning. Mic or audio file input, beat detection, particle physics, bloom, chromatic aberration, screen shake, and 4 color themes.",
+      "repo": "TheSandemon/synth-storm",
+      "pagesUrl": "https://thesandemon.github.io/synth-storm/",
+      "firestoreId": "Kt2MSY2h1n1QR7Wo5g6m",
+      "validated": true,
+      "timestamp": "2026-03-27T15:56:00.000Z"
+    },
+    {
+      "type": "new",
       "category": "tools",
       "title": "PIXEL STORM",
       "description": "Real-time cellular automata playground with Conway's Life, Brian's Brain, HighLife, Day & Night, and 6 other rule sets. Click-and-drag painting, 10 color presets, dying-cell fade effects, and PNG export.",
@@ -37,6 +60,16 @@
       "improvement": "Added SINGULARITY mode (deep gravity well with accretion disk, event horizon, velocity-based particle coloring, motion trails), breathing background pulse, CRT scanline overlay, P key to spawn +50 particles, connection lines disabled in singularity for performance, speed stat display, keyboard shortcut 6 for singularity",
       "pagesUrl": "https://thesandemon.github.io/graviton/",
       "timestamp": "2026-03-26T06:42:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "Graviton",
+      "repo": "TheSandemon/graviton",
+      "improvement": "Added COLLIDE mode (billiard ball physics — particles attract to cursor and elastically collide with each other, bouncing off walls), GRAV slider (adjustable gravity strength 0.01–0.30), LINES toggle (L key or LINES button to show/hide connection mesh), 7 key for COLLIDE mode, L key for lines toggle, cyan LINES button, collide mode has low damping (0.999) and wall bounce instead of edge wrapping",
+      "pagesUrl": "https://thesandemon.github.io/graviton/",
+      "validated": true,
+      "timestamp": "2026-03-27T17:37:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Tested ATTRACT and COLLIDE modes for ~2 minutes. ATTRACT: 400 particles smoothly swarm toward cursor, connection lines create a shimmering web. COLLIDE: Particles noticeably bounce off each other with elastic collisions — when two fast particles meet they deflect realistically. Wall bouncing works correctly at screen edges. GRAV slider smoothly adjusts the pull strength. LINES toggle instantly shows/hides the connection mesh. Mode switching (1-7 keys) is instant. No console errors. COLLIDE mode is the standout new feature — feels like a billiard table meets particle accelerator."
     },
     {
       "type": "new",
@@ -75,6 +108,15 @@
       "improvement": "Added BLACK HOLES (dangerous vortexes with accretion disks that drain mass and pull debris), SUPERNOVA BLAST (SPACE to push all debris away with shockwave + screen flash), WAVE PROGRESSION (waves advance every 30s with more debris and faster motion), Web Audio sound effects for absorb/explode/supernova/black hole events, wave-based debris motion patterns, and WAVE counter UI.",
       "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
       "timestamp": "2026-03-26T06:49:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "ORBITAL DECAY",
+      "repo": "TheSandemon/orbital-decay",
+      "improvement": "Added COMET STORM events (streaking comets with long particle tails, spawn from screen edges, wave 2+), STELLAR FLARE system (chain 3+ rapid absorptions triggers flare burst with light rays and ejected particles, multiplier up to x4), drifting nebula cloud backgrounds, comet-black hole interactions, and supernova now pushes comets away.",
+      "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
+      "validated": true,
+      "timestamp": "2026-03-27T16:09:00.000Z"
     },
     {
       "type": "update",
@@ -127,12 +169,31 @@
     },
     {
       "type": "update",
+      "title": "NEON PULSE",
+      "repo": "TheSandemon/neon-pulse",
+      "improvement": "Added RADIAL EQ mode (64 frequency-reactive radial bars with slow rotation, 3 guide rings, bass glow), GAIN/SENSITIVITY slider (0.5x–3.0x), SCREENSHOT feature (S key, downloads PNG), HELP OVERLAY (H key shows shortcuts, ESC closes), AUTO-CYCLE mode (C key toggles, switches modes every 5s), direct mode keys 1-5, trail/glow persistence canvas (18% fade creates neon afterglow on rings/burst/radial).",
+      "pagesUrl": "https://thesandemon.github.io/neon-pulse/",
+      "validated": true,
+      "timestamp": "2026-03-27T18:12:00.000Z",
+      "testingNotes": "Playwright: PASS. Code review + automated verification: RADIAL EQ draws 64 bars mapped from FFT, rotates slowly, glows with bass-reactive center. Sensitivity multiplier applied in getFrequencyBands(). Screenshot creates temp canvas, composites trail layer, calls toDataURL. Help overlay toggles on H/ESC, blocks interaction when hidden. Auto-cycle timer + mode switch verified. Trail canvas fade creates persistent neon glow. 5 mode buttons + 4 theme buttons + sensitivity row all present. No console errors."
+    },
+    {
+      "type": "update",
       "title": "PHOTON RIFT",
       "repo": "TheSandemon/photon-rift",
       "improvement": "Added VOID GUARDIAN boss system — every 50 gates a massive octagonal boss spawns with 4 orbiting magenta segments, HP pips, and targeting reticle. Use rift burst (full charge) to damage the boss and push it back. Boss scales in HP as you progress. Defeating it grants full rift + energy + +10 bonus score. Boss warning alert, HUD bar, defeat explosion with 8-stage particle burst.",
       "pagesUrl": "https://thesandemon.github.io/photon-rift/",
       "validated": true,
       "timestamp": "2026-03-27T15:37:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "PHOTON RIFT",
+      "repo": "TheSandemon/photon-rift",
+      "improvement": "Added SHIELD system (C key activates 10s one-hit protection, shown as cyan ring around ship), SLOW-MO ability (X key triggers 2s slow-motion at 30% speed with 15s cooldown, purple vignette + timer bar), and STREAK BONUS (consecutive gates without getting hit build streak multiplier shown as gold rings around ship, up to x2 bonus at 20 streak).",
+      "pagesUrl": "https://thesandemon.github.io/photon-rift/",
+      "validated": true,
+      "timestamp": "2026-03-27T17:28:00.000Z"
     },
     {
       "type": "new",
@@ -155,17 +216,127 @@
       "firestoreId": "Rpcz6ihD6isFz998qUGY",
       "validated": true,
       "timestamp": "2026-03-27T15:47:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "VOID CANVAS",
+      "repo": "TheSandemon/void-canvas",
+      "improvement": "Added UNDO system (Ctrl+Z, up to 50 steps), ERASE mode (click/drag to delete shapes and paths), LINE tool (straight line drawing), SYMMETRY mode (S key mirrors all drawing/actions across viewport center), glow intensity slider, text font selector (Space Mono/Syncopate/Orbitron/Rajdhani) with font size slider, ambient particle density increase, 250-star background, T key toggles NEON/GOLD theme",
+      "pagesUrl": "https://thesandemon.github.io/void-canvas/",
+      "validated": true,
+      "timestamp": "2026-03-27T15:58:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "VOID BALL",
+      "description": "Neon pinball with physics-based flippers, glowing ball trails, bumpers, gates, and wave-based scoring. Click to control flippers, SPACE to launch.",
+      "repo": "TheSandemon/void-ball",
+      "pagesUrl": "https://thesandemon.github.io/void-ball/",
+      "firestoreId": "Mkg0jkeM16PkFhvZbY1k",
+      "validated": true,
+      "timestamp": "2026-03-27T16:04:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "tools",
+      "title": "NEON MAZE",
+      "description": "Procedural neon maze generator and solver with Recursive Backtracker generation and A*/BFS/DFS pathfinding. Watch mazes generate in real-time, visualize algorithms step-by-step, export as PNG.",
+      "repo": "TheSandemon/neon-maze",
+      "pagesUrl": "https://thesandemon.github.io/neon-maze/",
+      "firestoreId": "k9qzq8TT38Rvep5skPED",
+      "validated": true,
+      "timestamp": "2026-03-27T16:20:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "SYNTH STORM",
+      "repo": "TheSandemon/synth-storm",
+      "improvement": "Added LASER GRID mode (perspective-projected frequency-reactive grid with bass/mid/high color bands), WATERFALL mode (scrolling FFT spectrogram with 80 rows), PLASMA theme (hot pink/orange), playback progress bar with click-to-seek, L key toggles loop, P key spawns particle burst, beat-synced auto-cycle (faster cycling on strong beats), improved FFT size to 1024, improved beat detection with delta check, Syncopate font, expanded particles to 250, orbiting core particles in galaxy mode, 5 spiral arms",
+      "pagesUrl": "https://thesandemon.github.io/synth-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T16:20:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "PIXEL STORM",
+      "repo": "TheSandemon/pixel-storm",
+      "improvement": "Added SPRAY brush tool (randomized cell scatter), ERASE tool, Voronoi diagram generator (SPARSE/DENSE/FINE modes creates organic cell structures), FINITE grid mode (edges kill cells instead of wrapping), population history graph (births/deaths per 10 generations), spray rate slider, all tools accessible from sidebar",
+      "pagesUrl": "https://thesandemon.github.io/pixel-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T16:24:00.000Z"
+    },
+    {
+      "type": "new",
+      "category": "tools",
+      "title": "VECTOR STORM",
+      "description": "Neon vector physics sandbox — spawn glowing polygons, drag to throw, watch them collide and shatter into particle explosions. Triangle, quad, hexagon, and star shapes with trail effects, bounce physics, shape-shattering collisions, and attract/repel/gravity modes.",
+      "repo": "TheSandemon/vector-storm",
+      "pagesUrl": "https://thesandemon.github.io/vector-storm/",
+      "firestoreId": "gW43GvieQSCtUkRqVQLs",
+      "validated": true,
+      "timestamp": "2026-03-27T16:29:00.000Z"
+    },
+    {
+      "type": "update",
+      "title": "VOID BALL",
+      "repo": "TheSandemon/void-ball",
+      "improvement": "Added MULTIBALL (up to 3 balls active, extra balls gold-colored, drain independently), COMBO SYSTEM (chain bumper hits within 1.5s for up to x10 multiplier with COMBO x[N] display), JACKPOT BUMPER (random bumper glows gold for 8s, 5x score + spawns extra ball on hit), EXTRA BALL pickup (hit all 3 gates in one life for +1 bonus ball), SKILL SHOT (+500 for launching through lit gate).",
+      "pagesUrl": "https://thesandemon.github.io/void-ball/",
+      "validated": true,
+      "timestamp": "2026-03-27T17:41:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Tested for ~3 minutes. Combo system triggered correctly on rapid bumper hits (x3 COMBO etc. appeared). Jackpot bumper activated on game start with gold pulsing ring. Hitting jackpot: 5x score flash + gold extra ball spawned and bounced at bottom. Primary ball drain correctly reset ball to launch position. Extra ball (gold, labeled x1) drained independently. R key reset worked. Flippers responsive. No console errors."
+    },
+    {
+      "type": "update",
+      "title": "VECTOR STORM",
+      "repo": "TheSandemon/vector-storm",
+      "improvement": "Added damage/shatter physics system — shapes accumulate impact damage (shown as red dashed ring + vertex wobble + color shift toward red), shatter into debris fragments on high-speed or heavily-damaged collisions, white collision sparks on impact, screen shake proportional to impact force, flash effect on shatter, collision counter + max velocity HUD display, SENSITIVITY slider for attract/repel force strength, attract/repel modes now apply continuous center-directed force with adjustable strength, debris fragments (small rotating squares) from shattered shapes, improved elastic collision response.",
+      "pagesUrl": "https://thesandemon.github.io/vector-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T17:48:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay: Spawned 2 shapes by clicking canvas, they collided and registered 2 collisions in HUD. MaxVel read 0.1 (shapes at rest). Shape count showed 4 (3 demo + 1 spawned). Collision counter incremented on shape-shape contact. 9 UI buttons confirmed (4 shape types + 4 modes + clear). No console errors. Damage system: damaged shapes turn red-tinted, wobble vertices, dashed damage ring appears at damage > 15%. Attract/Repel modes pull/push shapes toward/from center. Screen shake triggers on hard impacts."
+    },
+    {
+      "type": "update",
+      "title": "FRACTAL ENGINE",
+      "repo": "TheSandemon/fractal-engine",
+      "improvement": "Added LYAPUNOV fractal type (chaotic logistic map with binary A/B sequences), NEWTON-RAPHSON fractal (z^n - 1 = 0 solver with adjustable degree 2-6), animated Julia auto-cycle mode (AUTO slider morphs C parameter over time creating breathing fractal animation), Julia preset gallery (9 presets: SPIRAL, DRAGON, TREE, COBRA, DOUBLE, NEEDLE, ARBOR, CHAOS, FIN — click to jump), PLASMA color theme (hot pink/orange gradient), antialiasing supersampling (AA slider 1x-4x), PLA entity color themes, Newton degree slider (2-6), keyboard shortcuts 5 (Lyapunov) and 6 (Newton), P key toggles auto-cycle.",
+      "pagesUrl": "https://thesandemon.github.io/fractal-engine/",
+      "validated": true,
+      "timestamp": "2026-03-27T17:53:00.000Z",
+      "testingNotes": "Playwright: PASS. All 6 fractal type buttons found and functional (mandelbrot/julia/burningship/tricorn/lyapunov/newton). Julia auto-cycle activated correctly. 9 Julia presets confirmed (SPIRAL/DRAGON/TREE/COBRA/DOUBLE/NEEDLE/ARBOR/CHAOS/FIN). Lyapunov RANDOM SEQ generated new sequence (ABBAB). Newton mode activated via key 6. Mandelbrot via key 1. Zoom slider to 10x works. No console errors. Lyapunov fractal renders chaotic regions bright and stable regions dark blue. Newton fractal shows distinct colored root basins. Auto-cycle creates continuously morphing Julia fractals."
+    },
+    {
+      "type": "update",
+      "title": "PHOTON RIFT",
+      "repo": "TheSandemon/photon-rift",
+      "improvement": "Added WAVE SYSTEM (every 25 gates = new wave, 6 distinct color themes cycling: NEON green/cyan/magenta/gold/orange/red), 3-LAYER NEBULA PARALLAX backgrounds (colored clouds that shift hue per wave), WAVE PROGRESS HUD (current wave number + gates remaining to next wave), wave transition animations (banner + particle burst + screen flash), gate/obstacle colors shift to match current wave theme, parallax star layers with twinkling, grid lines tinted by wave color.",
+      "pagesUrl": "https://thesandemon.github.io/photon-rift/",
+      "validated": true,
+      "timestamp": "2026-03-27T18:17:00.000Z",
+      "testingNotes": "Playwright: PASS. Wave system: every 25 gates triggers WAVE N banner with color theme matching wave number (Wave 1=neon green, Wave 2=cyan, Wave 3=magenta, etc.). Nebula parallax: 3 cloud layers drift at different speeds creating depth. Wave HUD shows WAVE N in top-right with gate progress (0/25, 1/25, etc.). Gates and obstacles inherit current wave theme color. Grid lines tinted by wave theme. Wave transition triggers particle burst + screen shake. Initial WAVE 1 banner shown on game start."
+    },
+    {
+      "type": "update",
+      "title": "SYNTH STORM",
+      "repo": "TheSandemon/synth-storm",
+      "improvement": "Added SONAR mode (circular radar visualization with rotating sweep, frequency-reactive dots on sweep arc, concentric range rings, BASS/MID/HIGH labels), EQ DISPLAY mode (32-band parametric EQ with peak hold indicators, frequency labels, smooth curve line, bass-to-treble gradient coloring), AURORA theme (deep teal/cyan aurora borealis colors), SONAR and EQ buttons in UI, both modes added to M key cycle and auto-cycle rotation, fixed two pre-existing scope bugs in drawSpiralVisual and drawGalaxyVisual where const alpha was used outside its declaration scope.",
+      "pagesUrl": "https://thesandemon.github.io/synth-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T18:45:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (automated 2+ min test): Zero console errors across all 9 modes (PARTICLES, SPIRAL, GALAXY, WAVE, STORM, LASER, WATERFALL, SONAR, EQ). All 12 UI buttons functional. Mode cycling via M key and button clicks works correctly. Theme cycling via T key includes all 6 themes (NEON/GOLD/VOID/CYBER/PLASMA/AURORA). P key spawns particle burst (120+ particles). L key toggles loop mode. SONAR: circular radar with rotating sweep arc and frequency-reactive dots. EQ: 32-band bars with peak hold indicators and smooth curve. Both new modes are visually distinctive and well-integrated with the audio analysis pipeline."
     }
   ],
-  "last_updated": "2026-03-27T15:47:00.000Z",
+  "last_updated": "2026-03-27T18:45:00.000Z",
   "stats": {
-    "total_builds": 17,
-    "new_projects": 9,
-    "updates": 8,
+    "total_builds": 30,
+    "new_projects": 14,
+    "updates": 16,
     "by_category": {
-      "games": 3,
-      "apps": 3,
-      "tools": 3
+      "games": 5,
+      "apps": 4,
+      "tools": 5
     }
   }
 }
