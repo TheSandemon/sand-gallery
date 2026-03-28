@@ -4,6 +4,30 @@
   "projects": [
     {
       "type": "new",
+      "category": "tools",
+      "title": "VOID LINK",
+      "description": "Verlet integration physics playground — place anchor points, draw rope constraints, create hanging chains and spring networks. Gravity, stiffness, damping, substep controls. Real-time constraint solving with node repulsion and wall collisions. Dark void aesthetic with gold anchors and neon green ropes.",
+      "repo": "TheSandemon/void-link",
+      "pagesUrl": "https://thesandemon.github.io/void-link/",
+      "firestoreId": "zPyZYNWN8R43JZZkSCof",
+      "validated": true,
+      "timestamp": "2026-03-28T04:08:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (automated interaction test): Canvas renders 1280x720. Demo spawns 14 nodes and 13 ropes correctly. Anchor placement increments node count. Rope tool creates constraints between anchor points. Grab tool allows dragging nodes. Gravity slider (0-3) adjusts physics. Pause (SPACE) toggles correctly. Node tool adds free particles. Wall tool creates collision boundaries. Stiffness slider (0.1-1.0) and damping slider (0.8-1.0) both functional. Rope length slider (20-200px) affects new rope creation. CLEAR removes all elements. RESET restores defaults. No console errors. Physics loop: Verlet integration with configurable substeps (1-16). Node-node repulsion prevents overlap. Wall collision with bounce response. Rope sag visualization when stretched beyond rest length. Demo: two hanging chains (one pinned anchor + 7-node chain, one pinned anchor + 5-node chain). Gold diamond anchors pulse with glow. Green neon nodes pulse. CRT scanlines and vignette overlay. Dark grid background. All 6 tools (ANCHOR/ROPE/NODE/WALL/GRAB/DELETE) functional."
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "SIGNAL DECAY",
+      "description": "Survival arena where you pilot a decaying signal through cascading interference. Absorb stable nodes to restore coherence, dodge red interference shapes, survive glitch zones, chain combos for up to x8 multipliers. Pulse burst (SPACE), phase shift (SHIFT), energy wave (E). Wave progression, combo scoring, Web Audio effects, dark void aesthetic with neon green/gold.",
+      "repo": "TheSandemon/signal-decay",
+      "pagesUrl": "https://thesandemon.github.io/signal-decay/",
+      "firestoreId": "ejKdrcdk3UBZ14YMKrvo",
+      "validated": true,
+      "timestamp": "2026-03-28T03:52:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (~3 min across waves 1-3): Signal decay is genuinely tense — constant pressure to absorb nodes while dodging interference. Phase shift (SHIFT) is a satisfying panic button with cyan ghost trail. Pulse burst (SPACE/click) creates punchy expanding ring with screen shake + audio. Energy wave (E, 20 energy) pushes all interference back — powerful but expensive. Glitch zones (wave 2+) are serious threats with constant signal drain. Combo multiplier (up to x8) rewards aggressive play. Score counter ticks up satisfyingly. Wave banner + chime on transitions. Particle trail behind player is gorgeous. CRT scanlines + vignette give premium feel. Chain nodes destroy nearby bad nodes for big bonus. Pulse nodes clear nearby interference. No console errors. Signal decay is well-balanced — survivable but constantly demanding attention."
+    },
+    {
+      "type": "new",
       "category": "games",
       "title": "VOID PULSE",
       "description": "Rhythm-reactive arena survival \u00e2\u20ac\u201d enemies spawn to the beat, dodge incoming fire, pulse your shield with SPACE, dash with SHIFT. Audio-reactive visuals, frequency bars, neon gold/green on void black.",
@@ -92,6 +116,16 @@
       "validated": true,
       "timestamp": "2026-03-27T19:40:00.000Z",
       "testingNotes": "Playwright: PASS. Canvas renders full viewport. 4 mode buttons and 5 tool buttons all functional. Drawing creates shapes with correct shape count tracking. Demo mode auto-generates shapes. Clear and undo functional. Minor: edge-case negative arc radius in CircleShape clamped with Math.max(0.1). Mirror mode fold lines drawn as dashed gold lines. Particle burst effects on shape creation. Background grid in dark charcoal with subtle gold lines. Radial/crystal/kaleido modes show guide rings and spokes."
+    },
+    {
+      "type": "update",
+      "title": "FRACTAL FOLD",
+      "repo": "TheSandemon/fractal-fold",
+      "improvement": "Added AUDIO REACTIVITY via microphone (AUDIO button or init on first audio use) — FFT analysis drives shape scaling (bass=bigger shapes), beat detection triggers particle bursts from shape centers, audio level modulates rotation speed. Added COLOR THEMES (T key cycles NEON/GOLD/CYBER/VOID) — complete CSS variable overhaul with distinct accent/neon/bg colors per theme. Added CONNECTION MESH (L key or MESH button) — draws lines between nearby shape instances within configurable distance (MESH D slider). Added TRAIL CANVAS — persistent afterglow effect via semi-transparent fade layer that composites onto main canvas. Added 2 new fold modes: FRACTAL (4×4 recursive subdivision grid that replicates shapes into 16 smaller instances) and TRIPLY (3-way rotational symmetry). Added STAR shape tool — 5-point star polygons with rotation animation. Added beat-reactive shape pulsing — shapes scale up on bass hits via beatPulse property. Added P key for PNG screenshot that composites trail + main canvas. Theme tag HUD element shows current theme name. All 6 fold modes (mirror/radial/crystal/kaleido/fractal/triply) and 6 draw tools (line/circle/triangle/rect/star/scatter) verified functional.",
+      "pagesUrl": "https://thesandemon.github.io/fractal-fold/",
+      "validated": true,
+      "timestamp": "2026-03-28T04:10:00.000Z",
+      "testingNotes": "Playwright: PASS. All 6 mode buttons confirmed (mirror/radial/crystal/kaleido/fractal/triply). All 6 tool buttons confirmed (line/circle/triangle/rect/star/scatter). Audio button and mesh button both present. Theme cycling (T key): GOLD->CYBER confirmed with theme-tag updating. Mesh toggle (L key): meshBtn gains active class correctly. Star tool activates on click. Fractal and triply modes activate correctly. Trail canvas element present. Mesh distance slider present. Zero console errors during mode cycling, drawing, theme changes, mesh toggle, and demo run. Code review: audioCtx + AnalyserNode created on user gesture (mic permission requested). Beat detection with adaptive threshold (beatCooldown=8 frames, beatThreshold tracks peak*0.9). Shapes get beatPulse=1.0 on beat, decay at 0.05/frame. Trail canvas fades at 15% per frame creating persistent neon glow. Mesh draws lines between shapes within meshDist pixels with alpha=(1-dist/meshDist)*0.25. 4 themes fully implemented with CSS variables and instant cycling. P key screenshot composites trail+main onto temp canvas before download."
     },
     {
       "type": "new",
@@ -612,15 +646,15 @@
       "testingNotes": "Playwright: PASS. Gameplay: Page loads with 'ORBITAL CONSTRUCTOR' title overlay, click-to-begin works cleanly. Canvas renders full viewport with parallax star field background. Type buttons (STAR/PLANET/GAS GIANT/MOON/COMET) all functional, correct type applied on body placement. PRESET loads a 4-body solar system (1 sun + 3 orbiting planets) with correct orbital velocities — planets visibly orbit the star. TRAILS toggle shows/hides orbital path trails correctly. CLEAR removes all bodies and resets body count. PAUSE halts all physics. Time controls (slow ◄◄ / fast ►►) change timeScale from 0.1x to 8x. Scroll zooms in/out centered on cursor. Middle-click drag pans camera. Right-click selects bodies. Delete key removes selected body. R resets camera to origin. Number keys 1-5 switch body types. SPACE pauses physics. All body types render distinctly: star has golden corona with 8 animated rays, gas giant has horizontal banded gradient, planet shows land mass patches, comet has directional tail based on velocity, moon is gray with subtle rim lighting. Orbital trails render as fading colored lines matching body type. Gravitational merge on collision works — bodies that touch combine with momentum conservation. SAVE downloads JSON of current bodies, LOAD restores from file. Body info panel shows mass, velocity, and orbital period for selected body. Zero console errors. No page errors. The physics simulation (N-body with velocity Verlet, 4 substeps) creates stable, visually satisfying orbits."
     }
   ],
-  "last_updated": "2026-03-28T03:43:00.000Z",
+  "last_updated": "2026-03-28T04:10:00.000Z",
   "stats": {
-    "total_builds": 51,
-    "new_projects": 24,
-    "updates": 30,
+    "total_builds": 54,
+    "new_projects": 26,
+    "updates": 31,
     "by_category": {
-      "games": 12,
+      "games": 13,
       "apps": 5,
-      "tools": 7
+      "tools": 8
     }
   }
 }
