@@ -348,6 +348,16 @@
     },
     {
       "type": "update",
+      "title": "ORBITAL DECAY",
+      "repo": "TheSandemon/orbital-decay",
+      "improvement": "Added VOID MOON ECLIPSE system — two orbiting void moons (at 120px and 200px radii, opposite orbit directions) that create a shadow cone eclipse zone. When a moon passes between the star and debris within 300px, the debris is ECLIPSED and cannot be absorbed — it bounces away with purple sparks and a low tone. The eclipse zone is visually shown as a dark radial shadow cone emanating from the star through the moon. Moons also gravitationally slingshot nearby debris with tangential force, and absorb/debris on contact (purple burst). Star touching a void moon deals 1 mass damage and pushes the star away. Continuous eclipse drain of 0.02 mass per 100ms when active. Added ECLIPSE indicator UI (top-left, pulsing purple text) and VOID MOONS ACTIVE indicator (top-right). Dual accretion disk rendering around each moon with craters and eclipse pulse rings when active.",
+      "pagesUrl": "https://thesandemon.github.io/orbital-decay/",
+      "validated": true,
+      "timestamp": "2026-03-28T04:55:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (12s automated test): Eclipse indicator toggles correctly based on moon positions. Mass drains at correct passive rate (~0.1/s when >30 mass). Eclipse blocks debris absorption when shadow cone aligns. Void moons visible with orbital rings. Moon slingshot gravity deflects nearby debris. Star collision with moon correctly applies mass damage. Zero console errors and zero page errors. Code review: VoidMoon.update() sets eclipseActive=true only when debris within 300px AND angleDiff<0.25 rad AND dist>orbitRadius*0.5. Eclipse drain fires via setInterval at 0.02/100ms when eclipseActive. absorb() checks this.eclipsed flag first — blocked debris bounces with velocity +5 away, purple sparks, and mass drain 0.3. Star collision in game loop pushes star away and deals 1 mass damage. Both moons render with orbital dash rings, crater details, and glow gradients. Eclipse shadow cone drawn as filled radial gradient arc. initVoidMoons() called on restart."
+    },
+    {
+      "type": "update",
       "title": "PIXEL STORM",
       "repo": "TheSandemon/pixel-storm",
       "improvement": "Added zoom/pan (scroll to zoom, shift+drag to pan), minimap overview with viewport indicator, live density graph tracking population over 200 generations, custom rule editor (B/S format) modal, rainbow age-based color mode, pattern library inject (Glider/LWSS/Pulsar/Gosper/Acorn/Diehard/R-pentomino), keyboard shortcuts (E=rules, F=fit, 1-5=rule sets), density stat in top bar, GitHub Pages rebuild to legacy static mode.",
