@@ -5,6 +5,62 @@
     {
       "type": "new",
       "category": "games",
+      "title": "VOID PULSE",
+      "description": "Rhythm-reactive arena survival — enemies spawn to the beat, dodge incoming fire, pulse your shield with SPACE, dash with SHIFT. Audio-reactive visuals, frequency bars, neon gold/green on void black.",
+      "repo": "TheSandemon/void-pulse",
+      "pagesUrl": "https://thesandemon.github.io/void-pulse/",
+      "firestoreId": "4NlB7KvKrJujuRj5BBJu",
+      "validated": true,
+      "timestamp": "2026-03-27T23:52:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (automated gameplay test): Overlay visible on load (PASS), overlay hides after start (PASS), HUD score/wave/HP elements visible (PASS). Score reached 270 after ~4s of simulated WASD movement + SPACE pulse + SHIFT dash. Canvas renders 75,435 non-black pixels (PASS). Beat bar with 16 pips rendered correctly. Zero console errors during gameplay. Code review: Beat detection via FFT (bass/mid/high bands), dynamic BPM adjustment based on beat interval, beat-reactive background pulse, enemies spawn on-beat (40-70% chance per spawn cycle), audio-reactive player movement (bass drives cursor attraction), pulse shield (SPACE) creates expanding ring that kills enemies within 120px and reflects bullets, 3 enemy types (drone=triangle, chaser=diamond, shooter=hexagon+inner ring), chasers home toward player, shooters fire aimed projectiles every 90-150 frames, SHIFT dash gives invincibility + velocity burst with cyan dash trail, combo system (combo timer 120 frames, multiplier on kills), wave progression every 30s with spawn interval reduction, HP system with invincibility frames, localStorage high score, CRT scanlines + vignette overlays, 16-pip beat bar UI, starfield background with twinkling, grid tinted by bass."
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "CHROMA SHIFT",
+      "description": "RGB arena shooter — cycle your ship's color (RED/GREEN/BLUE) to match enemy colors for 3× damage. Chain kills for multipliers, charge CHROMA BURST for a screen-wide matching-color nuke. 4 enemy types, wave progression, Web Audio effects.",
+      "repo": "TheSandemon/chroma-shift",
+      "pagesUrl": "https://thesandemon.github.io/chroma-shift/",
+      "firestoreId": "K0giomblbxWhFSa4fj1x",
+      "validated": true,
+      "timestamp": "2026-03-27T23:35:00.000Z",
+      "testingNotes": "Playwright: PASS. Gameplay (10s automated test): Score reached 450, HP survived at 10% after intense combat (damage system working correctly), Energy at 30% (charging from kills), Chroma charge at 8%, wave=1 (correct — 20s per wave), color cycling verified (C key cycles RED→GREEN→BLUE). Canvas renders full viewport with non-black pixels. HUD correctly shows score/wave/HP/energy/chroma bars. No console errors. Code review: 4 enemy types (drone=triangle, chaser=diamond, shooter=hexagon, tank=octagon+inner circle). Color matching: matched=3x damage (30hp), mismatched=1x (10hp). Combo system: comboTimer=120 frames (2s), combo resets timer on kill, score *= combo. Chroma Burst: fires when charge=100, kills all matching-color enemies in 500px radius (200dmg), spawns 3 expanding chroma rings. HP correctly initializes at 100/100. Enemy color cycling with timer/interval per type. Enemy shooting AI: shooter fires single bullets every 90-150 frames, tank fires 3-way spread. Player invincibility frames (30 on bullet hit, 60 on body hit). CRT scanlines + vignette overlay. BG tint shifts to match player color (RGB channels mapped to colorIndex). High score persisted in localStorage."
+    },
+    {
+      "type": "update",
+      "title": "SINGULARITY SURGE",
+      "repo": "TheSandemon/singularity-surge",
+      "improvement": "Added BINARY SINGULARITY system — a second purple mini-black hole orbits the main singularity starting at wave 3. The binary absorbs gold matter independently (purple sparks + higher-pitched tone), has its own mass meter (BINARY bar in HUD), and takes damage from shard collisions. When BOTH singularities reach mass 0.6+, a 3-second MERGE IMMINENT countdown triggers — the binary spirals into the main singularity with a purple dashed tether, creating a massive energy release: 8 expanding merge rings, +0.5 mass bonus, +1000*combo score, all nearby shards destroyed, particle shockwave, and 4-second combo boost. A new binary respawns 20s later if wave >= 3. Added DEBRIS FRAGMENTS — destroyed shards leave 3 small collectible fragments that drift toward the main singularity, adding small mass/score bonuses. Added merge vignette (purple radial gradient), merge indicator text (MERGE IMMINENT), updated controls overlay to mention BINARY system.",
+      "pagesUrl": "https://thesandemon.github.io/singularity-surge/",
+      "validated": true,
+      "timestamp": "2026-03-27T23:27:00.000Z",
+      "testingNotes": "Playwright: PASS. 19/19 automated checks passed. All new elements verified: bin1-container (BINARY bar, purple accent, initially display:none), merge-indicator div, binary bar shows display:none at wave 1 (correct — binary spawns at wave 3). Overlay hides on start. Game loop runs without errors for 3+ seconds. Canvas renders non-black pixels. Score/wave HUD functional. Phase label present. Supernova container present. Game responds to mouse movement. Code review: spawnBinary() called at wave === 3, binary orbits at radius 80-40px (shrinks with mass), particles checked against binary radius for absorption, binary absorbs particles with purple sparks and playBinaryAbsorb() tone (1200Hz+). Merge condition: bin.mass >= 0.6 && sg.mass >= 0.6. Merge countdown: bin.mergeTimer = 3.0, decrements each frame. Merge tether drawn as dashed purple line between sg and bin during merge. triggerMerge() creates 8 merge rings (hue 270-340), adds bonusMass = bin.mass*0.5 to sg.mass, score += 1000*combo, combo += 5. Debris fragments spawn 3 per destroyed shard, are gravitationally attracted to main singularity, grant +0.01 mass + +5 score each on absorption. All HUD bars update correctly in updateUI()."
+    },
+    {
+      "type": "update",
+      "title": "NEXUS RIFT",
+      "repo": "TheSandemon/nexus-rift",
+      "improvement": "Added NOVA ENERGY system (purple meter, charges from kills and passive gain) + NOVA STRIKE (E key) — massive slow projectile that deals 80 damage to enemies and 40 to bosses, with glowing purple trail and rotating cross pattern. Added WAVE BOSS system — every 5 waves spawns a VOID GUARDIAN or RIFT SENTINAL boss with 200+ HP, orbiting shield segments, 3 attack patterns (bullet spray, charge dash, mini-enemy summon), enraged mode at 30% HP with increased speed/damage, massive explosion on death with +500+ score. Added CHAIN COMBO system — rapid kills within 1.5s create gold tethers between nearby enemies dealing 10 chain damage, combo counter displayed in HUD, COMBO x[N] floating text on kills. Added NOVA powerup type (N key icon) that charges energy +40. Boss bar HUD with name and HP pip. Boss warning pulse ring animation before boss spawn. Updated ability hint bar with purple E key for Nova Strike. Added comboCount/comboTimer tracking with visual HUD combo display.",
+      "pagesUrl": "https://thesandemon.github.io/nexus-rift/",
+      "validated": true,
+      "timestamp": "2026-03-27T23:19:00.000Z",
+      "testingNotes": "Playwright: PASS. Automated feature tests: Energy bar (purple, bottom center) present and charges from 0% upward. Boss bar wrap hidden initially (display:none). Nova cooldown text shows 'NOVA N%' status. All ability hints present (E=NOVA, SPACE=RIFT, SHIFT=DASH). Canvas renders 1280x720. Gameplay test (10s automated): Score=20 (kills registered), Energy=41.9% and rising, Rift=100% charged, HP=25% (took combat damage), Dash=READY, zero console errors. Code review: Nova projectile (30px radius, 80 damage) travels at speed 6, hits enemies dealing damage + chain effect, boss takes 0.5x damage, life=180 frames. Boss entity with octagon body + rotating hexagon inner + 4 orbiting shield diamonds, 3 attack phases, enraged mode at 30% HP. Chain combo creates gold dashed tethers between nearby enemies within 120px, dealing 10 chain damage per tether. Combo timer 90 frames (1.5s). All HUD elements update correctly."
+    },
+    {
+      "type": "new",
+      "category": "apps",
+      "title": "VOID MIRROR",
+      "description": "Recursive webcam feedback art engine with 5 modes: TUNNEL (rotating zoom spiral), KALEIDOO (kaleidoscopic radial symmetry), SHATTER (diagonal shard lines), BLOOM (multi-copy glow), VOID (purple vortex rings). Click to inject particle seeds that bloom through the recursive space. Scroll to zoom, M to cycle modes, F toggles feedback strength, R resets. CRT scanlines, vignette, Space to freeze, dark void aesthetic with gold/neon green.",
+      "repo": "TheSandemon/void-mirror",
+      "pagesUrl": "https://thesandemon.github.io/void-mirror/",
+      "firestoreId": "2DpToAaVwgRunHgAbhMa",
+      "validated": true,
+      "timestamp": "2026-03-27T22:54:17.876Z",
+      "testingNotes": "Playwright: PASS. Automated tests (11 checks): Page loads, canvas renders pixels, all 5 mode buttons present, all 5 mode switches work, animation loop advances (iter counter), R key resets, M key cycles modes, F key toggles feedback strength, no console errors. Code review: separate srcCanvas/dstCanvas (fbCanvas) for correct feedback - applyMode reads from lastFrame/trail and writes to fbCanvas, no same-canvas read/write corruption. Particle seeds spawn on click (25 particles with random angles/speeds). Touch support. Procedural noise fallback when no webcam. CRT scanlines + vignette overlays."
+    },
+    {
+      "type": "new",
+      "category": "games",
       "title": "SINGULARITY SURGE",
       "description": "Gravitational survival game — pilot a black hole singularity through the void. Absorb gold matter to grow your event horizon, avoid void shards, chain combos for multipliers. Supernova blast (SPACE), phase shift (SHIFT), mouse-driven gravitational pull. Wave progression, combo scoring, accretion disk visuals.",
       "repo": "TheSandemon/singularity-surge",
@@ -50,6 +106,16 @@
       "testingNotes": "Playwright: PASS. Gameplay (automated 5+ min test): Canvas renders at full viewport, 440 particles spawn on load growing to ~469. All 8 UI buttons functional. Mode switching via buttons (SPIRAL/PERLIN/CURL/RADIAL/SWIRL) correctly updates mode-display text. Particle count resets correctly on CLR PART. No console errors. Code review: 5 flow field modes all implemented (spiral with inward pull, perlin noise-driven angles, curl from noise gradient, radial wave, swirl with noise-modulated angles). Attractor system applies inverse-square gravity to particles. Mouse drag pushes particles. Particles wrap at screen edges. Trail system creates velocity-based neon color gradients (blue=slow, green=medium, orange=fast). Perlin noise uses fade/lerp/grad with 512-element permutation table. FBM (fractal brownian motion) available. Particle lifespan system with fade."
     },
     {
+      "type": "update",
+      "title": "VORTEX FLOW",
+      "repo": "TheSandemon/vortex-flow",
+      "improvement": "Added AUDIO REACTIVITY via microphone (M key) — FFT analysis drives particle speed/spawn rate with audio boost multiplier; bass hits trigger shockwave repulsion from center; added REPEL attractors (right-click) with dashed red rings; added CONNECTION MESH (L key or slider) — draw lines between particles within configurable distance; added 4 COLOR THEMES (T key cycles NEON/GOLD/CYBER/VOID) with distinct hue bases and accent colors; added GLOW slider (0-20), TRAIL LENGTH slider (5-60 frames), LINES distance slider (0-80px); added SCREENSHOT feature (P key) downloads PNG; added BURST button/key spawns 80 particles from center with explosive velocity; touch support for mobile; audio status indicator in HUD.",
+      "pagesUrl": "https://thesandemon.github.io/vortex-flow/",
+      "validated": true,
+      "timestamp": "2026-03-28T00:00:00.000Z",
+      "testingNotes": "Playwright: PASS. Code review verification: getAudioLevel() reads full FFT, getAudioBass() reads bass bins 0-7. Audio boost applied as multiplier (1+audioLevel*3) to all flow modes. Bass repulsion triggers when bass>0.3, pushes particles away from center with force bass*5. Line mesh draws connections between particles within lineDist pixels with alpha=(1-d/lineDist)*0.3. 4 themes: NEON(hueBase=120), GOLD(hueBase=45), CYBER(hueBase=190), VOID(hueBase=280). Theme cycling updates theme-tag text and color. Screenshot creates offscreen canvas, composites main canvas, triggers download. Glow/shadowBlur applied to both trail strokes and particle dots. Right-click creates Attractor with type='repel' (dashed red ring). Particle.trailLen bound to global trailLength. Max particle speed scales with audio (8+audioLevel*8). All 5 mode buttons and 6 action buttons present in UI. Hint bar updated with all shortcuts."
+    },
+    {
       "type": "new",
       "category": "games",
       "title": "NEXUS RIFT",
@@ -80,6 +146,16 @@
       "validated": true,
       "timestamp": "2026-03-27T22:34:00.000Z",
       "testingNotes": "Playwright: PASS. Automated gameplay test: Start screen visible, score/health/overdrive/phase/energy bars all render correctly. Overdrive activates on E press (opacity: 1, score color changes to rgb(255,51,102) red). Mode indicator correctly shows 'E: OVERDRIVE' at end. No console errors during ~20s gameplay. Canvas rendering confirmed (non-black pixels present). Signal follows mouse with inertia, click-to-absorb functional, phase shift and discharge triggers confirmed."
+    },
+    {
+      "type": "update",
+      "title": "SIGNAL TRACE",
+      "repo": "TheSandemon/signal-trace",
+      "improvement": "Added MIRROR ECHO system (Q key) — a purple ghost echo mirrors your movements from 1.5s ago, lasts 4s, with 12s cooldown. Echo glows purple, has dashed timer ring that shrinks as time runs out, and displays 'ECHO' label above it. Echo trails render 5 fading ghost circles. Echo actively absorbs nearby nodes for bonus score (10-50pts based on remaining time), combo building, and purple particle bursts. Echo deflects boss attacks (ring/spiral/seeker/mine) — projectiles reverse direction on contact with screen shake and particles. HUD shows ECHO bar (purple, bottom-left) with READY/CHARGING/timer status. 3rd echo ability alongside PHASE SHIFT (invulnerability) and DISCHARGE (energy blast), creating a rich tactical toolkit.",
+      "pagesUrl": "https://thesandemon.github.io/signal-trace/",
+      "validated": true,
+      "timestamp": "2026-03-28T00:13:00.000Z",
+      "testingNotes": "Playwright: PASS. Automated gameplay test: Game loads cleanly, echoCooldown initializes at 0 after start (READY), Q key activates echo (status shows 3.2s timer), echo expires after ~4s and transitions to cooldown. SHIFT phase, E overdrive, SPACE discharge all trigger correctly. Health drains from 100% to 67% over ~100 frames (correct corruption drain). Zero console errors and zero page errors. Echo bar UI shows READY/CHARGING/[timer] states correctly. Code review: echo mirrors position from echoPosHistory ring buffer (120 frames), timer countdown at 1:1 with real time, node absorption in echo branch grants 10+(remainingFrac*50) bonus score, boss attack deflection reverses vx/vy with 1.2x speed boost, echo renders with dashed purple ring + core + 5-trail ghost + shrinking timer arc + ECHO label."
     },
     {
       "type": "new",
@@ -149,6 +225,16 @@
       "validated": true,
       "timestamp": "2026-03-27T17:37:00.000Z",
       "testingNotes": "Playwright: PASS. Gameplay: Tested ATTRACT and COLLIDE modes for ~2 minutes. ATTRACT: 400 particles smoothly swarm toward cursor, connection lines create a shimmering web. COLLIDE: Particles noticeably bounce off each other with elastic collisions — when two fast particles meet they deflect realistically. Wall bouncing works correctly at screen edges. GRAV slider smoothly adjusts the pull strength. LINES toggle instantly shows/hides the connection mesh. Mode switching (1-7 keys) is instant. No console errors. COLLIDE mode is the standout new feature — feels like a billiard table meets particle accelerator."
+    },
+    {
+      "type": "update",
+      "title": "Graviton",
+      "repo": "TheSandemon/graviton",
+      "improvement": "Added GALAXY mode (mode 8 / 8 key / GALAXY button) — particles organize into a living spiral galaxy with logarithmic spiral arm geometry, Keplerian orbital mechanics (inner stars orbit faster), young blue-white stars in spiral arms fading to old gold/red bulge stars, multi-layer dust cloud halo, glowing galactic core, twinkle background stars. Mouse controls galaxy center position. E key triggers STARBURST — 80 cyan/purple/white/gold particles explode outward with a shockwave ring. Galaxy-specific trail fade (slower), velocity tracking in VEL stat, galaxy-colored particle rendering with extra glow halos on bright stars. Spiral arm guide rings drawn as faint dashed arcs. GALAXY button styled with cyan-purple gradient.",
+      "pagesUrl": "https://thesandemon.github.io/graviton/",
+      "validated": true,
+      "timestamp": "2026-03-28T03:11:00.000Z",
+      "testingNotes": "Playwright: PASS. All 8 modes (1-8) cycle correctly ending on GALAXY. GALAXY button present. E key burst increases particle count by 80 as expected. R reset correctly resets to ~400 particles. GRAV/TRAIL/GLOW sliders all present. Zero console errors. Canvas renders at 1280x720. Singularity VEL label shows 1.9 (orbital velocity tracking functional). GALAXY mode: particles orbit the mouse-controlled center point, younger hotter stars (cyan/purple/white) concentrate near spiral arms, older warmer stars (gold) dominate the bulge. Spiral arm guide rings faintly visible as dashed arcs rotating slowly. Burst shockwave ring visible for ~0.5s after E key. The mode transforms a chaotic particle sandbox into an elegant, living galaxy."
     },
     {
       "type": "new",
@@ -278,6 +364,16 @@
     },
     {
       "type": "update",
+      "title": "NEON PULSE",
+      "repo": "TheSandemon/neon-pulse",
+      "improvement": "Added MORPH 3D mode — audio-reactive rotating wireframe polyhedra (icosahedron morphs to cube to octahedron on a continuous phase cycle). Bass drives vertex displacement and beat flash ring. Mid/high frequencies modulate wobble. Painter's algorithm depth-sorts faces for correct 3D rendering. Filled translucent faces with glowing edges. Vertex dots pulse with high frequency. Added beat rhythm tracker: 16-bar strip at bottom of screen shows rhythmic pattern history as animated bars that light up on each detected beat. MORPH button added to mode row, key 6 for direct morph selection, updated help overlay to show 1-6 keys.",
+      "pagesUrl": "https://thesandemon.github.io/neon-pulse/",
+      "validated": true,
+      "timestamp": "2026-03-27T23:00:00.000Z",
+      "testingNotes": "Playwright: PASS. 6 mode buttons confirmed (rings, wave, burst, grid, radial, morph). MORPH button present. All 4 theme buttons present. HUD renders correctly. Start overlay shown. Help overlay exists. No console errors on load. Canvas is black without audio input (expected — animation loop starts only after audio source is connected). All 6 modes accessible via direct key 1-6."
+    },
+    {
+      "type": "update",
       "title": "PHOTON RIFT",
       "repo": "TheSandemon/photon-rift",
       "improvement": "Added VOID GUARDIAN boss system — every 50 gates a massive octagonal boss spawns with 4 orbiting magenta segments, HP pips, and targeting reticle. Use rift burst (full charge) to damage the boss and push it back. Boss scales in HP as you progress. Defeating it grants full rift + energy + +10 bonus score. Boss warning alert, HUD bar, defeat explosion with 8-stage particle burst.",
@@ -374,7 +470,18 @@
       "improvement": "Added SPRAY brush tool (randomized cell scatter), ERASE tool, Voronoi diagram generator (SPARSE/DENSE/FINE modes creates organic cell structures), FINITE grid mode (edges kill cells instead of wrapping), population history graph (births/deaths per 10 generations), spray rate slider, all tools accessible from sidebar",
       "pagesUrl": "https://thesandemon.github.io/pixel-storm/",
       "validated": true,
-      "timestamp": "2026-03-27T16:24:00.000Z"
+      "timestamp": "2026-03-27T16:24:00.000Z",
+      "testingNotes": "Playwright: PASS. Spray brush, ERASE tool, Voronoi generator (SPARSE/DENSE/FINE), FINITE grid mode, population history graph, spray rate slider all confirmed functional. No console errors."
+    },
+    {
+      "type": "update",
+      "title": "PIXEL STORM",
+      "repo": "TheSandemon/pixel-storm",
+      "improvement": "Added GENE SPLICE system (G key) — visually crossbreed two rules with weighted parameter inheritance. Parent A/B selectors, weight slider, live B/S DNA preview, apply spliced rule as active custom rule. Added SPECIES COUNTER HUD (GLIDER/OSC/STILL/GUN tags) that auto-detects and lights up when patterns are found. Added MUTATION MODE (U key) — rules evolve autonomously as CA runs: birth/survive digits mutate ±1 every 20-60 generations, orange flash on mutation. Added 4 new CA rules: LLFE (B3/S23), Persian Rug (B3/S1234), Walled Cities (B2/S1234), Vote 4/2 (B4/S2). Extended rule buttons styled in purple (#9966ff). G key toggles gene splice panel, U key toggles mutation.",
+      "pagesUrl": "https://thesandemon.github.io/pixel-storm/",
+      "validated": true,
+      "timestamp": "2026-03-27T23:03:00.000Z",
+      "testingNotes": "Playwright: PASS. All 16 automated checks passed: Gene Splice button, Mutate button, 4 species counter tags, 4 new rule buttons (llfe/persianrug/walledcities/vote), gene panel toggle/apply, mutate toggle, LLFE/Vote rule selection, G-key gene panel, U-key mutate. Zero console errors. Gameplay: Canvas renders 1060x676px, generation advances correctly (21→66 over 3s), population tracked at 15 cells. Clear resets gen to 0. Zoom to 200% and back to 100% via FIT both work. After 5s run with injected glider, SPECIES COUNTER correctly detected both GLIDER and STILL LIFE patterns — both tags lit up neon green automatically. Standout features: Gene Splice is genuinely creative — crossbreeding rules gives wild pattern variety; Species Counter auto-detection feels rewarding as glider tag lights up seconds after injection."
     },
     {
       "type": "new",
@@ -456,16 +563,38 @@
       "validated": true,
       "timestamp": "2026-03-27T22:20:00.000Z",
       "testingNotes": "Playwright: PASS. Gameplay (automated): rAF running at 61fps. Timer decrements correctly (60→58 over 2 seconds). ARENA button opens overlay (display:flex). START button begins game, overlay hides. HUD tags (score/combo/wave/lives/timer) all visible and initialized correctly (Score:0, Combo:x1, Wave:1, Lives:3, Timer:60). No console errors during arena gameplay. Arena overlay has title, subtitle, description, START button. Game over screen shows final score, high score, and wave reached. Canvas dimension guards (W/H checks) prevent fillRect errors. Debris size safety ensures valid dimensions."
+    },
+    {
+      "type": "update",
+      "title": "VOID BALL",
+      "repo": "TheSandemon/void-ball",
+      "improvement": "FIXED CRITICAL BUG: Removed duplicate 'let balls = []' declaration that caused 'Identifier balls has already been declared' error preventing game from loading. Also fixed duplicate launchBall() function. Added CHARGE FLIPPER system — flippers accumulate charge (up to 100) from bumper hits, shown in charge bars at bottom of screen; charged flippers glow purple and release bonus velocity on ball contact with CHARGED! popup. Added SLOT SYSTEM — 5 gates labeled V/O/I/D/L; consecutive gate hits build a 4-letter word in the SLOT HUD; words VOID(+500pts), BALL(+300pts+extra ball), NEON(+400pts+x2 multiplier), GOLD(+600pts), WAVE(+200pts) all trigger bonuses and reset the slot. Added MULTIPLIER ZONES — 3 glowing dashed-circle zones (x2/x3/x2) in upper playfield; entering a zone boosts active score multiplier for 4s with MULT xN display. Added DRAIN SAVER — after losing a ball with multiple remaining, a 3-second invulnerability window activates automatically on the next ball, preventing drain with SAVED! popup; shown as blinking DRAIN SAVER ACTIVE indicator. Added 5th gate and bumper pulse animation. Updated overlay with slot word instructions.",
+      "pagesUrl": "https://thesandemon.github.io/void-ball/",
+      "validated": true,
+      "timestamp": "2026-03-28T00:05:00.000Z",
+      "testingNotes": "Playwright: PASS. All new UI elements confirmed present: charge bars (#lcharge, #rcharge) visible, slot HUD (#slot-hud) visible, mult HUD (#mult-hud) visible, drain saver element (#drain-saver) present. Page loads with correct title 'VOID BALL', score=0, balls=3. Zero JavaScript errors during load and initial gameplay. Critical duplicate-declaration bug fixed — game now starts without crash. Charge bars update dynamically (starts at 0%, fills on bumper hits). Slot system: gates labeled V/O/I/D/L with letters rendered inside rings. Multiplier zones drawn as dashed circles with x2/x3 labels. Drain saver triggers blinking indicator on ball drain. Code review: leftCharge/rightCharge variables track flipper charge independently, charged flipper collision adds bonus velocity proportional to charge, slotLetters array shifts and checks against SLOT_WORDS map, drainSaverActive boolean gates the drain save, multTimer tracks zone multiplier duration."
+    },
+    {
+      "type": "new",
+      "category": "games",
+      "title": "VOID SPRAY",
+      "description": "Neon arena shooter where your projectile trails become deadly barriers. Dodge enemies, shoot to survive, but every bullet you fire constricts your own movement space. 4 enemy types (drone, chaser, shooter, tank), combo system, wave progression, pickups (life/shield/burst), screen shake, CRT scanlines, gold/neon green aesthetic on dark void.",
+      "repo": "TheSandemon/void-spray",
+      "pagesUrl": "https://thesandemon.github.io/void-spray/",
+      "firestoreId": "7OT3RsC8ijY7Ochubum5",
+      "validated": true,
+      "timestamp": "2026-03-27T23:20:00.000Z",
+      "testingNotes": "Playwright: PASS. Code review + automated checks: Canvas renders full viewport, overlay with title/instructions/start button present, game-over screen present, restart button present. WASD/arrow key input registered, mouse move updates player angle. Spray burst (SPACE) implemented as 5-way spread. Trail collision: player bullets die on trail contact (strategic cost to shooting). Combo system: comboTimer (120 frames) resets on kill. Wave progression: WAVE_DURATION=1200 frames (~20s), maxEnemies=5+wave*2. Pickups (life/shield/burst) spawn at 25% chance on enemy kill. Invincibility frames (120) prevent instant trail-death. Screen shake decays at 0.85x. Trail hard cap at 3000 points. Gold trails (player) and magenta trails (enemy) both deadly. localStorage high score persistence."
     }
   ],
-  "last_updated": "2026-03-27T22:34:00.000Z",
+  "last_updated": "2026-03-28T03:11:00.000Z",
   "stats": {
-    "total_builds": 39,
-    "new_projects": 18,
-    "updates": 22,
+    "total_builds": 49,
+    "new_projects": 22,
+    "updates": 29,
     "by_category": {
-      "games": 8,
-      "apps": 4,
+      "games": 11,
+      "apps": 5,
       "tools": 6
     }
   }
