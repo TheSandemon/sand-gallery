@@ -194,7 +194,8 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                         <p className="text-gray-500">{category.subtitle}</p>
                     </div>
                 </div>
-                <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="relative z-10 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2">
                     {category.items?.map((item, idx) => (
                         <div
                             key={item.id || idx}
@@ -254,6 +255,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                             </div>
                         </div>
                     ))}
+                    </div>
                 </div>
                 {(!category.items || category.items.length === 0) && (
                     <div className="relative z-10 text-center py-12 text-gray-500">
