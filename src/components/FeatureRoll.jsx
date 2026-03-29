@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const FeatureRoll = () => {
     const [videos, setVideos] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isLoaded, setIsLoaded] = useState(false);
-    const videoRef = useRef(null);
-    const nextVideoRef = useRef(null);
+    const [previousIndex, setPreviousIndex] = useState(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
     // Fetch videos from feature_roll category
     useEffect(() => {
@@ -29,51 +28,55 @@ const FeatureRoll = () => {
         fetchVideos();
     }, []);
 
-    // Handle video transition
+    // Handle video transition - start cross-fade
     const handleVideoEnd = () => {
         if (videos.length > 1) {
+            setPreviousIndex(currentIndex);
             setCurrentIndex((prev) => (prev + 1) % videos.length);
-            setIsLoaded(false);
+            setIsTransitioning(true);
         }
     };
 
-    const handleCanPlay = () => {
-        setIsLoaded(true);
-    };
+    // Clear previous video after cross-fade transition completes
+    useEffect(() => {
+        if (isTransitioning) {
+            const timer = setTimeout(() => {
+                setPreviousIndex(null);
+                setIsTransitioning(false);
+            }, 2000); // Match transition duration
+            return () => clearTimeout(timer);
+        }
+    }, [isTransitioning]);
 
     if (videos.length === 0) {
         return null;
     }
 
     const currentVideo = videos[currentIndex];
-    const nextVideo = videos[(currentIndex + 1) % videos.length];
 
     return (
         <div className="fixed inset-0 z-[-1] overflow-hidden">
-            {/* Current Video */}
+            {/* Previous Video (fading out during transition) */}
+            {previousIndex !== null && (
+                <video
+                    key={`prev-${videos[previousIndex].id}`}
+                    src={videos[previousIndex].url}
+                    autoPlay
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover animate-fade-out"
+                />
+            )}
+
+            {/* Current Video (fading in during transition) */}
             <video
-                ref={videoRef}
                 key={currentVideo.id}
                 src={currentVideo.url}
                 autoPlay
                 muted
-                loop={videos.length === 1}
+                loop={videos.length === 1 && !isTransitioning}
                 onEnded={handleVideoEnd}
-                onCanPlay={handleCanPlay}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className="absolute inset-0 w-full h-full object-cover animate-fade-in"
             />
-
-            {/* Next Video (preloaded, for seamless transition) */}
-            {videos.length > 1 && (
-                <video
-                    ref={nextVideoRef}
-                    key={`next-${nextVideo.id}`}
-                    src={nextVideo.url}
-                    preload="auto"
-                    muted
-                    className="absolute inset-0 w-full h-full object-cover opacity-0"
-                />
-            )}
 
             {/* Dark Overlay */}
             <div className="absolute inset-0 bg-black/30" />
