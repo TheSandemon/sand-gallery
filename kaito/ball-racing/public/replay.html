@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ball Racing Replay</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: #0a0a15;
+      color: #fff;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #ff3333, #3333ff, #ffcc00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .race-info {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    
+    .race-info span {
+      color: #fff;
+    }
+    
+    video {
+      width: 100%;
+      max-width: 1200px;
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(100, 100, 255, 0.2);
+    }
+    
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    button {
+      background: #222;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    
+    button:hover {
+      background: #333;
+      border-color: #666;
+    }
+    
+    .bet-link {
+      margin-top: 30px;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .bet-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      color: #555;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="raceTitle">Ball Racing Championship</h1>
+  <div class="race-info">
+    Track: <span id="trackName">Loading...</span> | 
+    Winner: <span id="winner">TBD</span>
+  </div>
+  
+  <video id="replayVideo" controls autoplay>
+    <source src="" type="video/webm">
+    Your browser does not support video playback.
+  </video>
+  
+  <div class="controls">
+    <button onclick="skipToEnd()">Skip to Finish</button>
+    <button onclick="toggleLoop()">Loop</button>
+  </div>
+  
+  <a id="betLink" class="bet-link" href="#" target="_blank">
+    Bet on Polymarket →
+  </a>
+  
+  <footer>
+    Ball Racing Simulation | Powered by Physics AI
+  </footer>
+  
+  <script>
+    // Parse metadata from URL or embedded data
+    const params = new URLSearchParams(window.location.search);
+    const replayUrl = params.get('replay') || '';
+    const metadataUrl = params.get('meta') || '';
+    
+    const video = document.getElementById('replayVideo');
+    
+    if (replayUrl) {
+      video.src = replayUrl;
+    }
+    
+    // Load metadata if available
+    if (metadataUrl) {
+      fetch(metadataUrl)
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('trackName').textContent = data.trackName || 'Unknown Track';
+          document.getElementById('winner').textContent = data.winner || 'TBD';
+          document.title = `${data.trackName || 'Ball Racing'} - Race Replay`;
+          
+          // Update bet link if we have a market ID
+          if (data.marketId) {
+            document.getElementById('betLink').href = `https://polymarket.com/market/${data.marketId}`;
+          }
+          
+          // Update race title
+          if (data.trackName) {
+            document.getElementById('raceTitle').textContent = `${data.trackName} Championship`;
+          }
+        })
+        .catch(console.error);
+    }
+    
+    function skipToEnd() {
+      video.currentTime = video.duration * 0.95;
+    }
+    
+    function toggleLoop() {
+      video.loop = !video.loop;
+    }
+  </script>
+</body>
+</html>

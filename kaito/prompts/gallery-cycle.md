@@ -96,8 +96,12 @@ Open the URL and play for 2-3 minutes. Try all controls. Report observations per
 ### Step 7: Add to Firestore (ONLY after both validations pass)
 ```bash
 cd C:\Users\Sand\.openclaw\workspace\kaito
-node scripts/add-to-gallery.js [category] "[title]" "[description]" "https://github.com/TheSandemon/[repo-name]" "" [type]
+node scripts/add-to-gallery.js [category] "[title]" "[description]" "TheSandemon/[repo-name]" "" [type]
 ```
+
+**IMPORTANT**: The 4th argument (githubRepo) must be `owner/repo` format — NOT the full GitHub URL.
+- ✅ Correct: `TheSandemon/quantum-weave`
+- ❌ Wrong: `https://github.com/TheSandemon/quantum-weave`
 
 ### Step 8: Update gallery-builds.json
 Include testingNotes with your actual gameplay observations.

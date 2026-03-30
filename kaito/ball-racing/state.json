@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-03-30T06:53:00Z",
+  "status": "building",
+  "gaps": [
+    {
+      "id": "gap-001",
+      "section": "quality_gates",
+      "description": "Module quality_gates does not exist",
+      "severity": "high",
+      "created": "2026-03-30T07:09:40.676Z",
+      "bibleSection": "Quality gates defined for race, replay, and market",
+      "resolved": true,
+      "resolvedAt": "2026-03-30T08:05:22.810Z"
+    },
+    {
+      "id": "gap-002",
+      "section": "cron_network",
+      "description": "Module cron_network does not exist",
+      "severity": "high",
+      "created": "2026-03-30T07:09:40.676Z",
+      "bibleSection": "Gap-finder, ideator, tester, committer crons documented",
+      "resolved": true,
+      "resolvedAt": "2026-03-30T09:04:41.055Z"
+    }
+  ],
+  "ideas": [
+    {
+      "id": "idea-001",
+      "gapId": "gap-001",
+      "section": "quality_gates",
+      "description": "Fix quality_gates: Module quality_gates does not exist",
+      "status": "rejected",
+      "category": "needs-research",
+      "testResult": "failed - needs redesign",
+      "created": "2026-03-30T07:09:50.638Z",
+      "testedAt": "2026-03-30T08:05:22.810Z"
+    },
+    {
+      "id": "idea-002",
+      "gapId": "gap-002",
+      "section": "cron_network",
+      "description": "Fix cron_network: Module cron_network does not exist",
+      "status": "approved",
+      "category": "needs-research",
+      "testResult": "passed",
+      "created": "2026-03-30T07:09:50.639Z",
+      "testedAt": "2026-03-30T09:04:41.054Z"
+    }
+  ],
+  "approved": [],
+  "races": [],
+  "currentBuild": {
+    "branch": "main",
+    "lastCommit": null,
+    "testsPassing": false,
+    "endToEndPassing": false
+  },
+  "nextRace": null,
+  "stats": {
+    "racesCompleted": 0,
+    "marketsCreated": 0,
+    "marketsResolved": 0
+  }
+}

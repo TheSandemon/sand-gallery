@@ -4,6 +4,18 @@
   "projects": [
     {
       "type": "new",
+      "category": "games",
+      "title": "QUANTUM WEAVE",
+      "description": "Entangled dual-reality maze — two particles mirror each other in opposite screen halves. Collect gates with BOTH particles simultaneously. Chain combos for multipliers up to x8. Audio-reactive walls pulse to microphone input. Phase shift (Q) for invulnerability, burst (SPACE) to push walls. Procedural maze generation per level, CRT scanlines, neon cyan/magenta/gold aesthetic.",
+      "repo": "TheSandemon/quantum-weave",
+      "pagesUrl": "https://thesandemon.github.io/quantum-weave/",
+      "firestoreId": "dclXtDbs62KbmIqjygJ2",
+      "validated": true,
+      "timestamp": "2026-03-28T05:23:00.000Z",
+      "testingNotes": "Playwright: PASS. Code review: Maze generation via recursive backtracker creates fully-connected labyrinths with walls as line segments. Entanglement: mirror.x = W - particle.x, mirror.y = H - particle.y ensures perfect opposite positioning. Both particles collide with walls independently (circleWallCollision checks each separately). Gate collection requires both particles to pass through the SAME gate location — each gate has c1 and c2 progress tracked separately. Combo/multiplier system: combo++ on each gate collect, multiplier = min(8, 1 + floor(combo/2)), comboTimer=120 frames (2s). Phase shift (Q) grants 180-frame invulnerability with dashed outer ring visual. Burst (SPACE) creates expanding ring (burstRadius += 12/frame) that pushes walls — pushForce = max(0, 1 - burstRadius/300) * 8. Audio via getUserMedia mic input, analyser.fftSize=256, bass from bins 0-7, mid from bins 8-31. Beat detection triggers beatPulse (bass > 0.6 && beatCooldown === 0). Walls glow with bass-driven shadowBlur (8 + bass*15) and purple stroke. Gates pulse with bass. CRT scanlines (3px spacing, 3% black). Vignette via radial gradient. Particle effects spawn on wall collision (5 cyan particles), gate collection (20 green + 10 gold), and level complete (50 particles each). Level complete triggers when collectedGates >= totalGates, awards bonus = timeLeft * 20 * level. Timer counts down from 60s, game over when timeLeft <= 0. Game over overlay shows final score and level reached. R key restarts level. Starfield background (150 stars with twinkle). Grid lines with bass-reactive alpha. HUD shows gate progress bars for both particles separately (c1/c2), score, multiplier, phase active indicator."
+    },
+    {
+      "type": "new",
       "category": "tools",
       "title": "VOID LINK",
       "description": "Verlet integration physics playground — place anchor points, draw rope constraints, create hanging chains and spring networks. Gravity, stiffness, damping, substep controls. Real-time constraint solving with node repulsion and wall collisions. Dark void aesthetic with gold anchors and neon green ropes.",
@@ -656,13 +668,13 @@
       "testingNotes": "Playwright: PASS. Gameplay: Page loads with 'ORBITAL CONSTRUCTOR' title overlay, click-to-begin works cleanly. Canvas renders full viewport with parallax star field background. Type buttons (STAR/PLANET/GAS GIANT/MOON/COMET) all functional, correct type applied on body placement. PRESET loads a 4-body solar system (1 sun + 3 orbiting planets) with correct orbital velocities — planets visibly orbit the star. TRAILS toggle shows/hides orbital path trails correctly. CLEAR removes all bodies and resets body count. PAUSE halts all physics. Time controls (slow ◄◄ / fast ►►) change timeScale from 0.1x to 8x. Scroll zooms in/out centered on cursor. Middle-click drag pans camera. Right-click selects bodies. Delete key removes selected body. R resets camera to origin. Number keys 1-5 switch body types. SPACE pauses physics. All body types render distinctly: star has golden corona with 8 animated rays, gas giant has horizontal banded gradient, planet shows land mass patches, comet has directional tail based on velocity, moon is gray with subtle rim lighting. Orbital trails render as fading colored lines matching body type. Gravitational merge on collision works — bodies that touch combine with momentum conservation. SAVE downloads JSON of current bodies, LOAD restores from file. Body info panel shows mass, velocity, and orbital period for selected body. Zero console errors. No page errors. The physics simulation (N-body with velocity Verlet, 4 substeps) creates stable, visually satisfying orbits."
     }
   ],
-  "last_updated": "2026-03-28T04:10:00.000Z",
+  "last_updated": "2026-03-28T05:23:00.000Z",
   "stats": {
-    "total_builds": 54,
-    "new_projects": 26,
+    "total_builds": 55,
+    "new_projects": 27,
     "updates": 31,
     "by_category": {
-      "games": 13,
+      "games": 14,
       "apps": 5,
       "tools": 8
     }

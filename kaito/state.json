@@ -6,46 +6,32 @@
     "idea": "Continuously build, test, and improve portfolio projects for sand.gallery"
   },
   "current_goal": {
-    "description": "Reinstate gallery crons + upgrade to rigorous testing protocol",
-    "milestone": "Every project validated by actual gameplay before marking done",
-    "task": "Reinstated 3 staggered crons. Gallery builder skill upgraded with rigorous gameplay testing. Each cycle now requires: (1) Playwright technical check + (2) Actual gameplay for 2-3 min + (3) Specific bug fixes based on observations + (4) Testing notes in log"
+    "description": "Gallery crons running with rigorous gameplay testing",
+    "milestone": "Every project validated by actual gameplay before marking done"
   },
   "gallery_status": {
     "total_builds": 23,
-    "new_projects": 13,
-    "updates": 10,
-    "categories": {
-      "games": 4,
-      "apps": 4,
-      "tools": 5
-    },
-    "all_urls_fixed": true,
-    "sandbox_fix_deployed": true
+    "firestore_urls_fixed": true,
+    "gallery_categories_fixed": true,
+    "sandbox_iframe_fix_deployed": true,
+    "crons_active": 3,
+    "crons_delivery_mode": "none"
   },
+  "key_fixes_today": [
+    "Firestore gallery_categories/{games,apps,tools}/items — all 15 URL fields corrected to https://thesandemon.github.io/{repo}/",
+    "ItemDetail.jsx sandbox iframe attribute pushed to sand-gallery repo",
+    "Cron delivery.mode changed from 'announce' to 'none' (isolated sessions have no channel)"
+  ],
   "crons": {
     "status": "active",
     "count": 3,
-    "schedule": "every 5 minutes, staggered",
-    "notes": "Decision: 30% new projects, 70% updates. All must pass gameplay testing."
+    "schedule": "every 5 minutes, staggered"
   },
   "testing_protocol": {
-    "playwright_check": "required - technical validation (loads, no 404s, no JS errors)",
+    "playwright_check": "required - technical validation",
     "gameplay_test": "required - actual play for 2-3 minutes",
     "must_fix_before_deploy": ["crashes", "broken controls", "black/white screen", "no content"],
-    "report_in_log": "specific observations, what worked, what broke, what was fixed"
+    "report_in_log": "specific observations in gallery-cycle-log.md"
   },
-  "progress": [
-    {
-      "timestamp": "2026-03-27T17:00:00Z",
-      "action": "Upgraded gallery builder to rigorous testing protocol",
-      "details": "Skill now requires actual gameplay testing (2-3 min per project), specific bug reports, and testing notes in log. Playwright only catches technical issues — gameplay testing catches real UX problems. Critical bugs must be fixed before marking done."
-    },
-    {
-      "timestamp": "2026-03-27T16:45:00Z",
-      "action": "Fixed Firestore gallery_categories URLs for all 15 game/app/tool entries",
-      "details": "All gallery_categories/{games,apps,tools}/items had broken URLs — wrong domain, full GitHub URLs instead of github.io, garbage URLs. Fixed all to https://thesandemon.github.io/{repo}/. Pushed sandbox iframe fix to sand-gallery repo."
-    }
-  ],
-  "last_active": "2026-03-27T17:00:00Z",
-  "next_goal": "Reinstate 3 staggered gallery crons, begin cycle with rigorous gameplay testing"
+  "last_active": "2026-03-28T04:26:00Z"
 }

@@ -1,0 +1,23 @@
+{
+  "name": "ball-racing",
+  "version": "1.0.0",
+  "description": "3D ball racing simulation with cinematic replays and Polymarket betting",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "race": "node src/main.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "gap-finder": "node scripts/gap-finder.js",
+    "ideator": "node scripts/ideator.js",
+    "committer": "node scripts/committer.js"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "three": "^0.160.0",
+    "simplex-noise": "^4.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
+  }
+}

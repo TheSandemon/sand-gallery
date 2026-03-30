@@ -38,3 +38,9 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 ---
 
 Add whatever helps you do your job. This is your cheat sheet.
+
+## API Keys
+
+### Kling AI (Video Generation)
+- Access Key: A9a49QKMGhBrAgdpTyArPrJtmdBCCFg3
+- Secret Key: AdDJmhgnTrrggTb4yfCBNknbDDdyyy43
