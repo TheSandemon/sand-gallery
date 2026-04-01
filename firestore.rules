@@ -10,15 +10,15 @@ service cloud.firestore {
       );
     }
 
-    // Media collection: Authenticated users can read, admins can write
+    // Media collection: Public read (portfolio展示), authenticated write, admins can write
     match /media/{mediaId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Gallery categories: Authenticated users can read, admins can write
+    // Gallery categories: Public read (portfolio content), admins can write
     match /gallery_categories/{categoryId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
