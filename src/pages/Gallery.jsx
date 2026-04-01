@@ -104,48 +104,6 @@ const GridBackground = () => (
     </div>
 );
 
-// Category card
-const CategoryCard = ({ category, isActive, onClick, index }) => {
-    const Icon = ICON_MAP[category.icon] || Sparkles;
-    const delay = index * 0.08;
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay, duration: 0.3 }}
-            onClick={onClick}
-            className="relative cursor-pointer group gallery-card"
-            style={{ '--glow-color': category.color }}
-        >
-            <div className="gallery-glow" style={{ '--glow-color': category.color }} />
-            <div
-                className={`relative overflow-hidden rounded-2xl p-6 md:p-8 border transition-colors duration-200
-                    ${isActive ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'}`}
-            >
-                <div
-                    className="w-16 h-16 md:w-20 md:h-20 rounded-xl flex items-center justify-center mb-4 md:mb-6"
-                    style={{
-                        background: `linear-gradient(135deg, ${category.color}20, ${category.color}05)`,
-                        border: `1px solid ${category.color}40`
-                    }}
-                >
-                    <Icon size={32} style={{ color: category.color }} className="relative z-10" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold tracking-wider mb-1" style={{ color: category.color }}>
-                    {category.title}
-                </h3>
-                <p className="text-sm text-gray-500 tracking-wide">
-                    {category.subtitle}
-                </p>
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-gray-400">
-                    {category.items?.length || 0} items
-                </div>
-            </div>
-        </motion.div>
-    );
-};
-
 // Expanded category panel
 const CategoryPanel = ({ category, onClose, onItemClick }) => {
     const navigate = useNavigate();
@@ -204,43 +162,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
                         >
                             {/* Thumbnail */}
                             <div className="w-16 h-16 rounded-lg bg-black overflow-hidden flex-shrink-0">
-                                {(() => {
-                                    // Try to get thumbnail from various sources
-                                    let thumbnail = item.thumbnail || item.url;
-
-                                    // For games/apps/tools with GitHub repo but no thumbnail, try GitHub OG image
-                                    if (!thumbnail && (item.type === 'game' || item.type === 'app' || item.type === 'tool') && item.githubRepo) {
-                                        const repoMatch = item.githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
-                                        if (repoMatch) {
-                                            const [, owner, repo] = repoMatch;
-                                            thumbnail = `https://opengraph.githubassets.com/default/${owner}/${repo.replace(/\.git$/, '')}`;
-                                        }
-                                    }
-
-                                    if (thumbnail) {
-                                        return (
-                                            <img
-                                                src={thumbnail}
-                                                alt={item.name}
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    // Try fallback thumbnail for YouTube
-                                                    const src = e.target.src;
-                                                    if (src.includes('maxresdefault.jpg')) {
-                                                        e.target.src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
-                                                    } else {
-                                                        e.target.style.display = 'none';
-                                                    }
-                                                }}
-                                            />
-                                        );
-                                    }
-                                    return (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-600">
-                                            {item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : item.type === 'game' ? '🎮' : item.type === 'app' ? '📱' : item.type === 'tool' ? '🔧' : item.type === 'image' ? '🖼️' : '🔗'}
-                                        </div>
-                                    );
-                                })()}
+                                <Thumbnail item={item} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h4 className="text-lg font-semibold text-white group-hover:text-neon-green truncate">{item.name}</h4>
@@ -266,6 +188,7 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
         </div>
     );
 };
+
 
 const Gallery = () => {
     const navigate = useNavigate();
