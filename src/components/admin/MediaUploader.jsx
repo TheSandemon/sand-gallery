@@ -3,6 +3,21 @@ import { useAuth } from '../../context/AuthContext';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase';
+import {
+    Image, Film, Music, Gamepad2, AppWindow, Wrench, Tv, Link,
+    Upload, Check, X
+} from 'lucide-react';
+
+const MEDIA_TYPES = [
+    { id: 'image', label: 'Image', Icon: Image },
+    { id: 'video', label: 'Video', Icon: Film },
+    { id: 'audio', label: 'Audio', Icon: Music },
+    { id: 'game', label: 'Game', Icon: Gamepad2 },
+    { id: 'app', label: 'App', Icon: AppWindow },
+    { id: 'tool', label: 'Tool', Icon: Wrench },
+    { id: 'embed', label: 'Embed', Icon: Tv },
+    { id: 'link', label: 'Link', Icon: Link },
+];
 
 const MediaUploader = ({ categories = [] }) => {
     const { user } = useAuth();
@@ -19,12 +34,15 @@ const MediaUploader = ({ categories = [] }) => {
     const [dragOver, setDragOver] = useState(false);
     const [category, setCategory] = useState('');
     const [githubRepo, setGithubRepo] = useState('');
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [error, setError] = useState('');
 
     // Handle file selection
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
             setFile(selectedFile);
+            setError('');
             if (!name) {
                 setName(selectedFile.name.replace(/\.[^/.]+$/, ''));
             }
@@ -47,43 +65,60 @@ const MediaUploader = ({ categories = [] }) => {
         const droppedFile = e.dataTransfer.files[0];
         if (droppedFile) {
             setFile(droppedFile);
+            setError('');
             if (!name) {
                 setName(droppedFile.name.replace(/\.[^/.]+$/, ''));
             }
         }
     };
 
+    const handleCancel = () => {
+        setFile(null);
+        setName('');
+        setDescription('');
+        setUrl('');
+        setEmbedUrl('');
+        setGithubRepo('');
+        setUploadProgress(0);
+        setError('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     // Upload media
     const handleUpload = async () => {
         if (!user) {
-            alert('Please sign in first');
+            setError('Please sign in first.');
             return;
         }
 
         if (!name.trim()) {
-            alert('Please enter a name');
+            setError('Please enter a name.');
             return;
         }
 
         // Validate based on type
         if (mediaType === 'image' || mediaType === 'audio' || mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') {
             if (!file && !url && !githubRepo) {
-                alert('Please select a file, enter a URL, or provide a GitHub repo');
+                setError('Please select a file, enter a URL, or provide a GitHub repo.');
                 return;
             }
         } else if (mediaType === 'video') {
             if (!isEmbed && !file && !url) {
-                alert('Please select a file or enter a URL');
+                setError('Please select a file or enter a URL.');
                 return;
             }
         } else if (mediaType === 'embed' || mediaType === 'link') {
             if (!url.trim()) {
-                alert('Please enter a URL');
+                setError('Please enter a URL.');
                 return;
             }
         }
 
         setUploading(true);
+        setError('');
+        setUploadProgress(10);
 
         try {
             let finalUrl = url;
@@ -91,7 +126,7 @@ const MediaUploader = ({ categories = [] }) => {
 
             // Handle file upload
             if (file && !isEmbed) {
-                // Upload games/apps/tools to respective folders, others to media/
+                setUploadProgress(30);
                 let folder = 'media';
                 if (mediaType === 'game') folder = 'games';
                 else if (mediaType === 'app') folder = 'apps';
@@ -99,20 +134,20 @@ const MediaUploader = ({ categories = [] }) => {
                 const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 finalUrl = await getDownloadURL(snapshot.ref);
+                setUploadProgress(70);
 
-                // For images, use the URL as thumbnail
                 if (mediaType === 'image') {
                     thumbnail = finalUrl;
                 }
-                // For games/apps/tools, use URL as both file and thumbnail
                 if (mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') {
                     thumbnail = finalUrl;
                 }
             }
 
+            setUploadProgress(80);
+
             // Handle embed URL (YouTube/Vimeo)
             if (isEmbed && embedUrl) {
-                // Convert YouTube URL to embed URL and get thumbnail
                 let embed = embedUrl;
                 let videoId = null;
 
@@ -129,29 +164,21 @@ const MediaUploader = ({ categories = [] }) => {
 
                 finalUrl = embed;
 
-                // Generate thumbnail for YouTube embeds with fallback
                 if (videoId && !thumbnail) {
                     thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-                }
-
-                // If using a URL for game/app/tool, no thumbnail needed (iframe loads the content)
-                if ((mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') && url && !thumbnail) {
-                    thumbnail = null; // Will use placeholder in UI
                 }
             }
 
             // Handle GitHub repo URL for games/apps/tools
             if ((mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') && githubRepo && !finalUrl) {
-                // Convert GitHub repo URL to embed URL
-                // Format: https://github.com/username/repo or https://github.com/username/repo/
                 const repoMatch = githubRepo.match(/github\.com[/:]([^\/]+)\/([^\/]+)/);
                 if (repoMatch) {
                     const [, owner, repo] = repoMatch;
-                    // Try GitHub Pages first, then fall back to raw gitcdn or similar
                     finalUrl = `https://${owner}.github.io/${repo}/`;
-                    // Store the raw repo URL for reference
                 }
             }
+
+            setUploadProgress(90);
 
             // Save to Firestore
             await addDoc(collection(db, 'media'), {
@@ -166,59 +193,62 @@ const MediaUploader = ({ categories = [] }) => {
                 createdAt: serverTimestamp(),
             });
 
-            // Reset form
-            setName('');
-            setDescription('');
-            setUrl('');
-            setEmbedUrl('');
-            setFile(null);
-            setCategory('');
-            setGithubRepo('');
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
+            setUploadProgress(100);
 
-            alert('Media uploaded successfully!');
-        } catch (error) {
-            console.error('Upload error:', error);
-            alert('Failed to upload: ' + error.message);
+            // Reset form
+            handleCancel();
+        } catch (err) {
+            console.error('Upload error:', err);
+            setError('Failed to upload: ' + err.message);
         } finally {
             setUploading(false);
         }
     };
 
     return (
-        <div style={{ background: '#111', borderRadius: '12px', padding: '2rem', border: '1px solid #222' }}>
-            <h3 style={{ margin: '0 0 1.5rem 0', color: 'white' }}>Upload Media</h3>
+        <div className="bg-[#111] rounded-xl p-6 md:p-8 border border-[#222]">
+            <h3 className="text-white text-xl font-bold mb-6">Upload Media</h3>
+
+            {/* Error display */}
+            {error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
+                    <X size={14} />
+                    {error}
+                </div>
+            )}
+
+            {/* Upload progress */}
+            {uploading && (
+                <div className="mb-4">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Uploading...</span>
+                        <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="h-1 bg-[#222] rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-neon-green transition-all duration-300 rounded-full"
+                            style={{ width: `${uploadProgress}%` }}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Media Type Selection */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Media Type</label>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {[
-                        { id: 'image', label: 'Image', icon: '🖼️' },
-                        { id: 'video', label: 'Video', icon: '🎬' },
-                        { id: 'audio', label: 'Audio', icon: '🎵' },
-                        { id: 'game', label: 'Game', icon: '🎮' },
-                        { id: 'app', label: 'App', icon: '📱' },
-                        { id: 'tool', label: 'Tool', icon: '🔧' },
-                        { id: 'embed', label: 'Embed (YouTube)', icon: '📺' },
-                        { id: 'link', label: 'Link', icon: '🔗' },
-                    ].map(type => (
+            <div className="mb-6">
+                <label className="block text-gray-400 mb-3 text-sm font-medium">Media Type</label>
+                <div className="flex flex-wrap gap-2">
+                    {MEDIA_TYPES.map(({ id, label, Icon }) => (
                         <button
-                            key={type.id}
-                            onClick={() => { setMediaType(type.id); setIsEmbed(type.id === 'embed'); }}
-                            style={{
-                                padding: '0.5rem 1rem',
-                                background: mediaType === type.id ? 'var(--neon-green)' : '#222',
-                                color: mediaType === type.id ? 'black' : '#888',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '0.9rem'
-                            }}
+                            key={id}
+                            onClick={() => { setMediaType(id); setIsEmbed(id === 'embed'); setError(''); }}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                mediaType === id
+                                    ? 'bg-neon-green text-black'
+                                    : 'bg-[#222] text-gray-400 hover:text-white hover:bg-[#333]'
+                            }`}
                         >
-                            {type.icon} {type.label}
+                            <Icon size={16} />
+                            {label}
                         </button>
                     ))}
                 </div>
@@ -230,17 +260,12 @@ const MediaUploader = ({ categories = [] }) => {
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                        border: `2px dashed ${dragOver ? 'var(--neon-green)' : '#444'}`,
-                        borderRadius: '12px',
-                        padding: '2rem',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        marginBottom: '1.5rem',
-                        background: dragOver ? 'rgba(0,143,78,0.1)' : 'transparent',
-                        transition: 'all 0.2s'
-                    }}
+                    onClick={() => !uploading && fileInputRef.current?.click()}
+                    className={`mb-6 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                        dragOver
+                            ? 'border-neon-green bg-neon-green/5'
+                            : 'border-[#444] hover:border-[#555]'
+                    } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     <input
                         ref={fileInputRef}
@@ -252,18 +277,19 @@ const MediaUploader = ({ categories = [] }) => {
                             'video/*'
                         }
                         onChange={handleFileChange}
-                        style={{ display: 'none' }}
+                        className="hidden"
+                        disabled={uploading}
                     />
                     {file ? (
-                        <div style={{ color: 'var(--neon-green)' }}>
-                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✓</div>
-                            <div>{file.name}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#666' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        <div className="flex flex-col items-center gap-2 text-neon-green">
+                            <Check size={32} />
+                            <span className="font-medium">{file.name}</span>
+                            <span className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                         </div>
                     ) : (
-                        <div style={{ color: '#666' }}>
-                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📁</div>
-                            <div>Drag & drop a file here, or click to browse</div>
+                        <div className="flex flex-col items-center gap-2 text-gray-500">
+                            <Upload size={32} />
+                            <span>Drag & drop a file here, or click to browse</span>
                         </div>
                     )}
                 </div>
@@ -271,36 +297,29 @@ const MediaUploader = ({ categories = [] }) => {
 
             {/* URL Input (alternative to upload) */}
             {(mediaType === 'image' || mediaType === 'video') && (
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                        Or enter a URL instead
-                    </label>
+                <div className="mb-4">
+                    <label className="block text-gray-400 mb-2 text-sm">Or enter a URL</label>
                     <input
                         type="url"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         placeholder="https://example.com/media.jpg"
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: '#0a0a0a',
-                            border: '1px solid #333',
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontSize: '1rem'
-                        }}
+                        disabled={uploading}
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors disabled:opacity-50"
                     />
                 </div>
             )}
 
             {/* Embed URL for videos */}
             {mediaType === 'video' && (
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#888', marginBottom: '0.5rem', cursor: 'pointer' }}>
+                <div className="mb-4">
+                    <label className="flex items-center gap-2 text-gray-400 mb-2 text-sm cursor-pointer">
                         <input
                             type="checkbox"
                             checked={isEmbed}
                             onChange={(e) => setIsEmbed(e.target.checked)}
+                            disabled={uploading}
+                            className="accent-neon-green"
                         />
                         Use embed URL (YouTube/Vimeo)
                     </label>
@@ -310,15 +329,8 @@ const MediaUploader = ({ categories = [] }) => {
                             value={embedUrl}
                             onChange={(e) => setEmbedUrl(e.target.value)}
                             placeholder="https://youtube.com/watch?v=..."
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                background: '#0a0a0a',
-                                border: '1px solid #333',
-                                borderRadius: '8px',
-                                color: 'white',
-                                fontSize: '1rem'
-                            }}
+                            disabled={uploading}
+                            className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors disabled:opacity-50 mt-2"
                         />
                     )}
                 </div>
@@ -326,8 +338,8 @@ const MediaUploader = ({ categories = [] }) => {
 
             {/* Link type */}
             {(mediaType === 'embed' || mediaType === 'link') && (
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                <div className="mb-4">
+                    <label className="block text-gray-400 mb-2 text-sm">
                         {mediaType === 'embed' ? 'YouTube/Vimeo URL' : 'Link URL'}
                     </label>
                     <input
@@ -335,102 +347,64 @@ const MediaUploader = ({ categories = [] }) => {
                         value={url}
                         onChange={(e) => { setUrl(e.target.value); if (mediaType === 'video') setEmbedUrl(e.target.value); }}
                         placeholder={mediaType === 'embed' ? 'https://youtube.com/watch?v=...' : 'https://example.com'}
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: '#0a0a0a',
-                            border: '1px solid #333',
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontSize: '1rem'
-                        }}
+                        disabled={uploading}
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors disabled:opacity-50"
                     />
                 </div>
             )}
 
             {/* GitHub Repository URL (for games/apps/tools) */}
             {(mediaType === 'game' || mediaType === 'app' || mediaType === 'tool') && (
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                        Or enter a GitHub Repository URL
-                    </label>
+                <div className="mb-4">
+                    <label className="block text-gray-400 mb-2 text-sm">Or enter a GitHub Repository URL</label>
                     <input
                         type="url"
                         value={githubRepo}
                         onChange={(e) => setGithubRepo(e.target.value)}
                         placeholder="https://github.com/username/repo"
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: '#0a0a0a',
-                            border: '1px solid #333',
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontSize: '1rem'
-                        }}
+                        disabled={uploading}
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors disabled:opacity-50"
                     />
-                    <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem' }}>
+                    <p className="text-xs text-gray-600 mt-1">
                         For GitHub Pages: enable it in your repo settings, or use a service like gitcdn to embed directly
                     </p>
                 </div>
             )}
 
             {/* Name */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name *</label>
+            <div className="mb-4">
+                <label className="block text-gray-400 mb-2 text-sm">Name *</label>
                 <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="My Awesome Project"
-                    style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: '#0a0a0a',
-                        border: '1px solid #333',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontSize: '1rem'
-                    }}
+                    disabled={uploading}
+                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors disabled:opacity-50"
                 />
             </div>
 
             {/* Description */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Description</label>
+            <div className="mb-4">
+                <label className="block text-gray-400 mb-2 text-sm">Description</label>
                 <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="A brief description of this media..."
                     rows={3}
-                    style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: '#0a0a0a',
-                        border: '1px solid #333',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontSize: '1rem',
-                        resize: 'vertical'
-                    }}
+                    disabled={uploading}
+                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors resize-none disabled:opacity-50"
                 />
             </div>
 
             {/* Category */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Category (optional)</label>
+            <div className="mb-6">
+                <label className="block text-gray-400 mb-2 text-sm">Category (optional)</label>
                 <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: '#0a0a0a',
-                        border: '1px solid #333',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontSize: '1rem'
-                    }}
+                    disabled={uploading}
+                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:border-neon-green focus:outline-none transition-colors disabled:opacity-50"
                 >
                     <option value="">Select a category...</option>
                     {categories.map(cat => (
@@ -439,25 +413,35 @@ const MediaUploader = ({ categories = [] }) => {
                 </select>
             </div>
 
-            {/* Upload Button */}
-            <button
-                onClick={handleUpload}
-                disabled={uploading}
-                style={{
-                    width: '100%',
-                    padding: '1rem',
-                    background: uploading ? '#333' : 'var(--neon-green)',
-                    color: uploading ? '#666' : 'black',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    cursor: uploading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s'
-                }}
-            >
-                {uploading ? 'Uploading...' : 'Upload Media'}
-            </button>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+                {file && !uploading && (
+                    <button
+                        onClick={handleCancel}
+                        className="flex-1 py-3 bg-[#222] text-gray-400 rounded-lg text-sm font-medium hover:bg-[#333] transition-colors flex items-center justify-center gap-2"
+                    >
+                        <X size={16} />
+                        Cancel
+                    </button>
+                )}
+                <button
+                    onClick={handleUpload}
+                    disabled={uploading}
+                    className="flex-1 py-3 bg-neon-green text-black rounded-lg text-sm font-bold cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                    {uploading ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                            Uploading...
+                        </>
+                    ) : (
+                        <>
+                            <Upload size={16} />
+                            Upload Media
+                        </>
+                    )}
+                </button>
+            </div>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import VideoAnalysis from '../components/VideoAnalysis';
 import {
@@ -15,143 +15,109 @@ import {
     Identity,
     EthBalance,
 } from '@coinbase/onchainkit/identity';
+import { LogOut, User, RefreshCw } from 'lucide-react';
 
 const Profile = () => {
     const { user, logout } = useAuth();
 
-    if (!user) return <div style={{ paddingTop: '100px', textAlign: 'center' }}>Please log in to view profile.</div>;
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] pt-32 pb-20 px-4 flex items-center justify-center">
+                <p className="text-gray-500">Please log in to view profile.</p>
+            </div>
+        );
+    }
 
     return (
-        <div style={{
-            paddingTop: '120px',
-            maxWidth: '800px',
-            margin: '0 auto',
-            paddingLeft: '20px',
-            paddingRight: '20px'
-        }}>
-            <div style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '2rem',
-                borderRadius: '20px',
-                border: '1px solid rgba(0, 143, 78, 0.3)',
-                backdropFilter: 'blur(10px)'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                    <img
-                        src={user.photoURL}
-                        alt={user.displayName}
-                        style={{ width: '100px', height: '100px', borderRadius: '50%', border: '3px solid var(--neon-green)' }}
-                    />
-                    <div style={{ flex: 1 }}>
-                        <h1 style={{ margin: 0, fontSize: '2rem' }}>{user.displayName}</h1>
-                        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{user.email}</p>
-                        <span style={{
-                            display: 'inline-block',
-                            marginTop: '0.5rem',
-                            padding: '0.2rem 0.8rem',
-                            backgroundColor: 'rgba(199, 155, 55, 0.2)',
-                            color: 'var(--neon-gold)',
-                            borderRadius: '20px',
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold'
-                        }}>{user.role || 'USER'}</span>
+        <div className="min-h-screen bg-[#0a0a0a] pt-32 pb-20 px-4">
+            <div className="max-w-3xl mx-auto">
+                {/* Profile Card */}
+                <div className="bg-white/5 p-6 md:p-8 rounded-2xl border border-neon-green/30 backdrop-blur-xl">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
+                        <img
+                            src={user.photoURL}
+                            alt={user.displayName}
+                            className="w-24 h-24 rounded-full border-[3px] border-neon-green object-cover"
+                        />
+                        <div className="flex-1 text-center sm:text-left">
+                            <h1 className="text-2xl font-bold text-white mb-1">{user.displayName}</h1>
+                            <p className="text-gray-400 text-sm mb-2">{user.email}</p>
+                            <span className="inline-block px-3 py-0.5 bg-neon-gold/20 text-neon-gold rounded-full text-xs font-bold uppercase">
+                                {user.role || 'USER'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                        <button
+                            onClick={logout}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg font-bold text-sm hover:bg-red-500/20 transition-colors cursor-pointer"
+                        >
+                            <LogOut size={14} />
+                            Log Out
+                        </button>
+                        <Wallet>
+                            <ConnectWallet className="flex items-center gap-2 px-4 py-2 bg-neon-green hover:bg-neon-green/80 text-black rounded-lg font-bold text-sm transition-all cursor-pointer">
+                                <Avatar className="w-4 h-4" />
+                                <Name />
+                            </ConnectWallet>
+                            <WalletDropdown className="bg-[#0a0a0a] border border-neon-green/20 rounded-xl overflow-hidden">
+                                <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                                    <Avatar />
+                                    <Name />
+                                    <Address className="text-gray-400" />
+                                    <EthBalance className="text-neon-gold" />
+                                </Identity>
+                                <WalletDropdownBasename className="px-4 py-2 text-sm text-gray-400 hover:bg-neon-green/10 transition-colors block" />
+                                <WalletDropdownDisconnect className="w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors text-left cursor-pointer">
+                                    Disconnect
+                                </WalletDropdownDisconnect>
+                            </WalletDropdown>
+                        </Wallet>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                    <button
-                        onClick={() => {
-                            logout();
-                        }}
-                        style={{
-                            padding: '0.5rem 1.5rem',
-                            background: 'rgba(255, 50, 50, 0.1)',
-                            border: '1px solid rgba(255, 50, 50, 0.3)',
-                            color: '#ff4444',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={e => e.target.style.background = 'rgba(255, 50, 50, 0.2)'}
-                        onMouseLeave={e => e.target.style.background = 'rgba(255, 50, 50, 0.1)'}
-                    >
-                        LOG OUT
-                    </button>
-                    <Wallet>
-                        <ConnectWallet className="bg-neon-green hover:bg-neon-green/80 text-black font-bold py-2 px-4 rounded transition-all duration-300" style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', fontWeight: 'bold' }}>
-                            <Avatar className="h-5 w-5" />
-                            <Name />
-                        </ConnectWallet>
-                        <WalletDropdown className="bg-[#0a0a0a] border border-neon-green/20" style={{ background: '#0a0a0a', border: '1px solid rgba(0, 143, 78, 0.2)', borderRadius: '8px', padding: '0.5rem' }}>
-                            <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick style={{ padding: '0.5rem' }}>
-                                <Avatar />
-                                <Name />
-                                <Address className="text-gray-400" />
-                                <EthBalance className="text-neon-gold" />
-                            </Identity>
-                            <WalletDropdownBasename className="hover:bg-neon-green/10" style={{ padding: '0.5rem', display: 'block' }} />
-                            <WalletDropdownDisconnect className="hover:bg-red-500/10 text-red-500" style={{ padding: '0.5rem', display: 'block', color: '#ff4444' }} />
-                        </WalletDropdown>
-                    </Wallet>
+                {/* Credits Card */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                    <div className="p-6 bg-white/5 rounded-xl border border-white/10">
+                        <h3 className="text-gray-500 text-sm mb-2 font-medium uppercase tracking-wider">Balance</h3>
+                        <p className="text-5xl font-black text-neon-gold">
+                            {user.credits || 0}
+                            <span className="text-lg font-normal text-gray-500 ml-2">CREDITS</span>
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.5rem',
-                marginTop: '2rem'
-            }}>
-                <div style={{
-                    padding: '1.5rem',
-                    background: 'rgba(0, 0, 0, 0.3)',
-                    borderRadius: '15px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                    <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>BALANCE</h3>
-                    <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: 'var(--neon-gold)' }}>
-                        {user.credits || 0} <span style={{ fontSize: '1rem' }}>CREDITS</span>
-                    </p>
+                {/* Video Analysis */}
+                <div className="mt-8">
+                    <VideoAnalysis userId={user.uid} />
                 </div>
-            </div>
 
-            <div style={{ marginTop: '3rem', marginBottom: '3rem' }}>
-                <VideoAnalysis userId={user.uid} />
+                {/* Creations Gallery */}
+                <CreationsGallery userId={user.uid} />
             </div>
-
-            <CreationsGallery userId={user.uid} />
         </div>
-
     );
-
 };
 
 const CreationsGallery = ({ userId }) => {
-    const [creations, setCreations] = React.useState([]);
-    const [loading, setLoading] = React.useState(true);
+    const [creations, setCreations] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchCreations = async () => {
             try {
-                // Import dynamically to avoid errors during build if firebase isn't fully set up logic logic
-                const { collection, query, where, getDocs, orderBy } = await import('firebase/firestore');
+                const { collection, query, where, getDocs } = await import('firebase/firestore');
                 const { db } = await import('../firebase');
 
-                // Construct query
-                // Note: orderBy might require an index. If it fails, we default to client-side sort
                 const q = query(
                     collection(db, 'creations'),
                     where('userId', '==', userId)
-                    // orderBy('createdAt', 'desc') // Commented out to avoid index requirements for now
                 );
 
                 const snapshot = await getDocs(q);
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Client side sort
                 data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
                 setCreations(data);
             } catch (error) {
                 console.error("Error fetching creations:", error);
@@ -163,29 +129,42 @@ const CreationsGallery = ({ userId }) => {
         fetchCreations();
     }, [userId]);
 
-    if (loading) return <div style={{ color: '#888' }}>Loading gallery...</div>;
-    if (creations.length === 0) return <div style={{ color: '#888' }}>No creations yet. Visit the Studio!</div>;
+    if (loading) {
+        return (
+            <div className="mt-8">
+                <h3 className="text-neon-green border-b border-[#333] pb-2 mb-4 text-lg font-bold">MY CREATIONS</h3>
+                <div className="flex items-center gap-3 text-gray-500 py-8 justify-center">
+                    <RefreshCw size={18} className="animate-spin" />
+                    <span>Loading gallery...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (creations.length === 0) {
+        return (
+            <div className="mt-8">
+                <h3 className="text-neon-green border-b border-[#333] pb-2 mb-4 text-lg font-bold">MY CREATIONS</h3>
+                <div className="text-gray-500 py-8 text-center">
+                    No creations yet. Visit the Studio!
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div style={{ marginTop: '2rem' }}>
-            <h3 style={{ borderBottom: '1px solid #333', paddingBottom: '0.5rem', color: 'var(--neon-green)' }}>MY CREATIONS</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+        <div className="mt-8">
+            <h3 className="text-neon-green border-b border-[#333] pb-2 mb-4 text-lg font-bold">MY CREATIONS</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {creations.map(item => (
-                    <div key={item.id} style={{
-                        background: 'rgba(0,0,0,0.4)',
-                        border: '1px solid #333',
-                        borderRadius: '8px',
-                        padding: '1rem'
-                    }}>
-                        <div style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '0.5rem', height: '40px', overflow: 'hidden' }}>
-                            "{item.prompt}"
-                        </div>
+                    <div key={item.id} className="bg-black/40 border border-[#333] rounded-xl p-4">
+                        <p className="text-sm text-gray-300 mb-3 line-clamp-2 leading-relaxed">"{item.prompt}"</p>
                         {item.audioUrl && (
-                            <audio controls src={item.audioUrl} style={{ width: '100%', height: '30px' }} />
+                            <audio controls src={item.audioUrl} className="w-full h-8 mb-2" />
                         )}
-                        <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '0.5rem' }}>
+                        <p className="text-xs text-gray-600">
                             {new Date(item.createdAt?.seconds * 1000).toLocaleDateString()}
-                        </div>
+                        </p>
                     </div>
                 ))}
             </div>

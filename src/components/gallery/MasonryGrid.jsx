@@ -6,10 +6,11 @@ const MasonryGrid = ({ items = [], renderItem }) => {
     useEffect(() => {
         const updateColumns = () => {
             const width = window.innerWidth;
-            if (width < 640) setColumnCount(1);      // Mobile
-            else if (width < 1024) setColumnCount(2); // Tablet
-            else if (width < 1536) setColumnCount(3); // Desktop
-            else setColumnCount(4);                   // Wide
+            if (width < 640) setColumnCount(1);       // Mobile
+            else if (width < 768) setColumnCount(2);  // Large mobile / small tablet
+            else if (width < 1024) setColumnCount(3); // Tablet
+            else if (width < 1280) setColumnCount(4); // Desktop / large tablet
+            else setColumnCount(5);                   // Wide
         };
 
         updateColumns();

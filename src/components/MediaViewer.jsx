@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Download, Play, Pause, Film, Music, Sparkles, Clock, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MediaViewer = ({ item, onClose, navigate: navigateProp }) => {
     const navigate = navigateProp || useNavigate();
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, [onClose]);
+
     if (!item) return null;
 
     const formatDate = (timestamp) => {
@@ -22,7 +30,13 @@ const MediaViewer = ({ item, onClose, navigate: navigateProp }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[2000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 md:p-10" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 md:p-10"
+            onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${item.type || 'Media'} preview`}
+        >
             <div
                 className="relative max-w-4xl max-h-[90vh] w-full bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden flex flex-col"
                 onClick={e => e.stopPropagation()}
@@ -37,17 +51,18 @@ const MediaViewer = ({ item, onClose, navigate: navigateProp }) => {
                         {item.url && (
                             <a
                                 href={item.url}
-                                download
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                                aria-label="Open in new tab"
                             >
-                                <Download size={18} />
+                                <ExternalLink size={18} />
                             </a>
                         )}
                         <button
                             onClick={onClose}
                             className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                            aria-label="Close"
                         >
                             <X size={18} />
                         </button>

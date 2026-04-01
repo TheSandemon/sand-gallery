@@ -81,7 +81,7 @@ const About = () => {
                 {/* Philosophy */}
                 <div className="bg-[#111] rounded-lg p-8 md:p-12">
                     <h2 className="text-2xl font-bold text-white mb-6">PHILOSOPHY</h2>
-                    <blockquote className="text-xl text-gray-300 italic leading-relaxed">
+                    <blockquote className="text-2xl text-gray-300 italic leading-relaxed border-l-4 border-neon-green pl-6">
                         "The best creative work happens at the edge of comfort and chaos.
                         I strive to create experiences that resonate emotionally while
                         challenging conventions."

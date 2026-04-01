@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import Thumbnail from './Thumbnail';
 import { motion } from 'framer-motion';
-import { Play, Music, Box, Image as ImageIcon, Heart, Share2, Maximize2 } from 'lucide-react';
+import { Play, Music, Box, Image as ImageIcon, Heart, Share2, Maximize2, Check } from 'lucide-react';
 
 const MediaCard = ({ item, onClick }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [showCopied, setShowCopied] = useState(false);
+
+    // Check if item was previously liked on mount
+    useState(() => {
+        try {
+            const liked = JSON.parse(localStorage.getItem('liked_items') || '[]');
+            setIsLiked(liked.includes(item.id));
+        } catch {}
+    });
 
     // Determine icon based on type
     const TypeIcon = {
@@ -13,6 +23,37 @@ const MediaCard = ({ item, onClick }) => {
         model: Box,
         image: ImageIcon
     }[item.type] || ImageIcon;
+
+    const handleLike = (e) => {
+        e.stopPropagation();
+        try {
+            const liked = JSON.parse(localStorage.getItem('liked_items') || '[]');
+            let newLiked;
+            if (isLiked) {
+                newLiked = liked.filter(id => id !== item.id);
+            } else {
+                newLiked = [...liked, item.id];
+            }
+            localStorage.setItem('liked_items', JSON.stringify(newLiked));
+            setIsLiked(!isLiked);
+        } catch {}
+    };
+
+    const handleShare = async (e) => {
+        e.stopPropagation();
+        try {
+            await navigator.clipboard.writeText(window.location.href + (window.location.pathname !== '/' ? window.location.pathname : '') + `?item=${item.id}`);
+            setShowCopied(true);
+            setTimeout(() => setShowCopied(false), 2000);
+        } catch {
+            // Fallback: do nothing silently
+        }
+    };
+
+    const handleMaximize = (e) => {
+        e.stopPropagation();
+        onClick(item);
+    };
 
     return (
         <motion.div
@@ -31,9 +72,9 @@ const MediaCard = ({ item, onClick }) => {
 
                 {/* Media Content */}
                 <div className="relative w-full overflow-hidden">
-                    <Thumbnail 
-                        item={item} 
-                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105" 
+                    <Thumbnail
+                        item={item}
+                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
                     {/* Overlay Gradient */}
@@ -63,14 +104,31 @@ const MediaCard = ({ item, onClick }) => {
                     {/* Action Bar */}
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
                         <div className="flex gap-3">
-                            <button className="text-gray-400 hover:text-red-500 transition-colors">
-                                <Heart size={16} />
+                            <button
+                                onClick={handleLike}
+                                className={`transition-colors ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
+                                aria-label="Like"
+                            >
+                                <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
                             </button>
-                            <button className="text-gray-400 hover:text-white transition-colors">
+                            <button
+                                onClick={handleShare}
+                                className="relative text-gray-400 hover:text-white transition-colors"
+                                aria-label="Share"
+                            >
                                 <Share2 size={16} />
+                                {showCopied && (
+                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs bg-black/80 text-white px-2 py-1 rounded whitespace-nowrap">
+                                        <Check size={10} className="inline mr-1" />Copied!
+                                    </span>
+                                )}
                             </button>
                         </div>
-                        <button className="text-gray-400 hover:text-white transition-colors">
+                        <button
+                            onClick={handleMaximize}
+                            className="text-gray-400 hover:text-white transition-colors"
+                            aria-label="View full"
+                        >
                             <Maximize2 size={16} />
                         </button>
                     </div>
@@ -79,6 +137,5 @@ const MediaCard = ({ item, onClick }) => {
         </motion.div>
     );
 };
-
 
 export default MediaCard;

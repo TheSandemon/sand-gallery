@@ -1,150 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { User, LogOut, Settings, Sparkles } from 'lucide-react';
 
 const UserButton = () => {
     const { user, signInWithGoogle, logout } = useAuth();
     const navigate = useNavigate();
-    const [popupOpen, setPopupOpen] = React.useState(false);
-    const popupRef = React.useRef(null);
+    const [popupOpen, setPopupOpen] = useState(false);
+    const popupRef = useRef(null);
 
     // Close popup on outside click
-    React.useEffect(() => {
+    useEffect(() => {
         const handleClickOutside = (event) => {
             if (popupRef.current && !popupRef.current.contains(event.target)) {
                 setPopupOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const styles = {
-        button: {
-            padding: '0.6rem 1.2rem',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            color: 'var(--bg-dark)',
-            backgroundColor: 'var(--neon-gold)',
-            borderRadius: '50px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            border: 'none',
-            whiteSpace: 'nowrap'
-        },
-        userContainer: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            position: 'relative' // For popup positioning
-        },
-        avatar: {
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            border: '2px solid var(--neon-green)',
-            cursor: 'pointer',
-            objectFit: 'cover'
-        },
-        badge: {
-            fontSize: '0.75rem',
-            padding: '0.2rem 0.6rem',
-            backgroundColor: 'rgba(0, 143, 78, 0.2)',
-            color: 'var(--neon-green)',
-            border: '1px solid var(--neon-green)',
-            borderRadius: '12px',
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-        },
-        // Popup Styles
-        popup: {
-            position: 'absolute',
-            top: '50px',
-            right: '0',
-            width: '280px',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-color, #333)',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-            zIndex: 1000,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            backdropFilter: 'blur(10px)',
-            opacity: popupOpen ? 1 : 0,
-            pointerEvents: popupOpen ? 'auto' : 'none',
-            transform: popupOpen ? 'translateY(0)' : 'translateY(-10px)',
-            transition: 'all 0.2s ease-out'
-        },
-        popupHeader: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            marginBottom: '0.5rem',
-            paddingBottom: '1rem',
-            borderBottom: '1px solid rgba(255,255,255,0.1)'
-        },
-        popupName: {
-            fontWeight: 'bold',
-            color: '#fff',
-            fontSize: '1rem',
-            margin: 0
-        },
-        popupEmail: {
-            color: '#888',
-            fontSize: '0.8rem',
-            margin: 0
-        },
-        popupLink: {
-            color: 'var(--text-secondary, #ccc)',
-            textDecoration: 'none',
-            fontSize: '0.95rem',
-            padding: '0.5rem',
-            borderRadius: '8px',
-            transition: 'background 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            cursor: 'pointer'
-        },
-        logoutBtn: {
-            marginTop: '0.5rem',
-            padding: '0.5rem',
-            backgroundColor: 'rgba(255, 50, 50, 0.1)',
-            color: '#ff4444',
-            border: '1px solid rgba(255, 50, 50, 0.3)',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            textAlign: 'center',
-            fontWeight: 'bold',
-            fontSize: '0.9rem',
-            transition: 'all 0.2s'
-        }
-    };
+    // Close on escape
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (e.key === 'Escape') setPopupOpen(false);
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, []);
 
     if (!user) {
         return (
             <button
-                style={styles.button}
                 onClick={(e) => {
                     e.stopPropagation();
                     signInWithGoogle();
                 }}
-                onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#dcb04d';
-                    e.target.style.boxShadow = '0 0 15px rgba(199, 155, 55, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'var(--neon-gold)';
-                    e.target.style.boxShadow = 'none';
-                }}
+                className="px-5 py-2.5 text-sm font-semibold text-[#0a0a0a] bg-neon-gold rounded-full cursor-pointer transition-all duration-300 hover:bg-[#dcb04d] hover:shadow-[0_0_15px_rgba(199,155,55,0.4)] flex items-center gap-2 border-none whitespace-nowrap"
             >
                 Sign In
             </button>
@@ -152,60 +44,90 @@ const UserButton = () => {
     }
 
     return (
-        <div style={styles.userContainer} ref={popupRef}>
-            <span
-                style={{ ...styles.badge, cursor: 'pointer' }}
+        <div className="flex items-center gap-4 relative" ref={popupRef}>
+            {/* Credits badge */}
+            <button
                 onClick={() => navigate('/pricing')}
+                className="text-xs font-bold uppercase tracking-wider px-3 py-1 bg-neon-green/20 text-neon-green border border-neon-green rounded-xl cursor-pointer hover:bg-neon-green/30 transition-colors"
                 title="Buy Credits"
             >
                 {user.credits || 0} CR
-            </span>
-            <img
-                src={user.photoURL}
-                alt={user.displayName}
-                style={styles.avatar}
+            </button>
+
+            {/* Avatar */}
+            <button
                 onClick={() => setPopupOpen(!popupOpen)}
+                className="cursor-pointer"
                 title="Profile Menu"
-            />
+                aria-label="Open profile menu"
+                aria-expanded={popupOpen}
+            >
+                <img
+                    src={user.photoURL}
+                    alt={user.displayName}
+                    className="w-9 h-9 rounded-full border-2 border-neon-green object-cover"
+                />
+            </button>
 
             {/* Popup Menu */}
-            <div style={styles.popup}>
-                <div style={styles.popupHeader}>
-                    <img src={user.photoURL} alt="User" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
-                    <div style={{ overflow: 'hidden' }}>
-                        <h4 style={styles.popupName}>{user.displayName}</h4>
-                        <p style={styles.popupEmail}>{user.email}</p>
+            <div
+                className={`absolute top-12 right-0 w-72 bg-[#0a0a0a] border border-[#333] rounded-2xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-50 flex flex-col gap-4 backdrop-blur-xl transition-all duration-200 ${
+                    popupOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-2'
+                }`}
+                role="menu"
+            >
+                {/* Header */}
+                <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                    <img
+                        src={user.photoURL}
+                        alt="User"
+                        className="w-10 h-10 rounded-full"
+                    />
+                    <div className="overflow-hidden">
+                        <h4 className="font-bold text-white truncate">{user.displayName}</h4>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                 </div>
 
-                <div
-                    style={styles.popupLink}
+                {/* Menu items */}
+                <button
                     onClick={() => { setPopupOpen(false); navigate('/profile'); }}
-                    onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                    onMouseLeave={e => e.target.style.background = 'transparent'}
+                    className="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer w-full text-left"
+                    role="menuitem"
                 >
+                    <User size={16} />
                     User Profile / Settings
-                </div>
-
-                <div
-                    style={styles.popupLink}
-                    onClick={() => { setPopupOpen(false); navigate('/studio'); }}
-                    onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                    onMouseLeave={e => e.target.style.background = 'transparent'}
-                >
-                    Design Studio
-                </div>
+                </button>
 
                 <button
-                    style={styles.logoutBtn}
+                    onClick={() => { setPopupOpen(false); navigate('/studio'); }}
+                    className="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer w-full text-left"
+                    role="menuitem"
+                >
+                    <Sparkles size={16} />
+                    Design Studio
+                </button>
+
+                <button
+                    onClick={() => { setPopupOpen(false); navigate('/admin'); }}
+                    className="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer w-full text-left"
+                    role="menuitem"
+                >
+                    <Settings size={16} />
+                    Admin Dashboard
+                </button>
+
+                {/* Sign Out */}
+                <button
                     onClick={() => {
                         setPopupOpen(false);
                         logout();
                         navigate('/');
                     }}
-                    onMouseEnter={e => e.target.style.backgroundColor = 'rgba(255, 50, 50, 0.2)'}
-                    onMouseLeave={e => e.target.style.backgroundColor = 'rgba(255, 50, 50, 0.1)'}
+                    className="flex items-center justify-center gap-2 mt-2 py-2.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg text-sm font-bold hover:bg-red-500/20 transition-colors cursor-pointer"
+                    role="menuitem"
                 >
+                    <LogOut size={14} />
                     Sign Out
                 </button>
             </div>

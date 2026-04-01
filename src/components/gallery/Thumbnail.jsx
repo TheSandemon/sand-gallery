@@ -1,10 +1,14 @@
-import React from 'react';
-import { Image as ImageIcon, Play, Music, Box } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Gamepad2, AppWindow, Wrench, Film, Music, Image as ImageIcon, Link } from 'lucide-react';
 
 /**
  * Robust Thumbnail component to handle various media sources and fallbacks.
  */
 const Thumbnail = ({ item, className }) => {
+    const [hasError, setHasError] = useState(false);
+    const [youtubeFallback, setYoutubeFallback] = useState(false);
+    const imgRef = useRef(null);
+
     // 1. Determine Source
     let src = item.thumbnail || item.url;
 
@@ -17,44 +21,48 @@ const Thumbnail = ({ item, className }) => {
         }
     }
 
-    // 3. Handle Rendering
-    if (src) {
+    // 3. YouTube hqdefault fallback
+    if (src && youtubeFallback) {
+        src = src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+    }
+
+    // 4. Handle Rendering
+    if (src && !hasError) {
         return (
             <img
+                ref={imgRef}
                 src={src}
                 alt={item.title || 'Thumbnail'}
                 className={className}
                 loading="lazy"
-                onError={(e) => {
-                    // Try YouTube fallback: maxres -> hq
-                    if (e.target.src.includes('maxresdefault.jpg')) {
-                        e.target.src = e.target.src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+                onError={() => {
+                    if (!youtubeFallback && src.includes('maxresdefault.jpg')) {
+                        setYoutubeFallback(true);
                     } else {
-                        // If all else fails, hide and show parent placeholder
-                        e.target.style.display = 'none';
-                        e.target.parentElement.classList.add('has-fallback');
+                        setHasError(true);
                     }
                 }}
             />
         );
     }
 
-    // 4. Default Placeholder
-    const getEmoji = () => {
+    // 5. Default Placeholder — Lucide icons instead of emoji
+    const getIcon = () => {
+        const iconProps = { size: 32, className: 'text-gray-600' };
         switch (item.type) {
-            case 'game': return '🎮';
-            case 'app': return '📱';
-            case 'tool': return '🔧';
-            case 'video': return '🎬';
-            case 'audio': return '🎵';
-            case 'image': return '🖼️';
-            default: return '🔗';
+            case 'game': return <Gamepad2 {...iconProps} />;
+            case 'app': return <AppWindow {...iconProps} />;
+            case 'tool': return <Wrench {...iconProps} />;
+            case 'video': return <Film {...iconProps} />;
+            case 'audio': return <Music {...iconProps} />;
+            case 'image': return <ImageIcon {...iconProps} />;
+            default: return <Link {...iconProps} />;
         }
     };
 
     return (
-        <div className="w-full h-full flex items-center justify-center bg-white/5 text-4xl">
-            {getEmoji()}
+        <div className="w-full h-full flex items-center justify-center bg-white/5">
+            {getIcon()}
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Grid3X3, Layers, Wrench, Box, Image, Headphones, Folder, ExternalLink } from 'lucide-react';
+import { Gamepad2, AppWindow, Film, Sparkles, ChevronRight, X, Wrench, Box, Image, Headphones, Folder, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -236,7 +236,6 @@ const CategoryPanel = ({ category, onClose, onItemClick }) => {
 const Gallery = () => {
     const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState(null);
-    const [viewMode, setViewMode] = useState('grid');
     const [categories, setCategories] = useState(GALLERY_CATEGORIES);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -279,30 +278,12 @@ const Gallery = () => {
             <div className="relative min-h-[60vh] py-12 px-4">
                 <GridBackground />
 
-                {/* View mode toggle */}
-                <div className="relative z-10 flex justify-end max-w-6xl mx-auto mb-6">
-                    <div className="flex gap-2 bg-black/40 p-1 rounded-lg border border-white/10">
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
-                        >
-                            <Grid3X3 size={18} />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
-                        >
-                            <Layers size={18} />
-                        </button>
-                    </div>
-                </div>
-
                 {/* Category Grid */}
                 <div className="relative max-w-6xl mx-auto z-10">
                     {loading ? (
                         <div className="text-center text-gray-500 py-20">Loading gallery...</div>
                     ) : (
-                    <div className={`grid gap-4 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
                         {categories.map((category, index) => (
                             <CategoryCard
                                 key={category.id}

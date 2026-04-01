@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Mail, Github, Twitter, Linkedin, Send } from 'lucide-react';
+import { Mail, Github, Twitter, Linkedin, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -9,20 +11,33 @@ const Contact = () => {
     });
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSending(true);
-        // Simulate sending
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setSending(false);
-        setSent(true);
+        setError('');
+
+        try {
+            await addDoc(collection(db, 'contacts'), {
+                name: formData.name.trim(),
+                email: formData.email.trim(),
+                message: formData.message.trim(),
+                createdAt: serverTimestamp(),
+            });
+            setSending(false);
+            setSent(true);
+        } catch (err) {
+            console.error('Contact form error:', err);
+            setSending(false);
+            setError('Failed to send message. Please try again.');
+        }
     };
 
     const SOCIAL_LINKS = [
-        { name: 'GitHub', icon: Github, url: '#', color: 'hover:text-white' },
-        { name: 'Twitter', icon: Twitter, url: '#', color: 'hover:text-blue-400' },
-        { name: 'LinkedIn', icon: Linkedin, url: '#', color: 'hover:text-blue-500' },
+        { name: 'GitHub', icon: Github, url: 'https://github.com' },
+        { name: 'Twitter', icon: Twitter, url: 'https://twitter.com' },
+        { name: 'LinkedIn', icon: Linkedin, url: 'https://linkedin.com' },
     ];
 
     return (
@@ -44,12 +59,12 @@ const Contact = () => {
                         {sent ? (
                             <div className="bg-[#111] rounded-lg p-8 text-center">
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neon-green/20 flex items-center justify-center">
-                                    <Send className="w-8 h-8 text-neon-green" />
+                                    <CheckCircle className="w-8 h-8 text-neon-green" />
                                 </div>
                                 <h3 className="text-white text-xl font-bold mb-2">Message Sent!</h3>
                                 <p className="text-gray-400">Thanks for reaching out. I'll get back to you soon.</p>
                                 <button
-                                    onClick={() => setSent(false)}
+                                    onClick={() => { setSent(false); setFormData({ name: '', email: '', message: '' }); }}
                                     className="mt-6 text-neon-green hover:underline"
                                 >
                                     Send another message
@@ -57,6 +72,12 @@ const Contact = () => {
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                {error && (
+                                    <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                                        <AlertCircle size={16} />
+                                        {error}
+                                    </div>
+                                )}
                                 <div>
                                     <label className="block text-gray-400 mb-2 text-sm">NAME</label>
                                     <input
@@ -134,7 +155,10 @@ const Contact = () => {
                                     <a
                                         key={social.name}
                                         href={social.url}
-                                        className={`w-12 h-12 rounded-lg bg-[#222] flex items-center justify-center text-gray-400 transition-colors ${social.color}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`w-12 h-12 rounded-lg bg-[#222] flex items-center justify-center text-gray-400 transition-colors hover:text-white`}
+                                        aria-label={social.name}
                                     >
                                         <social.icon size={20} />
                                     </a>
